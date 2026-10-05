@@ -10,15 +10,15 @@ export const Button = ({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "primary" | "ghost" | "danger" }) => {
   const styles = {
-    default: "bg-white/[0.06] hover:bg-white/10 border border-line text-neutral-100",
-    primary: "bg-accent text-black font-medium hover:brightness-110",
-    ghost: "hover:bg-white/5 text-neutral-300",
-    danger: "bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30",
+    default: "bg-white/[0.04] hover:bg-white/[0.08] border border-line text-neutral-100 hover:border-white/20",
+    primary: "bg-accent text-white font-medium hover:bg-accent-hover shadow-[0_6px_18px_-10px_var(--color-accent)]",
+    ghost: "text-neutral-400 hover:text-white hover:bg-white/[0.06]",
+    danger: "bg-red-500/10 hover:bg-red-500/15 text-red-300 border border-red-500/25",
   }[variant];
   return (
     <button
       {...props}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] transition disabled:opacity-40 disabled:pointer-events-none ${styles} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] transition active:translate-y-px disabled:opacity-40 disabled:pointer-events-none ${styles} ${className}`}
     />
   );
 };
@@ -32,13 +32,15 @@ export const Seg = <T extends string>({
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
 }) => (
-  <div className="grid grid-flow-col auto-cols-fr gap-1 bg-black/30 p-1 rounded-lg border border-line">
+  <div className="grid grid-flow-col auto-cols-fr gap-1 bg-black/40 p-1 rounded-lg border border-line">
     {options.map((o) => (
       <button
         key={o.value}
         onClick={() => onChange(o.value)}
         className={`px-2 py-1.5 rounded-md text-[12px] ${
-          value === o.value ? "bg-white/12 text-white bg-white/10 font-medium" : "text-neutral-400 hover:text-white"
+          value === o.value
+            ? "bg-accent-soft text-white font-medium border border-accent/40"
+            : "border border-transparent text-neutral-400 hover:text-white hover:bg-white/[0.05]"
         }`}
       >
         {o.label}
@@ -49,7 +51,7 @@ export const Seg = <T extends string>({
 
 export const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="flex flex-col gap-1.5">
-    <div className="text-[11px] uppercase tracking-wide text-neutral-500">{label}</div>
+    <div className="font-heading text-[11px] font-semibold uppercase tracking-[0.07em] text-neutral-500">{label}</div>
     {children}
   </div>
 );
@@ -67,10 +69,12 @@ export const Panel = ({
   className?: string;
   bodyClassName?: string;
 }) => (
-  <section className={`bg-panel border border-line rounded-xl flex flex-col min-h-0 ${className}`}>
+  <section
+    className={`bg-panel border border-line rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.6)] transition-colors hover:border-white/15 flex flex-col min-h-0 ${className}`}
+  >
     {title ? (
       <div className="h-11 shrink-0 px-4 flex items-center justify-between border-b border-line">
-        <h2 className="text-[13px] font-semibold tracking-tight text-neutral-200">{title}</h2>
+        <h2 className="font-heading text-[13px] font-semibold tracking-tight text-neutral-100">{title}</h2>
         {right}
       </div>
     ) : null}
@@ -81,7 +85,7 @@ export const Panel = ({
 const STEP_COLORS: Partial<Record<PipelineStep, string>> = {
   done: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   error: "bg-red-500/15 text-red-300 border-red-500/30",
-  awaiting_approval: "bg-accent-soft text-accent border-accent/40",
+  awaiting_approval: "bg-amber-400/10 text-amber-300 border-amber-400/30",
   idle: "bg-white/5 text-neutral-400 border-line",
 };
 
@@ -145,11 +149,14 @@ export const ConfirmDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 grid place-items-center p-4" onClick={() => !busy && onClose()}>
+    <div
+      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-[3px] grid place-items-center p-4"
+      onClick={() => !busy && onClose()}
+    >
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-md bg-panel border border-line rounded-xl p-5 shadow-2xl"
+        className="w-full max-w-md bg-panel-2 border border-line rounded-xl p-5 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-base font-semibold text-neutral-100">{title}</h2>

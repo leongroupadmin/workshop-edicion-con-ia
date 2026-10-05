@@ -47,7 +47,7 @@ export const StatusBar = ({ id, state, onRetry }: { id: string; state: ProjectSt
                 <span
                   className={`px-2 py-1 rounded-md border ${
                     active
-                      ? "border-accent/60 bg-accent-soft text-accent"
+                      ? "border-amber-400/40 bg-amber-400/10 text-amber-300"
                       : done
                         ? "border-transparent text-neutral-300"
                         : "border-transparent text-neutral-600"

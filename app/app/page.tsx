@@ -32,7 +32,7 @@ export default function Home() {
           <h1 className="text-2xl font-semibold tracking-tight">Proyectos de edición</h1>
           <p className="text-neutral-400 mt-1">Cada video que subís se transcribe, se corta y Claude te propone un plan de edición.</p>
         </div>
-        <Link href="/nuevo" className="px-4 py-2 rounded-lg bg-accent text-black font-medium hover:brightness-110">
+        <Link href="/nuevo" className="px-4 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover shadow-[0_8px_24px_-12px_var(--color-accent)]">
           + Nuevo video
         </Link>
       </div>
@@ -53,7 +53,7 @@ export default function Home() {
           {projects.map((p) => (
             <div
               key={p.id}
-              className="group relative bg-panel border border-line rounded-xl overflow-hidden hover:border-accent/50 transition"
+              className="group relative bg-panel border border-line rounded-xl overflow-hidden transition hover:border-accent/50 hover:shadow-[0_14px_36px_-20px_rgba(0,0,0,0.95)]"
             >
               <Link href={`/p/${p.id}`} className="block">
                 <div className="aspect-[9/12] bg-black/60 relative overflow-hidden">

@@ -9,7 +9,7 @@ import { Button, LayoutIcon, Panel, Seg } from "./ui";
 
 const LANES: { key: string; label: string; types: string[]; color: string }[] = [
   { key: "scenes", label: "Escenas", types: ["motion_graphic", "broll"], color: "bg-violet-500/70 border-violet-300/60" },
-  { key: "overlays", label: "Títulos / overlays", types: ["title", "overlay", "lower_third"], color: "bg-accent/80 border-yellow-200/70 text-black" },
+  { key: "overlays", label: "Títulos / overlays", types: ["title", "overlay", "lower_third"], color: "bg-accent/80 border-accent/60 text-white" },
   { key: "fx", label: "Transiciones / zoom", types: ["transition", "zoom"], color: "bg-sky-500/70 border-sky-300/60" },
   { key: "sfx", label: "Sonido", types: ["sfx"], color: "bg-emerald-500/70 border-emerald-300/60" },
 ];

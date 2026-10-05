@@ -1,10 +1,10 @@
-# Sistema de edición automática de video
+# Clipo — sistema de edición automática de video
 
 Este repo edita videos hablados (talking head) de forma automática: transcribe,
 corta, propone un plan de edición, genera motion graphics con **HyperFrames**,
 monta todo con **Remotion** y renderiza versiones. Se usa desde la terminal
-(Claude Code) y desde el panel web local (`/app`, Claude Agent SDK con cwd en
-esta raíz). Las dos vías siguen este mismo archivo.
+(Claude Code) y desde el panel web local (**Clipo**: `/app`, Claude Agent SDK con cwd
+en esta raíz). Las dos vías siguen este mismo archivo.
 
 Respondé siempre en **español**, corto y claro. El usuario no es programador:
 explicá qué hiciste en lenguaje simple, no muestres código salvo que lo pida.

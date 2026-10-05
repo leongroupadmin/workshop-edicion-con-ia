@@ -1,10 +1,10 @@
 #!/bin/bash
-# Vuelve a crear la aplicación "Panel de video" en el Escritorio, con su ícono.
+# Vuelve a crear la aplicación "Clipo" en el Escritorio, con su ícono.
 # Útil si la borraste o si estás instalando el proyecto en otra Mac.
 
 set -e
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
-APP="$HOME/Desktop/Panel de video.app"
+APP="$HOME/Desktop/Clipo.app"
 TMP="$(mktemp -d)"
 
 cat > "$TMP/applet.applescript" <<APPLESCRIPT
@@ -26,6 +26,6 @@ killall Dock 2>/dev/null || true
 rm -rf "$TMP"
 
 echo
-echo "  Listo: \"Panel de video\" está en tu Escritorio."
+echo "  Listo: \"Clipo\" está en tu Escritorio."
 echo
 read -r -p "  Apretá Enter para cerrar esta ventana. " _
