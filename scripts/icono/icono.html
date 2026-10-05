@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;padding:0;background:transparent;width:1024px;height:1024px;overflow:hidden}
+</style></head><body>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#1B3C5E"/>
+      <stop offset="0.55" stop-color="#11273E"/>
+      <stop offset="1" stop-color="#0A1829"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.02"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="22" flood-color="#000000" flood-opacity="0.42"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0" stdDeviation="16" flood-color="#7F9AB1" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <!-- cuerpo del icono -->
+  <g filter="url(#drop)">
+    <rect x="92" y="92" width="840" height="840" rx="188" fill="url(#bg)"/>
+    <rect x="92" y="92" width="840" height="840" rx="188" fill="url(#sheen)"/>
+    <rect x="94.5" y="94.5" width="835" height="835" rx="186" fill="none" stroke="#7F9AB1" stroke-opacity="0.28" stroke-width="5"/>
+  </g>
+
+  <!-- play -->
+  <g filter="url(#glow)">
+    <path d="M436 348 L672 486 a30 30 0 0 1 0 52 L436 676 a30 30 0 0 1 -45 -26 L391 374 a30 30 0 0 1 45 -26 Z"
+          fill="#F0EFEF"/>
+  </g>
+
+  <!-- linea de tiempo -->
+  <rect x="330" y="762" width="364" height="18" rx="9" fill="#7F9AB1" fill-opacity="0.32"/>
+  <rect x="330" y="762" width="196" height="18" rx="9" fill="#7F9AB1"/>
+  <circle cx="526" cy="771" r="33" fill="#F0EFEF"/>
+  <circle cx="526" cy="771" r="33" fill="none" stroke="#11273E" stroke-opacity="0.35" stroke-width="6"/>
+</svg>
+</body></html>
