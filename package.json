@@ -37,7 +37,8 @@
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
     "panel": "npm --prefix app run dev",
-    "setup:whisper": "tsx scripts/setup-whisper.ts"
+    "setup:whisper": "tsx scripts/setup-whisper.ts",
+    "cuenta": "bash scripts/cuenta.command"
   },
   "sideEffects": [
     "*.css"

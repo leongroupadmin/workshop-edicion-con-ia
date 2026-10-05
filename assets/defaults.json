@@ -2,7 +2,7 @@
   "format": "vertical",
   "fps": 30,
   "subtitles": {
-    "style": "karaoke",
+    "style": "simple",
     "size": 72,
     "position": "bottom",
     "maxWords": 3,
@@ -20,10 +20,11 @@
   },
   "style": {
     "pace": "dynamic",
+    "graphicsCount": 2,
     "graphics": "corporate",
     "splitUse": "always",
     "cut": "aggressive",
-    "autoZoom": false,
+    "autoZoom": true,
     "split": {
       "position": "top",
       "share": 0.5

@@ -238,6 +238,7 @@ npx tsx scripts/scene.ts init|render <id> <itemId>
 npx tsx scripts/render.ts <id> --note "..."   # pasos 5-6
 npx tsx scripts/pipeline.ts prepare <id>      # pasos 1+2 seguidos (lo usa el panel)
 npx tsx scripts/setup-whisper.ts              # reinstalar whisper.cpp + modelo
+npm run cuenta                                # ver/cambiar la cuenta de Claude del panel
 npm run dev                                   # Remotion Studio (puerto 3001)
 cd app && npm run dev                         # panel en http://localhost:3000
 ```
