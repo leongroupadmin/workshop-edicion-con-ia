@@ -10,3 +10,6 @@ Config.setRspack(true);
 Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
 Config.overrideBundlerConfig(enableTailwind);
+
+// El panel web usa el puerto 3000; Remotion Studio queda en el 3001.
+Config.setStudioPort(3001);

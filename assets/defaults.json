@@ -1,0 +1,32 @@
+{
+  "format": "vertical",
+  "fps": 30,
+  "subtitles": {
+    "style": "karaoke",
+    "size": 72,
+    "position": "bottom",
+    "maxWords": 3,
+    "uppercase": false
+  },
+  "music": {
+    "enabled": true,
+    "volume": 0.25,
+    "duckTo": 0.3,
+    "track": ""
+  },
+  "sfx": {
+    "enabled": true,
+    "volume": 0.4
+  },
+  "style": {
+    "pace": "dynamic",
+    "graphics": "corporate",
+    "splitUse": "always",
+    "cut": "aggressive",
+    "autoZoom": false,
+    "split": {
+      "position": "top",
+      "share": 0.5
+    }
+  }
+}

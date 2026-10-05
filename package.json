@@ -6,28 +6,38 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@remotion/bundler": "4.0.532",
+    "@remotion/captions": "4.0.532",
     "@remotion/cli": "4.0.532",
+    "@remotion/install-whisper-cpp": "4.0.532",
+    "@remotion/media": "4.0.532",
+    "@remotion/media-utils": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "@remotion/tailwind-v4": "4.0.532",
     "@remotion/zod-types": "4.0.532",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.532",
-    "zod": "4.5.4",
-    "@remotion/tailwind-v4": "4.0.532",
-    "tailwindcss": "4.0.0"
+    "tailwindcss": "4.0.0",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.532",
+    "@types/node": "^26.6.4",
     "@types/react": "19.2.7",
     "@types/web": "0.0.166",
     "eslint": "9.39.5",
     "prettier": "3.8.1",
+    "tsx": "^4.23.15",
     "typescript": "5.9.3"
   },
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
-    "lint": "eslint src && tsc"
+    "lint": "eslint src && tsc",
+    "panel": "npm --prefix app run dev",
+    "setup:whisper": "tsx scripts/setup-whisper.ts"
   },
   "sideEffects": [
     "*.css"

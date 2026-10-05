@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --color-accent: #ffb600;
+  --color-accent-soft: #ffb60022;
+  --color-panel: #141416;
+  --color-panel-2: #1b1b1f;
+  --color-line: #26262c;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #0b0b0d;
+  color: #e9e9ec;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a42 transparent;
+}
+
+.md p {
+  margin: 0 0 0.6em;
+}
+.md p:last-child {
+  margin-bottom: 0;
+}
+.md ul,
+.md ol {
+  margin: 0.3em 0 0.6em 1.2em;
+}
+.md ul {
+  list-style: disc;
+}
+.md ol {
+  list-style: decimal;
+}
+.md li {
+  margin: 0.15em 0;
+}
+.md code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: #ffffff12;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+.md strong {
+  color: #fff;
+}
+.md h1,
+.md h2,
+.md h3 {
+  font-weight: 600;
+  margin: 0.5em 0 0.3em;
+}
+
+input[type="range"] {
+  accent-color: var(--color-accent);
+}

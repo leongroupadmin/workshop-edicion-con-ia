@@ -5,3 +5,20 @@ dist
 
 # Ignore the output video from Git but not videos you import into src/.
 out
+
+# Pipeline de edición
+projects/*
+!projects/.gitkeep
+whisper.cpp/
+.cache/
+samples/
+.env.local
+
+# Música con licencia de HeyGen: no se redistribuye.
+# Se vuelve a bajar con: npx tsx scripts/music.ts search "<estilo>"
+/assets/music/*
+!/assets/music/sfx/
+!/assets/music/.gitkeep
+
+# Skills de HyperFrames: se reinstalan solas desde skills-lock.json
+/.claude/skills/
