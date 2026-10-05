@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Chat } from "@/components/Chat";
+import { Images } from "@/components/Images";
 import { PlanTimeline } from "@/components/PlanTimeline";
 import { Preview } from "@/components/Preview";
 import { ProjectConfig } from "@/components/ProjectConfig";
@@ -83,6 +84,7 @@ export default function ProjectPage() {
             <Preview id={id} state={state} />
             <ProjectConfig id={id} state={state} />
           </div>
+          <Images id={id} />
           <PlanTimeline id={id} state={state} busy={busy} />
           {state.transcriptText ? (
             <details className="bg-panel border border-line rounded-xl">

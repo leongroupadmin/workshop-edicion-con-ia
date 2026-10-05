@@ -44,6 +44,13 @@ export type CutsFile = {
   style?: "soft" | "normal" | "aggressive";
 };
 
+/** Una imagen que subió el usuario para un video (projects/<id>/images.json). */
+export type ProjectImage = {
+  file: string;
+  /** Qué se ve / para qué sirve. Lo escribe el usuario; ayuda a Claude a ubicarla. */
+  note?: string;
+};
+
 export type PlanItemType =
   | "title"
   | "motion_graphic"
@@ -81,6 +88,11 @@ export type PlanItem = {
   layout?: SceneLayout;
   /** Texto principal que aparece en pantalla, si aplica. */
   text?: string;
+  /**
+   * Imágenes del usuario que usa esta escena (nombres de archivo de
+   * projects/<id>/images). scene.ts las copia a assets/img de la escena.
+   */
+  images?: string[];
   /** Archivo generado, relativo a la carpeta del proyecto (scenes/xx.mov, assets de sfx, etc.). */
   file?: string;
   /** Para sfx: archivo de /assets/music (relativo a /assets). */
@@ -153,8 +165,14 @@ export type EditStyle = {
   graphicsCount: number;
   /** Estilo visual con el que Claude diseña los motion graphics. */
   graphics: "minimal" | "bold" | "corporate";
-  /** Cuándo usar pantalla dividida: never = nunca, auto = decide Claude, always = en todos los gráficos. */
-  splitUse: "never" | "auto" | "always";
+  /**
+   * Cómo se muestran los gráficos sobre el video:
+   * - auto: lo decide Claude según el contenido (mezcla los tres).
+   * - overlay: siempre encima del video, con fondo transparente.
+   * - split: siempre en pantalla dividida (gráfico y cara a la vez).
+   * - fullscreen: siempre tapando la pantalla, como un b-roll; la voz sigue.
+   */
+  layoutUse: "auto" | "overlay" | "split" | "fullscreen";
   split: {
     /** Dónde va el gráfico en pantalla dividida: top = arriba (en horizontal, a la izquierda). */
     position: "top" | "bottom";
@@ -200,26 +218,42 @@ export const DEFAULT_SETTINGS: Settings = {
     pace: "normal",
     graphicsCount: 0,
     graphics: "bold",
-    splitUse: "auto",
+    layoutUse: "auto",
     split: { position: "top", share: 0.5 },
     cut: "normal",
     autoZoom: false,
   },
 };
 
+/**
+ * Ajustes viejos: antes "cómo se ven los gráficos" era `splitUse`
+ * (never / auto / always). "Nunca" pasa a "encima del video" y "Siempre" a
+ * "pantalla dividida", así los proyectos que ya existen no cambian de aspecto.
+ */
+const LEGACY_LAYOUT: Record<string, EditStyle["layoutUse"]> = {
+  never: "overlay",
+  auto: "auto",
+  always: "split",
+};
+
 /** Completa un settings.json parcial (o viejo) con los valores por defecto. */
-export const mergeSettings = (s: Partial<Settings>, base: Settings = DEFAULT_SETTINGS): Settings => ({
-  ...base,
-  ...s,
-  subtitles: { ...base.subtitles, ...(s.subtitles ?? {}) },
-  music: { ...base.music, ...(s.music ?? {}) },
-  sfx: { ...base.sfx, ...(s.sfx ?? {}) },
-  style: {
-    ...base.style,
-    ...(s.style ?? {}),
-    split: { ...base.style.split, ...(s.style?.split ?? {}) },
-  },
-});
+export const mergeSettings = (s: Partial<Settings>, base: Settings = DEFAULT_SETTINGS): Settings => {
+  const style = s.style as (Partial<EditStyle> & { splitUse?: string }) | undefined;
+  const legacy = !style?.layoutUse && style?.splitUse ? LEGACY_LAYOUT[style.splitUse] : undefined;
+  return {
+    ...base,
+    ...s,
+    subtitles: { ...base.subtitles, ...(s.subtitles ?? {}) },
+    music: { ...base.music, ...(s.music ?? {}) },
+    sfx: { ...base.sfx, ...(s.sfx ?? {}) },
+    style: {
+      ...base.style,
+      ...(s.style ?? {}),
+      ...(legacy ? { layoutUse: legacy } : {}),
+      split: { ...base.style.split, ...(s.style?.split ?? {}) },
+    },
+  };
+};
 
 export const FORMAT_SIZE: Record<Format, { width: number; height: number }> = {
   vertical: { width: 1080, height: 1920 },

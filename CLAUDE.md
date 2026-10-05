@@ -21,6 +21,8 @@ projects/<id>/        un proyecto de edición por video
   cut.mp4             video sin silencios, muletillas ni tomas repetidas
   cut.transcript.json transcripción re-sincronizada a cut.mp4  ← usar ESTA para el plan
   plan.json           plan de edición (borrador → aprobado)
+  images/             imágenes que subió el usuario para ESTE video
+  images.json         descripción de cada imagen (la escribe el usuario)
   scenes-src/<item>/  proyecto HyperFrames de cada escena (index.html)
   scenes/             escenas renderizadas (.mp4 pantalla completa, .webm con alfa para overlays)
   versions/           v1.mp4, v2.mp4… + vN.json (qué cambió)
@@ -106,6 +108,7 @@ mirá qué archivos ya existen para retomar donde quedó.
       "startMs": 0, "endMs": 2500,
       "layout": "overlay | fullscreen | split",
       "text": "Texto en pantalla (si aplica)",
+      "images": ["foto.jpg"],
       "description": "Qué se ve / qué hace",
       "reason": "Por qué va acá",
       "sound": "music/sfx/whoosh.mp3",
@@ -129,8 +132,10 @@ mirá qué archivos ya existen para retomar donde quedó.
   cambiar el layout de cada escena desde el panel (antes o después de
   aprobar): respetá lo que eligió. Si una escena ya generada cambia de layout,
   el panel le saca `file` y te pide regenerar solo esas (`init --force` +
-  `render`) y armar una versión nueva. Respetá `settings.style.splitUse`; con
-  `auto`, variá los layouts según el contenido (no todo overlay).
+  `render`) y armar una versión nueva. Respetá `settings.style.layoutUse`; con
+  `auto`, variá los layouts según el contenido (no todo overlay): alterná
+  tramos de cara con `fullscreen` (el gráfico tapa la pantalla unos segundos,
+  como un b-roll) y `split`.
 - `transition` va en ítems `type: "transition"` (300-500 ms, centrados en el
   cambio). **Con pantalla dividida no hay transiciones:** la división entra y
   sale con corte directo y no pongas ítems `transition` dentro de un tramo
@@ -149,6 +154,13 @@ mirá qué archivos ya existen para retomar donde quedó.
   solo si el tono es tech o algo sale mal. Máximo un sonido por aparición, y
   no en cada palabra. El volumen lo maneja `settings.sfx` (no lo pongas en
   el plan); si `settings.sfx.enabled` es false, no propongas sonidos.
+- `images`: nombres de archivo de `projects/<id>/images` (las subió el usuario
+  desde el panel). Si hay imágenes, **usalas todas**: repartilas entre los
+  gráficos que mejor peguen con lo que se dice en ese momento, una imagen en un
+  solo ítem. `images.json` dice qué es cada una. `scene.ts init` las copia a
+  `assets/img/` de la escena y lo anota en el `BRIEF.md`: mostralas con `<img>`
+  o como fondo, con `object-fit: cover` para que no se deformen. Las fotos
+  piden `fullscreen` o `split` (en `overlay` quedan chicas).
 - Criterio: menos es más. Si `settings.style.graphicsCount` es mayor a 0, esa
   es la cantidad exacta de gráficos (ver Estilo de edición); si no, 1 elemento
   visual cada 4-8 s como máximo (según el ritmo). El primero en los primeros
@@ -195,10 +207,13 @@ mirá qué archivos ya existen para retomar donde quedó.
     `bold` = tipografía enorme 800, kinetic typography, alto contraste,
     animaciones con energía; `corporate` = tarjetas prolijas, íconos, grilla,
     deslizamientos suaves.
-  - `splitUse` (cuándo usar pantalla dividida): `never` = ningún ítem con
-    `layout: "split"`; `always` = todos los ítems con escena en `split`;
-    `auto` = elegís vos según el contenido (ver `layout` arriba). Cuando el
-    usuario lo cambia, el panel ya actualiza el plan actual.
+  - `layoutUse` (cómo se ven los gráficos): `overlay` = todos encima del
+    video; `split` = todos en pantalla dividida; `fullscreen` = todos tapan la
+    pantalla unos segundos, como un b-roll, y después vuelve la cara (la voz
+    sigue); `auto` = elegís vos según el contenido y mezclás los tres (ver
+    `layout` arriba). Cuando el usuario lo cambia, el panel ya actualiza el
+    plan actual. Antes esto se llamaba `splitUse`: los settings viejos se
+    convierten solos (`never`→`overlay`, `always`→`split`).
   - `split` = pantalla dividida: `position` `top|bottom` (en horizontal:
     izquierda|derecha) y `share` (0.4/0.5/0.6 de la pantalla para el gráfico).
     El tamaño de cada escena split sale de acá (lo dice el `BRIEF.md`).

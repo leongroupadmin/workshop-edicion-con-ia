@@ -1,6 +1,6 @@
 import { emit } from "@/lib/server/bus";
 import { writeJson } from "@/lib/server/fsutil";
-import { applySplitUse } from "@/lib/server/pipeline";
+import { applyLayoutUse } from "@/lib/server/pipeline";
 import { exists, paths, readSettings } from "@/lib/server/projects";
 import { normalizeSettings } from "@/lib/server/settings";
 import type { Settings } from "@/lib/types";
@@ -18,8 +18,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/projects/[id]/s
   const before = readSettings(id);
   const next = normalizeSettings(patch, before);
   writeJson(paths(id).settings, next);
-  // "Pantalla dividida: Nunca / Siempre" cambia el plan actual
-  const layouts = before.style.splitUse !== next.style.splitUse ? applySplitUse(id, next.style.splitUse) : { changed: 0 };
+  // "Cómo se ven los gráficos" (que no sea "auto") cambia el plan actual
+  const layouts =
+    before.style.layoutUse !== next.style.layoutUse ? applyLayoutUse(id, next.style.layoutUse) : { changed: 0 };
   emit(id, { type: "refresh" });
   return Response.json({ settings: next, layouts });
 }

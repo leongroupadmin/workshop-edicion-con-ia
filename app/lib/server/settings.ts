@@ -1,5 +1,5 @@
 import "server-only";
-import { CUT_LABELS, GRAPHICS_LABELS, PACE_LABELS, SPLIT_USE_LABELS, mergeSettings } from "../defaults";
+import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS, mergeSettings } from "../defaults";
 import type { EditStyle, Settings } from "../types";
 
 const pick = <T extends string>(v: unknown, options: Record<T, unknown>, fallback: T): T =>
@@ -10,7 +10,7 @@ const cleanStyle = (st: EditStyle, prev: EditStyle): EditStyle => ({
   pace: pick(st.pace, PACE_LABELS, prev.pace),
   graphicsCount: Math.max(0, Math.min(30, Math.round(Number(st.graphicsCount) || 0))),
   graphics: pick(st.graphics, GRAPHICS_LABELS, prev.graphics),
-  splitUse: pick(st.splitUse, SPLIT_USE_LABELS, prev.splitUse),
+  layoutUse: pick(st.layoutUse, LAYOUT_USE_LABELS, prev.layoutUse),
   cut: pick(st.cut, CUT_LABELS, prev.cut),
   autoZoom: Boolean(st.autoZoom),
   split: {

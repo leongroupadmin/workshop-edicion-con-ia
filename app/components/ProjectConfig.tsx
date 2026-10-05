@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/client";
+import { LAYOUT_USE_LABELS } from "@/lib/defaults";
 import type { ProjectState, Settings } from "@/lib/types";
 import { StyleFields } from "./StyleFields";
 import { Button, Panel, Row, Seg } from "./ui";
@@ -50,11 +51,11 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
       const changed = r.layouts?.changed ?? 0;
       if (changed) {
         setMsg({
-          text: `Cambié ${changed === 1 ? "1 gráfico" : `${changed} gráficos`} del plan ${
-            next.style.splitUse === "always" ? "a pantalla dividida" : "para que no usen pantalla dividida"
-          }.`,
+          text: `Cambié ${changed === 1 ? "1 gráfico" : `${changed} gráficos`} del plan a ${LAYOUT_USE_LABELS[
+            next.style.layoutUse
+          ].toLowerCase()}.`,
         });
-      } else if (next.style.splitUse !== prev.style.splitUse) setMsg(null);
+      } else if (next.style.layoutUse !== prev.style.layoutUse) setMsg(null);
     } catch (e) {
       dirty.current = false;
       setSaving("error");
@@ -256,7 +257,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
         showPace={false}
         stacked
         notes={{
-          splitUse: s.style.splitUse !== "auto" && state.plan ? "Cambia también el plan de este video." : undefined,
+          layoutUse: s.style.layoutUse !== "auto" && state.plan ? "Cambia también el plan de este video." : undefined,
           cut: state.plan ? "Al renderizar se vuelve a cortar y los tiempos del plan se acomodan solos." : undefined,
         }}
       />

@@ -11,26 +11,41 @@ export const DEFAULT_SETTINGS: Settings = {
     pace: "normal",
     graphicsCount: 0,
     graphics: "bold",
-    splitUse: "auto",
+    layoutUse: "auto",
     split: { position: "top", share: 0.5 },
     cut: "normal",
     autoZoom: false,
   },
 };
 
+/**
+ * Ajustes viejos: "cómo se ven los gráficos" era `splitUse`
+ * (never / auto / always). Así los proyectos que ya existen no cambian.
+ */
+const LEGACY_LAYOUT: Record<string, EditStyle["layoutUse"]> = {
+  never: "overlay",
+  auto: "auto",
+  always: "split",
+};
+
 // Mantener en sync con mergeSettings de /src/pipeline/types.ts
-export const mergeSettings = (s: Partial<Settings>, base: Settings = DEFAULT_SETTINGS): Settings => ({
-  ...base,
-  ...s,
-  subtitles: { ...base.subtitles, ...(s.subtitles ?? {}) },
-  music: { ...base.music, ...(s.music ?? {}) },
-  sfx: { ...base.sfx, ...(s.sfx ?? {}) },
-  style: {
-    ...base.style,
-    ...(s.style ?? {}),
-    split: { ...base.style.split, ...(s.style?.split ?? {}) },
-  },
-});
+export const mergeSettings = (s: Partial<Settings>, base: Settings = DEFAULT_SETTINGS): Settings => {
+  const style = s.style as (Partial<EditStyle> & { splitUse?: string }) | undefined;
+  const legacy = !style?.layoutUse && style?.splitUse ? LEGACY_LAYOUT[style.splitUse] : undefined;
+  return {
+    ...base,
+    ...s,
+    subtitles: { ...base.subtitles, ...(s.subtitles ?? {}) },
+    music: { ...base.music, ...(s.music ?? {}) },
+    sfx: { ...base.sfx, ...(s.sfx ?? {}) },
+    style: {
+      ...base.style,
+      ...(s.style ?? {}),
+      ...(legacy ? { layoutUse: legacy } : {}),
+      split: { ...base.style.split, ...(s.style?.split ?? {}) },
+    },
+  };
+};
 
 export const PACE_LABELS: Record<EditStyle["pace"], string> = {
   calm: "Tranquilo",
@@ -44,10 +59,11 @@ export const GRAPHICS_LABELS: Record<EditStyle["graphics"], string> = {
   corporate: "Corporativo",
 };
 
-export const SPLIT_USE_LABELS: Record<EditStyle["splitUse"], string> = {
-  never: "Nunca",
+export const LAYOUT_USE_LABELS: Record<EditStyle["layoutUse"], string> = {
   auto: "Que decida Claude",
-  always: "Siempre",
+  overlay: "Encima del video",
+  split: "Pantalla dividida",
+  fullscreen: "Pantalla completa",
 };
 
 export const CUT_LABELS: Record<EditStyle["cut"], string> = {

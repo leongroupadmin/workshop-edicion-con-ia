@@ -30,6 +30,10 @@ export const projectPaths = (id: string) => {
     cutsApplied: path.join(dir, ".cuts-applied.json"),
     cuts: path.join(dir, "cuts.json"),
     plan: path.join(dir, "plan.json"),
+    /** Imágenes que subió el usuario para este video (las usa Claude en las escenas). */
+    images: path.join(dir, "images"),
+    /** Descripción corta de cada imagen, para que Claude sepa cuándo usarla. */
+    imagesMeta: path.join(dir, "images.json"),
     scenes: path.join(dir, "scenes"),
     scenesSrc: path.join(dir, "scenes-src"),
     versions: path.join(dir, "versions"),

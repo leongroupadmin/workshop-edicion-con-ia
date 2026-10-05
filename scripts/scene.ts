@@ -15,7 +15,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import type { Brand, EditStyle, Plan, PlanItem } from "../src/pipeline/types";
+import type { Brand, EditStyle, Plan, PlanItem, ProjectImage } from "../src/pipeline/types";
 import { FORMAT_SIZE, SCENE_TYPES, sceneLayout, sceneSpecFor, splitSceneSize } from "../src/pipeline/types";
 import { BRAND_DIR, projectPaths } from "./lib/config";
 import { readJson, run, writeJson } from "./lib/media";
@@ -190,6 +190,23 @@ export const initScene = async (id: string, itemId: string, force = false) => {
     const src = path.join(BRAND_DIR, "fonts", f.file);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(assets, "fonts", f.file));
   }
+  // Copiar las imágenes del usuario que use esta escena
+  const imgDir = path.join(assets, "img");
+  const notes = readJson<ProjectImage[]>(p.imagesMeta, []);
+  const usadas: ProjectImage[] = [];
+  for (const file of item.images ?? []) {
+    const src = path.join(p.images, path.basename(file));
+    if (!fs.existsSync(src)) continue;
+    fs.mkdirSync(imgDir, { recursive: true });
+    fs.copyFileSync(src, path.join(imgDir, path.basename(file)));
+    usadas.push(notes.find((n) => n.file === path.basename(file)) ?? { file: path.basename(file) });
+  }
+  const imagesBrief = usadas.length
+    ? `\n## Imágenes del usuario\n\nEstán en \`assets/img/\` y hay que usarlas en la escena (no las dejes afuera):\n${usadas
+        .map((u) => `- \`assets/img/${u.file}\`${u.note ? ` — ${u.note}` : ""}`)
+        .join("\n")}\n\nMostralas con \`<img>\` o como fondo, recortadas con \`object-fit: cover\` para que no se deformen.\n`
+    : "";
+
   const durS = Math.max(0.5, Math.round((item.endMs - item.startMs) / 100) / 10);
   const overlay = layout === "overlay";
   const top = settings.style.split.position === "top";
@@ -222,7 +239,7 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   );
   fs.writeFileSync(
     path.join(dir, "BRIEF.md"),
-    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}`,
+    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}${imagesBrief}`,
   );
   log(id, `[scene] init ${itemId} (${item.type}, ${durS}s, ${layout}, ${width}x${height})`);
   console.log(`Escena lista para editar: ${path.relative(process.cwd(), path.join(dir, "index.html"))}`);

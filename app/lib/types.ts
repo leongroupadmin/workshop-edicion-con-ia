@@ -8,6 +8,7 @@ export type {
   Plan,
   PlanItem,
   PlanItemType,
+  ProjectImage,
   ProjectMeta,
   ProjectStatus,
   SceneLayout,

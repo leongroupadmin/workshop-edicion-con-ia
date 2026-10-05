@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { isBusy, runAgent } from "@/lib/server/agent";
-import { PLAN_PROMPT, startPrepare } from "@/lib/server/pipeline";
+import { planPrompt, startPrepare } from "@/lib/server/pipeline";
 import { exists, paths } from "@/lib/server/projects";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/projects/[id]/
   try {
     if (!fs.existsSync(p.cut) || !fs.existsSync(p.cutTranscript)) startPrepare(id);
     else if (!fs.existsSync(p.plan))
-      runAgent(id, PLAN_PROMPT, { kind: "plan", role: "system", visibleText: "Reintentando: pidiéndole a Claude el plan de edición…" });
+      runAgent(id, planPrompt(id), { kind: "plan", role: "system", visibleText: "Reintentando: pidiéndole a Claude el plan de edición…" });
     else return Response.json({ error: "No hay nada para reintentar: usá el chat o los botones del plan." }, { status: 400 });
     return Response.json({ ok: true });
   } catch (err) {

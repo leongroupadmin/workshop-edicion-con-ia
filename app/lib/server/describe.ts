@@ -1,5 +1,5 @@
 import "server-only";
-import { CUT_LABELS, GRAPHICS_LABELS, PACE_LABELS, SPLIT_USE_LABELS } from "../defaults";
+import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS } from "../defaults";
 import type { Settings } from "../types";
 
 const FORMAT = { vertical: "vertical", horizontal: "horizontal", square: "cuadrado" } as const;
@@ -36,7 +36,7 @@ export const describeChanges = (
   if (hasSplit && sa.split.position !== sb.split.position) out.push(`gráfico ${sb.split.position === "top" ? "arriba" : "abajo"} en pantalla dividida`);
   if (hasSplit && sa.split.share !== sb.split.share) out.push(`pantalla dividida ${Math.round(sb.split.share * 100)}/${Math.round((1 - sb.split.share) * 100)}`);
   if (renderOnly) return out;
-  if (sa.splitUse !== sb.splitUse) out.push(`pantalla dividida: ${SPLIT_USE_LABELS[sb.splitUse].toLowerCase()}`);
+  if (sa.layoutUse !== sb.layoutUse) out.push(`gráficos: ${LAYOUT_USE_LABELS[sb.layoutUse].toLowerCase()}`);
   if (sa.pace !== sb.pace) out.push(`ritmo ${PACE_LABELS[sb.pace].toLowerCase()}`);
   if (sa.graphicsCount !== sb.graphicsCount) {
     out.push(sb.graphicsCount ? `${sb.graphicsCount} gráficos` : "cantidad de gráficos automática");

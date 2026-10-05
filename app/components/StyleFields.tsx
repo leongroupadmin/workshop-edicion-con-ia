@@ -1,6 +1,6 @@
 "use client";
 
-import { CUT_LABELS, GRAPHICS_LABELS, PACE_LABELS, SPLIT_SHARES, SPLIT_USE_LABELS } from "@/lib/defaults";
+import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS, SPLIT_SHARES } from "@/lib/defaults";
 import type { EditStyle, Format } from "@/lib/types";
 import { LayoutIcon, Row, Seg } from "./ui";
 
@@ -21,10 +21,11 @@ const Group = ({ title, when, children }: { title: string; when: string; childre
   </div>
 );
 
-const SPLIT_USE_HINT: Record<EditStyle["splitUse"], string> = {
-  never: "Ningún gráfico va en pantalla dividida.",
-  auto: "Claude elige en qué gráficos conviene. En el plan lo podés cambiar gráfico por gráfico.",
-  always: "Todos los gráficos van en pantalla dividida.",
+const LAYOUT_USE_HINT: Record<EditStyle["layoutUse"], string> = {
+  auto: "Claude mezcla los tres según el contenido. En el plan lo podés cambiar gráfico por gráfico.",
+  overlay: "Todos los gráficos van encima del video, sin tapar tu cara.",
+  split: "Todos los gráficos van en pantalla dividida: el gráfico y tu cara a la vez.",
+  fullscreen: "Cada gráfico tapa la pantalla unos segundos, como un b-roll, y después volvés a aparecer. Tu voz sigue.",
 };
 
 export const PACE_HINT: Record<EditStyle["pace"], string> = {
@@ -130,7 +131,7 @@ export const StyleFields = ({
   graphicsWhen: string;
   videoWhen: string;
   /** Aclaraciones extra por opción (p.ej. "cambia también el plan"). */
-  notes?: Partial<Record<"splitUse" | "cut", string>>;
+  notes?: Partial<Record<"layoutUse" | "cut", string>>;
   /** Ritmo y cantidad de gráficos cambian el plan entero: dentro del proyecto viven en el plan. */
   showPace?: boolean;
   /** Una sola columna (para paneles angostos). */
@@ -145,15 +146,15 @@ export const StyleFields = ({
   return (
     <div className={`grid grid-cols-1 gap-3 ${stacked ? "" : "lg:grid-cols-2"}`}>
       <Group title="Gráficos" when={graphicsWhen}>
-        <Row label="Pantalla dividida">
-          <Seg value={st.splitUse} onChange={(splitUse) => set({ splitUse })} options={options(SPLIT_USE_LABELS)} />
+        <Row label="Cómo se ven los gráficos">
+          <Seg value={st.layoutUse} onChange={(layoutUse) => set({ layoutUse })} options={options(LAYOUT_USE_LABELS)} />
           <Hint>
-            {SPLIT_USE_HINT[st.splitUse]}
-            {notes.splitUse ? ` ${notes.splitUse}` : ""}
+            {LAYOUT_USE_HINT[st.layoutUse]}
+            {notes.layoutUse ? ` ${notes.layoutUse}` : ""}
           </Hint>
         </Row>
 
-        {st.splitUse !== "never" ? (
+        {st.layoutUse === "auto" || st.layoutUse === "split" ? (
           <Row label="Cómo se ve la pantalla dividida">
             <div className="flex flex-wrap gap-1.5">
               {(["top", "bottom"] as const).flatMap((position) =>

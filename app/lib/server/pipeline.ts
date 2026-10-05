@@ -4,22 +4,26 @@ import path from "node:path";
 import { LAYOUT_LABELS, PACE_LABELS, SCENE_TYPES, sceneLayout } from "../defaults";
 import type { EditStyle, Plan, PlanItem, SceneLayout } from "../types";
 import { runAgent } from "./agent";
+import { imagesPromptBlock } from "./images";
 import { runScript } from "./jobs";
 import { paths, readPlan, readSettings, writePlan, writeStatus } from "./projects";
 
-export const PLAN_PROMPT = `El video ya está transcripto y cortado (pasos 1 y 2 listos).
+const PLAN_BASE = `El video ya está transcripto y cortado (pasos 1 y 2 listos).
 Hacé el paso 3 del pipeline: leé cut.transcript.json, fijate qué efectos de
 sonido hay en assets/music/sfx y la marca en assets/brand, y escribí
 plan.json en borrador con títulos, motion graphics, overlays, transiciones,
 zooms y efectos (con timestamp y por qué). Respetá el estilo de edición de
 settings.json (style.graphicsCount = cantidad EXACTA de gráficos repartidos
 parejos si es mayor a 0, style.pace = cuántos elementos, style.graphics = estilo visual,
-style.autoZoom, style.splitUse; ver CLAUDE.md). Si settings.music.enabled es
+style.autoZoom, style.layoutUse; ver CLAUDE.md). Si settings.music.enabled es
 true y settings.music.track está vacío, elegí la música de fondo según el tono
 del video con: npx tsx scripts/music.ts pick <id> "<estilo en inglés>" (y
 contame cuál elegiste). Después resumime el plan en
 pocas líneas y terminá ahí: lo reviso y toco "Renderizar" en el panel (eso lo
 aprueba). No generes escenas todavía.`;
+
+/** El pedido del plan, más la lista de imágenes que subió el usuario (si hay). */
+export const planPrompt = (id: string) => PLAN_BASE.replace("<id>", id) + imagesPromptBlock(id);
 
 /** Pasos 1 y 2 (sin Claude) y, si salen bien, Claude propone el plan (paso 3). */
 export const startPrepare = (id: string, autoPlan = true) => {
@@ -27,7 +31,7 @@ export const startPrepare = (id: string, autoPlan = true) => {
   runScript(id, "Transcribir y cortar", "pipeline.ts", [], (ok) => {
     if (!ok || !autoPlan) return;
     try {
-      runAgent(id, PLAN_PROMPT.replace("<id>", id), {
+      runAgent(id, planPrompt(id), {
         kind: "plan",
         role: "system",
         visibleText: "Video transcripto y cortado. Pidiéndole a Claude el plan de edición…",
@@ -95,19 +99,20 @@ export const setItemLayout = (id: string, itemId: string, layout: SceneLayout) =
   return plan;
 };
 
-/** Aplica "Pantalla dividida: Nunca / Siempre" al plan actual. Devuelve cuántos gráficos cambiaron. */
-export const applySplitUse = (id: string, use: EditStyle["splitUse"]) => {
+/**
+ * Aplica "Cómo se ven los gráficos" al plan actual (todo encima del video, todo
+ * en pantalla dividida o todo a pantalla completa). Con "auto" no toca nada:
+ * los layouts los eligió Claude. Devuelve cuántos gráficos cambiaron.
+ */
+export const applyLayoutUse = (id: string, use: EditStyle["layoutUse"]) => {
   const plan = readPlan(id);
   if (!plan || use === "auto") return { changed: 0 };
   let changed = 0;
   for (const item of plan.items) {
     if (!SCENE_TYPES.has(item.type) || item.status === "removed") continue;
     const current = sceneLayout(item);
-    // "Nunca": cada gráfico vuelve a como estaba antes (o a su forma natural: títulos encima, motion graphics a pantalla completa)
-    const target =
-      use === "always" ? "split" : current === "split" ? (item.prevScene?.layout ?? sceneLayout({ type: item.type })) : current;
-    if (target === current) continue;
-    applyLayout(id, plan, item, target);
+    if (use === current) continue;
+    applyLayout(id, plan, item, use);
     changed++;
   }
   if (changed) writePlan(id, plan);
@@ -124,7 +129,7 @@ export const replanWithStyle = (id: string) => {
     : "";
   return requestPlanChanges(
     id,
-    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.splitUse y mantené los ítems que sigan sirviendo.`,
+    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.layoutUse y mantené los ítems que sigan sirviendo.`,
     `🎨 Rehacé el plan con ritmo ${PACE_LABELS[pace].toLowerCase()}${graphicsCount ? ` y ${graphicsCount} gráficos` : ""}.`,
   );
 };
