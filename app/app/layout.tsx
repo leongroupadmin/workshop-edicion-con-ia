@@ -23,6 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/marca" className="px-3 py-1.5 rounded-md hover:bg-white/5 hover:text-white">
               Marca y música
             </Link>
+            <Link href="/cuenta" className="px-3 py-1.5 rounded-md hover:bg-white/5 hover:text-white">
+              Cuenta
+            </Link>
           </nav>
           <div className="ml-auto">
             <Link
