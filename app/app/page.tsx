@@ -44,8 +44,16 @@ export default function Home() {
       ) : projects.length === 0 ? (
         <Link
           href="/nuevo"
-          className="block border border-dashed border-line rounded-xl p-16 text-center text-neutral-400 hover:border-accent/60 hover:text-white"
+          className="block border border-dashed border-line rounded-xl p-16 text-center text-neutral-400 transition hover:border-accent/60 hover:text-white"
         >
+          <span className="relative mx-auto mb-6 block h-28 w-28 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element -- logo local, sin optimizar */}
+            <img
+              src="/clipo-completo.webp"
+              alt=""
+              className="absolute left-1/2 top-1/2 h-[135%] max-w-none -translate-x-1/2 -translate-y-1/2 mix-blend-screen"
+            />
+          </span>
           Todavía no hay proyectos. <span className="text-accent">Subí tu primer video →</span>
         </Link>
       ) : (

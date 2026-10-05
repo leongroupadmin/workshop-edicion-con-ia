@@ -13,6 +13,7 @@ explicá qué hiciste en lenguaje simple, no muestres código salvo que lo pida.
 
 ```
 assets/brand/         brand.json (colores, tipografías, logo) + fonts/ + logo  (compartido)
+assets/brand/clipo/   logos de Clipo (horizontal, ícono, completo) — los usa el panel
 assets/music/         música de fondo (.mp3/.wav/.m4a) + sfx/ efectos           (compartido)
 projects/<id>/        un proyecto de edición por video
   raw/                video original (no tocar)
