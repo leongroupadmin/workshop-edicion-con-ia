@@ -14,6 +14,7 @@ explicá qué hiciste en lenguaje simple, no muestres código salvo que lo pida.
 ```
 assets/brand/         brand.json (colores, tipografías, logo) + fonts/ + logo  (compartido)
 assets/brand/clipo/   logos de Clipo (horizontal, ícono, completo) — los usa el panel
+assets/brands/<slug>/ marcas guardadas (copia de brand.json + fonts/ + logo)
 assets/music/         música de fondo (.mp3/.wav/.m4a) + sfx/ efectos           (compartido)
 projects/<id>/        un proyecto de edición por video
   raw/                video original (no tocar)
@@ -179,7 +180,9 @@ mirá qué archivos ya existen para retomar donde quedó.
   de la zona segura (no tapar la interfaz de Instagram/TikTok). Ver
   `src/edit/Captions.tsx` y `src/edit/layout.ts`.
 - **Marca:** usar siempre `/assets/brand` si existe (`brand.json`, `fonts/`,
-  logo). No inventar colores ni tipografías.
+  logo). No inventar colores ni tipografías. En `/assets/brands/` hay marcas
+  guardadas: el usuario cambia de una a otra desde el panel y eso reemplaza
+  `/assets/brand`; vos leé siempre la que está en uso.
 - **Ajustes:** ante un pedido de ajuste, cambiar SOLO lo pedido y re-renderizar
   como nueva versión (`--note` con el pedido). Si el cambio es de una escena,
   re-renderizar solo esa escena y después el montaje.

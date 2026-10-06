@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ColorsFromImage } from "@/components/ColorsFromImage";
 import { MusicSearch } from "@/components/MusicSearch";
+import { SavedBrands } from "@/components/SavedBrands";
 import { Button, ConfirmDialog, Panel, TrashIcon } from "@/components/ui";
 import { api, uploadFile } from "@/lib/client";
 import type { Brand } from "@/lib/types";
@@ -231,6 +232,8 @@ export default function BrandPage() {
           setMsg(`Música agregada: ${file}. Ya la podés elegir en la Configuración de cada video.`);
         }}
       />
+
+      <SavedBrands actual={brand.name} pendiente={dirty} onUsar={load} />
 
       <Panel title="Tu música y efectos de sonido" bodyClassName="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         {(["tracks", "sfx"] as const).map((k) => (
