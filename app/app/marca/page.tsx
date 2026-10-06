@@ -37,7 +37,7 @@ export default function BrandPage() {
   const [brand, setBrand] = useState<Brand | null>(null);
   const [saved, setSaved] = useState<string>("");
   const [msg, setMsg] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [stamp, setStamp] = useState(0);
 
   const load = async () => {
@@ -61,26 +61,31 @@ export default function BrandPage() {
     }
   }, [brand?.fonts.files]);
 
+  // La marca se guarda sola (igual que la configuración de cada proyecto).
+  useEffect(() => {
+    if (!brand) return;
+    const body = JSON.stringify(brand);
+    if (body === saved) return;
+    const t = setTimeout(async () => {
+      setSaving("saving");
+      try {
+        const r = await api<{ brand: Brand }>("/api/brand", { method: "POST", body });
+        setBrand(r.brand);
+        setSaved(JSON.stringify(r.brand));
+        setSaving("saved");
+      } catch (e) {
+        setMsg((e as Error).message);
+        setSaving("error");
+      }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [brand, saved]);
+
   if (!brand) return <div className="p-10 text-neutral-500">Cargando…</div>;
   const dirty = JSON.stringify(brand) !== saved;
   const families = Array.from(new Set([...(brand.fonts.files ?? []).map((f) => f.family), "Futura", "Helvetica Neue", "Inter"]));
 
-  const save = async () => {
-    setBusy(true);
-    try {
-      const r = await api<{ brand: Brand }>("/api/brand", { method: "POST", body: JSON.stringify(brand) });
-      setBrand(r.brand);
-      setSaved(JSON.stringify(r.brand));
-      setMsg("Marca guardada. Se usa en los próximos renders y escenas.");
-    } catch (e) {
-      setMsg((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const upload = async (url: string, f: File, ok: string) => {
-    setBusy(true);
     setMsg(`Subiendo ${f.name}…`);
     try {
       await uploadFile(url, f, () => {});
@@ -88,8 +93,6 @@ export default function BrandPage() {
       setMsg(ok);
     } catch (e) {
       setMsg((e as Error).message);
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -103,9 +106,9 @@ export default function BrandPage() {
             (subtítulos, escenas de HyperFrames y montaje).
           </p>
         </div>
-        <Button variant="primary" disabled={!dirty || busy} onClick={save}>
-          Guardar cambios
-        </Button>
+        <span className={`text-[11px] ${saving === "error" ? "text-red-300" : "text-neutral-500"}`}>
+          {saving === "saving" || dirty ? "Guardando…" : saving === "error" ? "No se pudo guardar" : "Se guarda solo"}
+        </span>
       </div>
       {msg ? <p className="text-[13px] text-neutral-300">{msg}</p> : null}
 
@@ -221,7 +224,7 @@ export default function BrandPage() {
         </div>
       </div>
 
-      <SavedBrands actual={brand.name} pendiente={dirty} onUsar={load} />
+      <SavedBrands actual={brand.name} pendiente={dirty || saving === "saving"} onUsar={load} />
 
     </div>
   );

@@ -106,19 +106,16 @@ export const SavedBrands = ({
           />
           <Button variant="primary" onClick={() => void guardar()} disabled={busy || pendiente || !limpio}>
             {busy ? <Spinner /> : null}
-            {existente ? "Actualizar" : "Guardar como marca nueva"}
+            Guardar marca
           </Button>
         </div>
         <p className="text-[11px] text-neutral-500">
-          Es una copia: la marca que estás usando no cambia de nombre. Si escribís un nombre que ya está en la lista, se
-          reemplaza esa.
+          {existente
+            ? `Ya tenés una marca con ese nombre: se va a reemplazar por la que estás usando.`
+            : "Es una copia: la marca que estás usando ahora no se toca."}
         </p>
 
-        {pendiente ? (
-          <p className="text-[12px] text-amber-300">
-            Tenés cambios sin guardar: tocá “Guardar cambios” arriba y después guardá la marca.
-          </p>
-        ) : null}
+        {pendiente ? <p className="text-[12px] text-neutral-500">Esperá a que termine de guardarse la marca…</p> : null}
 
         {brands === null ? (
           <p className="flex items-center gap-2 text-[13px] text-neutral-500">
