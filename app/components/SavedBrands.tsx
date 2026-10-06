@@ -36,6 +36,10 @@ export const SavedBrands = ({
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [borrar, setBorrar] = useState<SavedBrand | null>(null);
+  // Nombre con el que se va a guardar. Arranca con el de la marca en uso,
+  // pero se puede cambiar para guardar una marca nueva sin tocar la actual.
+  const [nombre, setNombre] = useState(actual);
+  const [tocado, setTocado] = useState(false);
 
   const cargar = async () => {
     try {
@@ -49,6 +53,11 @@ export const SavedBrands = ({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial
     void cargar();
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- seguir a la marca en uso mientras no escriban
+    if (!tocado) setNombre(actual);
+  }, [actual, tocado]);
 
   const llamar = async (body: Record<string, string>, ok: string, despues?: () => void | Promise<void>) => {
     setBusy(true);
@@ -66,22 +75,48 @@ export const SavedBrands = ({
     }
   };
 
-  const yaExiste = brands?.some((b) => b.name.trim().toLowerCase() === actual.trim().toLowerCase());
+  const limpio = nombre.trim();
+  const existente = brands?.find((b) => b.name.trim().toLowerCase() === limpio.toLowerCase());
+
+  const guardar = async () => {
+    await llamar(
+      { action: "guardar", name: limpio },
+      existente ? `Actualizada: ${limpio}.` : `Guardada como ${limpio}. Seguís usando ${actual}.`,
+    );
+    setTocado(false);
+  };
 
   return (
-    <Panel
-      title="Marcas guardadas"
-      right={
-        <Button onClick={() => void llamar({ action: "guardar" }, `Marca guardada: ${actual}.`)} disabled={busy || pendiente}>
-          {busy ? <Spinner /> : null}
-          {yaExiste ? "Actualizar esta marca" : "Guardar la marca actual"}
-        </Button>
-      }
-    >
+    <Panel title="Marcas guardadas">
       <div className="flex flex-col gap-2">
+        <label className="text-[11px] uppercase tracking-wide text-neutral-500">
+          Guardar lo que estás usando ahora como:
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={nombre}
+            onChange={(e) => {
+              setNombre(e.target.value);
+              setTocado(true);
+            }}
+            onKeyDown={(e) => e.key === "Enter" && limpio && !busy && !pendiente && void guardar()}
+            maxLength={60}
+            placeholder="nombre de la marca"
+            className="min-w-[200px] flex-1 rounded-lg border border-line bg-black/30 px-3 py-1.5 text-[13px] outline-none"
+          />
+          <Button variant="primary" onClick={() => void guardar()} disabled={busy || pendiente || !limpio}>
+            {busy ? <Spinner /> : null}
+            {existente ? "Actualizar" : "Guardar como marca nueva"}
+          </Button>
+        </div>
+        <p className="text-[11px] text-neutral-500">
+          Es una copia: la marca que estás usando no cambia de nombre. Si escribís un nombre que ya está en la lista, se
+          reemplaza esa.
+        </p>
+
         {pendiente ? (
           <p className="text-[12px] text-amber-300">
-            Tenés cambios sin guardar: tocá “Guardar cambios” arriba y después guardala como marca.
+            Tenés cambios sin guardar: tocá “Guardar cambios” arriba y después guardá la marca.
           </p>
         ) : null}
 
@@ -91,8 +126,8 @@ export const SavedBrands = ({
           </p>
         ) : brands.length === 0 ? (
           <p className="text-[13px] text-neutral-500">
-            Todavía no guardaste ninguna. Guardá la marca actual y después vas a poder cambiar entre una y otra con un
-            toque: colores, tipografías y logo.
+            Todavía no guardaste ninguna. Poné un nombre arriba y guardala: después vas a poder cambiar entre una y otra
+            con un toque, con sus colores, tipografías y logo.
           </p>
         ) : (
           <ul className="flex flex-col gap-1.5">

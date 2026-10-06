@@ -1,11 +1,11 @@
 {
-  "name": "Mi marca",
+  "name": "León Group",
   "colors": {
-    "primary": "#F0EFEF",
-    "secondary": "#7F9AB1",
-    "background": "#11273E",
+    "primary": "#D69E03",
+    "secondary": "#E2BB4F",
+    "background": "#060502",
     "text": "#FFFFFF",
-    "highlight": "#7F9AB1"
+    "highlight": "#D69E03"
   },
   "fonts": {
     "heading": "Hauora Sans",
@@ -33,5 +33,5 @@
       }
     ]
   },
-  "logo": "logo.jpeg"
+  "logo": "logo.png"
 }
