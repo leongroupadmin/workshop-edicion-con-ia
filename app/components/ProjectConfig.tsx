@@ -200,8 +200,8 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
           ) : (
             <p className="text-[12px] text-neutral-500">
               Todavía no hay música. Buscala en{" "}
-              <a className="text-accent underline" href="/marca">
-                Marca y música
+              <a className="text-accent underline" href="/musica">
+                Música
               </a>{" "}
               (más de 10.000 temas) o dejá que Claude elija una al armar el plan.
             </p>
@@ -209,7 +209,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
         ) : null}
         <p className="text-[11px] text-neutral-500">
           La música baja sola cuando hablás.{" "}
-          <a className="text-accent underline" href="/marca">
+          <a className="text-accent underline" href="/musica">
             Buscar más música
           </a>
         </p>
@@ -242,8 +242,8 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
         </div>
         <p className="text-[11px] text-neutral-500">
           Whoosh, pop, golpes, clicks… los elige Claude en el plan. Podés escucharlos o subir los tuyos en{" "}
-          <a className="text-accent underline" href="/marca">
-            Marca y música
+          <a className="text-accent underline" href="/musica">
+            Música
           </a>
           .
         </p>

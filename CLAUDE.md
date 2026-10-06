@@ -241,7 +241,7 @@ mirá qué archivos ya existen para retomar donde quedó.
   `music.enabled` y `music.track` está vacío, elegí una así y contalo. Después de cada
   render revisá el campo `music` de `versions/vN.json`: si es `null` el video
   salió SIN música; decíselo al usuario (no afirmes que tiene música sin verificarlo)
-  y ofrecé elegir una pista o subirla desde "Marca y música".
+  y ofrecé elegir una pista o subirla desde la pestaña "Música" del panel.
 - **Todo local:** no subir videos ni audios a servicios externos.
 - Al terminar un paso, el estado se ve en `status.json`; los scripts ya lo
   actualizan. Si algo falla, leé `logs/pipeline.log`, arreglalo y reintentá
