@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ColorsFromImage } from "@/components/ColorsFromImage";
 import { MusicSearch } from "@/components/MusicSearch";
-import { Button, Panel } from "@/components/ui";
+import { Button, ConfirmDialog, Panel, TrashIcon } from "@/components/ui";
 import { api, uploadFile } from "@/lib/client";
 import type { Brand } from "@/lib/types";
 
@@ -40,6 +40,8 @@ export default function BrandPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [stamp, setStamp] = useState(0);
+  // Audio que se está por borrar (nombre + si es efecto de sonido)
+  const [borrar, setBorrar] = useState<{ file: string; sfx: boolean } | null>(null);
 
   const load = async () => {
     const r = await api<{ brand: Brand }>("/api/brand");
@@ -247,6 +249,14 @@ export default function BrandPage() {
                   <li key={t} className="flex items-center gap-2 text-[12px]">
                     <span className="flex-1 truncate text-neutral-300">{t}</span>
                     <audio controls preload="none" src={`/api/music?play=${encodeURIComponent(k === "sfx" ? `sfx/${t}` : t)}`} className="h-7 w-48" />
+                    <button
+                      type="button"
+                      aria-label={`Eliminar ${t}`}
+                      onClick={() => setBorrar({ file: t, sfx: k === "sfx" })}
+                      className="shrink-0 text-neutral-500 hover:text-red-300"
+                    >
+                      <TrashIcon />
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -256,6 +266,34 @@ export default function BrandPage() {
           </div>
         ))}
       </Panel>
+
+      {borrar ? (
+        <ConfirmDialog
+          title={`¿Eliminar “${borrar.file}”?`}
+          confirmLabel="Eliminar audio"
+          onClose={() => setBorrar(null)}
+          onConfirm={async () => {
+            const r = await api<{ tracks: string[]; sfx: string[] }>(
+              `/api/music?file=${encodeURIComponent(borrar.file)}${borrar.sfx ? "&sfx=1" : ""}`,
+              { method: "DELETE" },
+            );
+            setMusic({ tracks: r.tracks, sfx: r.sfx });
+            setBorrar(null);
+            setMsg(`Eliminado: ${borrar.file}.`);
+          }}
+        >
+          Va a la <b className="text-neutral-200">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
+          {borrar.sfx ? (
+            <span className="block mt-2">
+              Si algún plan ya lo tenía puesto, ese sonido no va a sonar hasta que elijas otro.
+            </span>
+          ) : (
+            <span className="block mt-2">
+              Los videos ya renderizados no cambian. Si era la música elegida, los videos nuevos arrancan sin música.
+            </span>
+          )}
+        </ConfirmDialog>
+      ) : null}
     </div>
   );
 }

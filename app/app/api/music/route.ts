@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { MUSIC_DIR, fileResponse, safeFilename, safeJoin, saveBody } from "@/lib/server/fsutil";
+import { DEFAULTS_FILE, MUSIC_DIR, fileResponse, moveToTrash, readJson, safeFilename, safeJoin, saveBody, writeJson } from "@/lib/server/fsutil";
+import type { Settings } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -46,4 +47,38 @@ export async function POST(req: Request) {
   const dest = path.join(MUSIC_DIR, sfx ? "sfx" : "", safeFilename(original));
   await saveBody(req, dest);
   return Response.json({ ok: true, file: path.relative(MUSIC_DIR, dest) });
+}
+
+/**
+ * DELETE ?file=ruta (&sfx=1): manda el audio a la Papelera de la Mac. Si era la
+ * música elegida para los videos nuevos, la deja sin elegir.
+ */
+export async function DELETE(req: Request) {
+  const url = new URL(req.url);
+  const rel = url.searchParams.get("file");
+  if (!rel) return Response.json({ error: "Falta el archivo." }, { status: 400 });
+  const sfx = url.searchParams.get("sfx") === "1";
+  let file: string;
+  try {
+    file = safeJoin(MUSIC_DIR, sfx ? `sfx/${rel}` : rel);
+  } catch {
+    return Response.json({ error: "No permitido" }, { status: 403 });
+  }
+  if (!EXTS.includes(path.extname(file).toLowerCase())) {
+    return Response.json({ error: "No permitido" }, { status: 403 });
+  }
+  try {
+    await moveToTrash([file]);
+  } catch (e) {
+    return Response.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+  }
+  if (!sfx) {
+    const defaults = readJson<Partial<Settings>>(DEFAULTS_FILE, {});
+    if (defaults.music?.track === rel) writeJson(DEFAULTS_FILE, { ...defaults, music: { ...defaults.music, track: "" } });
+  }
+  return Response.json({
+    ok: true,
+    tracks: list(MUSIC_DIR).sort(),
+    sfx: list(path.join(MUSIC_DIR, "sfx")).sort(),
+  });
 }
