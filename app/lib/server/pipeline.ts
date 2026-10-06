@@ -22,8 +22,16 @@ contame cuál elegiste). Después resumime el plan en
 pocas líneas y terminá ahí: lo reviso y toco "Renderizar" en el panel (eso lo
 aprueba). No generes escenas todavía.`;
 
-/** El pedido del plan, más la lista de imágenes que subió el usuario (si hay). */
-export const planPrompt = (id: string) => PLAN_BASE.replace("<id>", id) + imagesPromptBlock(id);
+/** Indicaciones libres que escribió el usuario para este video (si hay). */
+const instructionsBlock = (id: string) => {
+  const txt = readSettings(id).instructions?.trim();
+  return txt
+    ? `\n\nIndicaciones del usuario para ESTE video (respetalas en el plan y en cada escena):\n--- inicio ---\n${txt}\n--- fin ---`
+    : "";
+};
+
+/** El pedido del plan, con las imágenes y las indicaciones del usuario (si hay). */
+export const planPrompt = (id: string) => PLAN_BASE.replace("<id>", id) + imagesPromptBlock(id) + instructionsBlock(id);
 
 /** Pasos 1 y 2 (sin Claude) y, si salen bien, Claude propone el plan (paso 3). */
 export const startPrepare = (id: string, autoPlan = true) => {
@@ -129,7 +137,7 @@ export const replanWithStyle = (id: string) => {
     : "";
   return requestPlanChanges(
     id,
-    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.layoutUse y mantené los ítems que sigan sirviendo.`,
+    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.layoutUse y mantené los ítems que sigan sirviendo.${instructionsBlock(id)}`,
     `🎨 Rehacé el plan con ritmo ${PACE_LABELS[pace].toLowerCase()}${graphicsCount ? ` y ${graphicsCount} gráficos` : ""}.`,
   );
 };

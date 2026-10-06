@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { InstructionsField } from "@/components/InstructionsField";
 import { StyleFields } from "@/components/StyleFields";
 import { Row, Seg } from "@/components/ui";
 import { api, uploadFile } from "@/lib/client";
@@ -86,6 +87,10 @@ export default function NewVideo() {
               format={settings.format}
               graphicsWhen="Claude arma el plan con esto"
               videoWhen="Se aplica al cortar y armar el video"
+            />
+            <InstructionsField
+              value={settings.instructions}
+              onChange={(instructions) => setSettings({ ...settings, instructions })}
             />
             <label className="flex items-center gap-2 text-[13px] text-neutral-300">
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />

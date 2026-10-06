@@ -29,6 +29,7 @@ export const describeChanges = (
   if (a.music.track !== b.music.track) out.push(`música: ${b.music.track || "automática"}`);
   if (a.sfx.enabled !== b.sfx.enabled) out.push(b.sfx.enabled ? "con efectos de sonido" : "sin efectos de sonido");
   if (a.sfx.enabled && b.sfx.enabled && a.sfx.volume !== b.sfx.volume) out.push(`efectos al ${Math.round(b.sfx.volume * 100)}%`);
+  if ((a.instructions ?? "") !== (b.instructions ?? "")) out.push(b.instructions?.trim() ? "indicaciones nuevas" : "sin indicaciones");
   const sa = a.style;
   const sb = b.style;
   if (sa.cut !== sb.cut) out.push(`cortes ${CUT_LABELS[sb.cut].toLowerCase()}`);

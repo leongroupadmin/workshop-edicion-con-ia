@@ -207,6 +207,10 @@ export const initScene = async (id: string, itemId: string, force = false) => {
         .join("\n")}\n\nMostralas con \`<img>\` o como fondo, recortadas con \`object-fit: cover\` para que no se deformen.\n`
     : "";
 
+  // Indicaciones libres del usuario (settings.json): valen también para el diseño
+  const extra = settings.instructions?.trim();
+  const instructionsBrief = extra ? `\n## Indicaciones del usuario\n\n${extra}\n` : "";
+
   const durS = Math.max(0.5, Math.round((item.endMs - item.startMs) / 100) / 10);
   const overlay = layout === "overlay";
   const top = settings.style.split.position === "top";
@@ -239,7 +243,7 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   );
   fs.writeFileSync(
     path.join(dir, "BRIEF.md"),
-    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}${imagesBrief}`,
+    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}${imagesBrief}${instructionsBrief}`,
   );
   log(id, `[scene] init ${itemId} (${item.type}, ${durS}s, ${layout}, ${width}x${height})`);
   console.log(`Escena lista para editar: ${path.relative(process.cwd(), path.join(dir, "index.html"))}`);

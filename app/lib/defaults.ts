@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: Settings = {
   subtitles: { style: "karaoke", size: 72, position: "bottom", maxWords: 3, uppercase: false },
   music: { enabled: true, volume: 0.25, duckTo: 0.3, track: "" },
   sfx: { enabled: true, volume: 0.4 },
+  instructions: "",
   style: {
     pace: "normal",
     graphicsCount: 0,

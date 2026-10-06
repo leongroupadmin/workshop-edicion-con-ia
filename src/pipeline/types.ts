@@ -152,6 +152,11 @@ export type Settings = {
     volume: number;
   };
   style: EditStyle;
+  /**
+   * Indicaciones libres del usuario para esta edición (opcional). Claude las
+   * tiene en cuenta al armar el plan y al diseñar las escenas.
+   */
+  instructions: string;
 };
 
 /** Estilo de edición (sección "Estilo de edición" del panel). */
@@ -214,6 +219,7 @@ export const DEFAULT_SETTINGS: Settings = {
     track: "",
   },
   sfx: { enabled: true, volume: 0.4 },
+  instructions: "",
   style: {
     pace: "normal",
     graphicsCount: 0,

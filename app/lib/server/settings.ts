@@ -30,5 +30,7 @@ export const normalizeSettings = (patch: Partial<Settings>, base: Settings): Set
   next.music.volume = Math.max(0, Math.min(1, next.music.volume));
   next.sfx.enabled = Boolean(next.sfx.enabled);
   next.sfx.volume = Math.max(0, Math.min(1, Number(next.sfx.volume) || 0));
+  // Indicaciones libres: texto plano, con un tope para que no desborde el prompt.
+  next.instructions = typeof next.instructions === "string" ? next.instructions.slice(0, 2000) : "";
   return next;
 };

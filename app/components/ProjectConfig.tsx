@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/client";
 import { LAYOUT_USE_LABELS } from "@/lib/defaults";
 import type { ProjectState, Settings } from "@/lib/types";
+import { InstructionsField } from "./InstructionsField";
 import { StyleFields } from "./StyleFields";
 import { Button, Panel, Row, Seg } from "./ui";
 
@@ -260,6 +261,12 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
           layoutUse: s.style.layoutUse !== "auto" && state.plan ? "Cambia también el plan de este video." : undefined,
           cut: state.plan ? "Al renderizar se vuelve a cortar y los tiempos del plan se acomodan solos." : undefined,
         }}
+      />
+
+      <InstructionsField
+        value={s.instructions}
+        onChange={(instructions) => update({ instructions }, 800)}
+        nota={state.plan ? "Si ya hay un plan, pedile por el chat que lo rehaga para que las aplique." : undefined}
       />
 
       {msg ? <p className={`text-[12px] ${msg.error ? "text-red-300" : "text-neutral-300"}`}>{msg.text}</p> : null}

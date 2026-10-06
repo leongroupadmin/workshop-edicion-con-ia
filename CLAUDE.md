@@ -183,6 +183,11 @@ mirá qué archivos ya existen para retomar donde quedó.
 - **Ajustes:** ante un pedido de ajuste, cambiar SOLO lo pedido y re-renderizar
   como nueva versión (`--note` con el pedido). Si el cambio es de una escena,
   re-renderizar solo esa escena y después el montaje.
+- **Indicaciones del usuario (`settings.instructions`):** texto libre que
+  escribe desde el panel ("Indicaciones para Claude", opcional). Si hay algo,
+  respetalo al armar el plan y al diseñar cada escena: viene en el pedido del
+  plan y en el `BRIEF.md` de cada escena. Manda sobre tus criterios por
+  defecto, salvo que choque con las reglas de formato o zona segura.
 - **settings.json:** formato (`vertical|horizontal|square`), subtítulos
   (`style: karaoke|simple|none`, `size`, `position: bottom|middle|top`,
   `maxWords`, `uppercase`), música (`enabled`, `volume`, `duckTo`, `track`) y
