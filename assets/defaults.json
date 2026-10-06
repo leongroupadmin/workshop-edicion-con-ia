@@ -18,11 +18,12 @@
     "enabled": true,
     "volume": 0.4
   },
+  "instructions": "",
   "style": {
     "pace": "dynamic",
     "graphicsCount": 2,
-    "graphics": "corporate",
-    "splitUse": "always",
+    "graphics": "minimal",
+    "layoutUse": "fullscreen",
     "cut": "aggressive",
     "autoZoom": true,
     "split": {
