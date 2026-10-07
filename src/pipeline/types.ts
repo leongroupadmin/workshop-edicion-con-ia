@@ -67,11 +67,45 @@ export type PlanItemType =
  * split: pantalla dividida, escena arriba y video abajo (en horizontal:
  *   escena a la izquierda, video a la derecha).
  */
-export type SceneLayout = "overlay" | "fullscreen" | "split";
+export type SceneLayout = "overlay" | "fullscreen" | "split" | "pip" | "frame";
+
+/**
+ * Layouts donde el gráfico ocupa toda la pantalla y el video se dibuja ENCIMA,
+ * metido en un rectángulo: "pip" (vos chiquito en una esquina) y "frame" (tu
+ * video enmarcado, con lugar para el título arriba y la marca abajo).
+ * La escena se genera a pantalla completa y tiene que dejar ese rectángulo
+ * libre (el BRIEF.md de cada escena dice exactamente dónde cae).
+ */
+export const INSET_LAYOUTS = new Set<SceneLayout>(["pip", "frame"]);
 
 /** Tipos de ítem que llevan una escena de HyperFrames. */
 export const SCENE_TYPES = new Set(["title", "motion_graphic", "overlay", "lower_third", "broll"]);
+/**
+ * Regla de edición: una escena visual necesita tiempo suficiente para leerse.
+ * Aplica a motion, b-rolls, overlays, títulos y lower thirds; no a subtítulos,
+ * transiciones, zooms ni efectos de sonido.
+ */
+export const MIN_SCENE_DURATION_MS = 2_000;
 const OVERLAY_BY_DEFAULT = new Set(["title", "overlay", "lower_third"]);
+
+/**
+ * "Combinado" (layoutUse "mixed"): los gráficos rotan entre los layouts
+ * disponibles sin repetir dos iguales seguidos. Arranca a pantalla completa
+ * porque el primer gráfico es el gancho de los primeros segundos.
+ *
+ * Los gráficos con fotos nunca van en overlay: ahí la foto queda chica y se
+ * desperdicia (ver CLAUDE.md). En ese caso se usa el layout grande que no
+ * repita con el anterior.
+ */
+export const MIXED_ORDER: SceneLayout[] = ["fullscreen", "overlay", "split", "pip", "frame"];
+
+export const mixedLayout = (index: number, hasImages = false, prev?: SceneLayout): SceneLayout => {
+  // Candidatos: la rotación empezando por el que le toca a este gráfico.
+  const turno = index % MIXED_ORDER.length;
+  const candidatos = MIXED_ORDER.map((_, i) => MIXED_ORDER[(turno + i) % MIXED_ORDER.length]);
+  const sirve = (l: SceneLayout) => l !== prev && (!hasImages || l !== "overlay");
+  return candidatos.find(sirve) ?? candidatos.find((l) => l !== prev) ?? candidatos[0];
+};
 
 export const sceneLayout = (it: Pick<PlanItem, "type" | "layout">): SceneLayout =>
   it.layout ?? (OVERLAY_BY_DEFAULT.has(it.type) ? "overlay" : "fullscreen");
@@ -110,6 +144,10 @@ export type PlanItem = {
   status?: "pending" | "approved" | "removed" | "rendered" | "error";
 };
 
+/** Verificación compartida antes de crear o montar cualquier escena visual. */
+export const hasMinimumSceneDuration = (item: Pick<PlanItem, "type" | "startMs" | "endMs">) =>
+  !SCENE_TYPES.has(item.type) || item.endMs - item.startMs >= MIN_SCENE_DURATION_MS;
+
 export type Plan = {
   version: 1;
   status: "draft" | "approved";
@@ -122,10 +160,12 @@ export type Plan = {
 };
 
 export type Format = "vertical" | "horizontal" | "square";
-export type SubtitleStyle = "karaoke" | "simple" | "none";
+export type SubtitleStyle = "karaoke" | "simple" | "pop" | "none";
 export type SubtitlePosition = "bottom" | "middle" | "top";
 
 export type Settings = {
+  /** Proveedor que arma el plan y atiende el chat de este proyecto. */
+  aiProvider: "anthropic" | "openai";
   format: Format;
   fps: number;
   subtitles: {
@@ -177,7 +217,7 @@ export type EditStyle = {
    * - split: siempre en pantalla dividida (gráfico y cara a la vez).
    * - fullscreen: siempre tapando la pantalla, como un b-roll; la voz sigue.
    */
-  layoutUse: "auto" | "overlay" | "split" | "fullscreen";
+  layoutUse: "auto" | "mixed" | "overlay" | "split" | "fullscreen" | "pip" | "frame";
   split: {
     /** Dónde va el gráfico en pantalla dividida: top = arriba (en horizontal, a la izquierda). */
     position: "top" | "bottom";
@@ -203,6 +243,7 @@ export const CUT_PRESETS: Record<
 export const AUTO_ZOOM_SCALE = 1.12;
 
 export const DEFAULT_SETTINGS: Settings = {
+  aiProvider: "anthropic",
   format: "vertical",
   fps: 30,
   subtitles: {
@@ -333,6 +374,7 @@ export type EditProps = {
   plan: Plan | null;
   settings: Settings;
   brand: Brand;
+  brandAssetsPath?: string;
   musicFile: string | null;
   /** Momentos de cut.mp4 (ms) donde hay un corte; los usa el zoom automático. */
   cutPoints?: number[];
@@ -364,5 +406,7 @@ export type ProjectMeta = {
   title: string;
   createdAt: string;
   originalName: string;
+  brandSlug?: string;
+  brandName?: string;
   sessionId?: string;
 };

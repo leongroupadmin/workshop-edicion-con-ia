@@ -16,10 +16,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Brand, EditStyle, Plan, PlanItem, ProjectImage } from "../src/pipeline/types";
-import { FORMAT_SIZE, SCENE_TYPES, sceneLayout, sceneSpecFor, splitSceneSize } from "../src/pipeline/types";
-import { BRAND_DIR, projectPaths } from "./lib/config";
+import { FORMAT_SIZE, hasMinimumSceneDuration, MIN_SCENE_DURATION_MS, SCENE_TYPES, sceneLayout, sceneSpecFor, splitSceneSize } from "../src/pipeline/types";
+import { videoInset } from "../src/edit/layout";
+import { projectPaths } from "./lib/config";
 import { readJson, run, writeJson } from "./lib/media";
-import { loadBrand, loadSettings } from "./lib/project";
+import { loadBrand, loadSettings, projectBrandDir } from "./lib/project";
 import { log, setStatus } from "./lib/status";
 
 const RESOLUTION = { vertical: "portrait", horizontal: "landscape", square: "square" } as const;
@@ -60,26 +61,135 @@ export const GRAPHICS_BRIEF: Record<EditStyle["graphics"], string> = {
     "CORPORATIVO: prolijo y sobrio. Tarjetas limpias con bordes redondeados, íconos simples, jerarquía clara (título + bajada), todo alineado a una grilla. Animaciones de deslizamiento suaves (power3.out), sin efectos llamativos.",
 };
 
-/** Variantes de la plantilla inicial según el estilo de gráficos. */
-const TEMPLATE_STYLE: Record<EditStyle["graphics"], { card: string; title: string; enter: string; ease: string }> = {
+/** Variantes de la plantilla inicial según el estilo de gráficos (solo el look CSS). */
+const TEMPLATE_STYLE: Record<EditStyle["graphics"], { card: string; title: string }> = {
   minimal: {
     card: "padding: 24px 8px; border-bottom: 3px solid var(--brand-primary);",
     title: "font-weight: 600;",
-    enter: "{ opacity: 0, y: 24 }",
-    ease: "power2.out",
   },
   bold: {
     card: "padding: 48px 64px; border-radius: 28px; border: 4px solid var(--brand-primary);",
     title: "font-weight: 800;",
-    enter: "{ opacity: 0, y: 60, scale: 0.92 }",
-    ease: "back.out(1.6)",
   },
   corporate: {
     card: "padding: 40px 56px; border-radius: 20px; border-left: 12px solid var(--brand-primary); background: color-mix(in srgb, var(--brand-text) 8%, var(--brand-bg));",
     title: "font-weight: 700; text-align: left;",
-    enter: "{ opacity: 0, x: -60 }",
-    ease: "power3.out",
   },
+};
+
+/**
+ * Personalidad de movimiento de cada estilo: números fijos para que TODAS las
+ * escenas de un video se muevan igual. Duraciones en segundos, pensadas para
+ * video a 30 fps (no para interfaces: en video el ojo no dispara la animación,
+ * así que son más largas que en una web).
+ *
+ * `enter` es el estado inicial del elemento principal; `ease`/`enterS` cómo y
+ * en cuánto llega; `exitEase`/`exitS` cómo se va (la salida dura ~70% de la
+ * entrada); `stagger` lo que se espera entre un elemento y el siguiente;
+ * `secondary` el retardo de la capa secundaria (sombras, íconos) respecto de
+ * la principal; `settleS` el respiro mínimo entre que termina la salida y
+ * termina la escena.
+ */
+export type MotionStyle = {
+  name: string;
+  enter: string;
+  enterS: number;
+  ease: string;
+  overshoot: string;
+  exitS: number;
+  exitEase: string;
+  exitTo: string;
+  stagger: number;
+  secondary: number;
+  settleS: number;
+};
+
+export const MOTION_STYLE: Record<EditStyle["graphics"], MotionStyle> = {
+  minimal: {
+    name: "sobrio y elegante",
+    enter: "{ opacity: 0, y: 28 }",
+    enterS: 0.6,
+    ease: "power2.out",
+    overshoot: "sin rebote (0%): frena y queda quieto",
+    exitS: 0.4,
+    exitEase: "power2.in",
+    exitTo: "opacity: 0, y: -24",
+    stagger: 0.08,
+    secondary: 0.08,
+    settleS: 0.2,
+  },
+  bold: {
+    name: "con energía",
+    enter: "{ opacity: 0, y: 70, scale: 0.9 }",
+    enterS: 0.4,
+    ease: "back.out(1.7)",
+    overshoot: "rebote marcado (15-25%): se pasa de largo y vuelve",
+    exitS: 0.28,
+    exitEase: "power3.in",
+    exitTo: "opacity: 0, y: -60, scale: 0.94",
+    stagger: 0.05,
+    secondary: 0.05,
+    settleS: 0.2,
+  },
+  corporate: {
+    name: "prolijo y directo",
+    enter: "{ opacity: 0, x: -56 }",
+    enterS: 0.5,
+    ease: "power3.out",
+    overshoot: "casi sin rebote (0-3%): llega y frena limpio",
+    exitS: 0.35,
+    exitEase: "power2.in",
+    exitTo: "opacity: 0, x: 40",
+    stagger: 0.07,
+    secondary: 0.08,
+    settleS: 0.2,
+  },
+};
+
+/**
+ * Criterios de movimiento que van al BRIEF.md de cada escena.
+ * Son los mismos números que usa la plantilla inicial: si se rediseña la
+ * escena a mano, hay que respetarlos para que todas se muevan igual.
+ */
+export const motionBrief = (graphics: EditStyle["graphics"], durS: number): string => {
+  const m = MOTION_STYLE[graphics];
+  const exitAt = Math.max(m.enterS + 0.2, durS - m.settleS - m.exitS);
+  return `
+## Movimiento (respetar estos números)
+
+Personalidad de este video: **${m.name}**. Es la misma en TODAS las escenas: no
+la cambies por escena.
+
+| Qué | Cuánto |
+| --- | --- |
+| Entrada del elemento principal | ${m.enterS}s con \`${m.ease}\`, desde \`${m.enter}\` |
+| Freno | ${m.overshoot} |
+| Salida | ${m.exitS}s con \`${m.exitEase}\` hacia \`{ ${m.exitTo} }\`, arranca en ${exitAt.toFixed(2)}s |
+| Respiro final | al menos ${m.settleS}s entre que termina la salida y termina la escena |
+| Escalonado entre elementos | ${m.stagger}s (total del escalonado: menos de 0.5s) |
+| Retardo de la capa secundaria | ${m.secondary}s después de la principal |
+
+### Los 4 actos (esta escena dura ${durS}s)
+
+1. **Anticipación** — un gesto mínimo antes de la entrada (comprimir, juntar, atenuar el resto).
+2. **Acción** — la entrada del elemento principal: lo que el espectador tiene que leer.
+3. **Reacción** — la capa secundaria responde ${m.secondary}s después (sombra, ícono, línea de acento).
+4. **Resolución** — salida + respiro. Nunca cortar de golpe en el último cuadro.
+
+### Las tres capas (si falta una, la escena se ve plana)
+
+- **Principal**: el texto o dato que se tiene que leer.
+- **Secundaria**: lo que lo acompaña y llega después (sombra, ícono, subrayado, línea).
+- **Ambiente**: vida de fondo, lenta y continua (\`sine.inOut\`, loop suave). Nunca protagonista.
+
+### Control antes de renderizar
+
+1. Nada de \`linear\` para movimiento: solo para rotación continua o barras de progreso.
+2. Ningún cambio importante solo con opacidad: sumarle posición o escala.
+3. Las tres capas presentes.
+4. Como máximo un tercio de los elementos moviéndose a la vez.
+5. La salida termina con el respiro: la escena no corta en movimiento.
+`;
 };
 
 /** Plantilla inicial: título de marca animado. Claude la reemplaza/mejora. */
@@ -93,7 +203,11 @@ const template = (
   graphics: EditStyle["graphics"],
 ) => {
   const look = TEMPLATE_STYLE[graphics];
+  const m = MOTION_STYLE[graphics];
   const text = esc(item.text || item.description.slice(0, 60));
+  // Acto 4 (resolución): la salida tiene que terminar con un respiro antes del final.
+  const exitAt = Math.max(m.enterS + 0.2, durS - m.settleS - m.exitS);
+  const ambientS = Math.max(0.8, (durS - m.settleS) / 2);
   const logo = brand.logo ? `<img id="logo" src="assets/${esc(brand.logo)}" alt="" />` : "";
   return `<!doctype html>
 <html lang="es">
@@ -107,7 +221,9 @@ const template = (
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: ${w}px; height: ${h}px; overflow: hidden; }
       #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
-      .clip { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; }
+      .clip { position: absolute; inset: 0; }
+      /* Todo el contenido vive acá: en overlay esta capa es la que "respira". */
+      #stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; transform-origin: center center; }
       #card {
         ${overlay ? "background: color-mix(in srgb, var(--brand-bg) 85%, transparent);" : ""}
         max-width: ${Math.round(w * 0.82)}px;
@@ -120,20 +236,48 @@ const template = (
       }
       #title em { font-style: normal; color: var(--brand-primary); }
       #logo { width: ${Math.round(Math.min(w, h) * 0.18)}px; height: auto; }
+      /* Capa ambiente (solo con fondo opaco): un halo lento detrás del contenido.
+         En overlay NO va: un degradado grande sobre transparencia se comprime
+         mal (deja franjas de color) y además le taparía la cara a la persona. */
+      ${overlay ? "" : `#ambient {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: ${Math.round(w)}px; height: ${Math.round(h * 0.6)}px;
+        pointer-events: none; filter: blur(70px);
+        background: radial-gradient(ellipse at center, color-mix(in srgb, var(--brand-primary) 22%, transparent) 0%, transparent 62%);
+      }`}
+      /* Capa secundaria: acompaña al elemento principal, llega después */
+      #accent {
+        width: ${Math.round(Math.min(w, h) * 0.22)}px; height: 6px; border-radius: 3px;
+        background: var(--brand-primary); transform-origin: left center;
+      }
     </style>
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="${durS}" data-width="${w}" data-height="${h}">
       <section id="scene" class="clip" data-start="0" data-duration="${durS}" data-track-index="0">
-        ${logo}
-        <div id="card"><h1 id="title">${text}</h1></div>
+        <div id="stage">
+          ${overlay ? "" : '<div id="ambient"></div>'}
+          ${logo}
+          <div id="card"><h1 id="title">${text}</h1></div>
+          <div id="accent"></div>
+        </div>
       </section>
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });
-      tl.fromTo("#card", ${look.enter}, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.5, ease: "${look.ease}" }, 0.05);
-      ${logo ? 'tl.fromTo("#logo", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0);' : ""}
-      tl.to("#card", { opacity: 0, y: -40, duration: 0.35, ease: "power2.in" }, ${Math.max(0.6, durS - 0.4).toFixed(2)});
+      // Capa AMBIENTE: vida lenta y continua, nunca protagonista.
+      tl.fromTo("#stage", { scale: 1 }, { scale: ${overlay ? "1.02" : "1.012"}, duration: ${ambientS.toFixed(2)}, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);
+      ${overlay ? "" : `tl.fromTo("#ambient", { scale: 0.96, opacity: 0.35 }, { scale: 1.05, opacity: 0.7, duration: ${ambientS.toFixed(2)}, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);`}
+      // Capa PRINCIPAL: entra (acto 2) con la personalidad del estilo.
+      tl.fromTo("#card", ${m.enter}, { opacity: 1, x: 0, y: 0, scale: 1, duration: ${m.enterS}, ease: "${m.ease}" }, 0.07);
+      // Capa SECUNDARIA: llega DESPUÉS de la principal (acto 3, reacción).
+      tl.fromTo("#accent", { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: ${(m.enterS * 0.7).toFixed(2)}, ease: "${m.ease}" }, ${(0.07 + m.secondary).toFixed(2)});
+      ${logo ? `tl.fromTo("#logo", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: ${(m.enterS * 0.7).toFixed(2)}, ease: "power3.out" }, ${(0.07 + m.secondary).toFixed(2)});` : ""}
+      // Acto 4: salida (≈70% de la entrada) y respiro de ${m.settleS}s antes del final.
+      tl.to("#accent", { scaleX: 0, opacity: 0, duration: ${(m.exitS * 0.8).toFixed(2)}, ease: "${m.exitEase}" }, ${exitAt.toFixed(2)});
+      tl.to("#card", { ${m.exitTo}, duration: ${m.exitS}, ease: "${m.exitEase}" }, ${exitAt.toFixed(2)});
+      ${logo ? `tl.to("#logo", { opacity: 0, y: -24, duration: ${m.exitS}, ease: "${m.exitEase}" }, ${exitAt.toFixed(2)});` : ""}
+      ${overlay ? "" : `tl.to("#ambient", { opacity: 0, duration: ${m.exitS}, ease: "${m.exitEase}" }, ${exitAt.toFixed(2)});`}
       window.__timelines["main"] = tl;
     </script>
   </body>
@@ -162,6 +306,9 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   const plan = loadPlan(id);
   const item = plan.items.find((i) => i.id === itemId);
   if (!item) throw new Error(`No hay ítem "${itemId}" en plan.json`);
+  if (!hasMinimumSceneDuration(item)) {
+    throw new Error(`La escena ${item.id} dura menos de ${MIN_SCENE_DURATION_MS / 1000} segundos. Ajustá el plan antes de generarla.`);
+  }
   const settings = loadSettings(id);
   const layout = sceneLayout(item);
   const { width, height } =
@@ -180,14 +327,15 @@ export const initScene = async (id: string, itemId: string, force = false) => {
     );
   }
   // Copiar assets de marca (logo + fuentes) dentro de la escena
-  const brand = loadBrand();
+  const brand = loadBrand(id);
+  const brandDir = projectBrandDir(id);
   const assets = path.join(dir, "assets");
   fs.mkdirSync(path.join(assets, "fonts"), { recursive: true });
-  if (brand.logo && fs.existsSync(path.join(BRAND_DIR, brand.logo))) {
-    fs.copyFileSync(path.join(BRAND_DIR, brand.logo), path.join(assets, brand.logo));
+  if (brand.logo && fs.existsSync(path.join(brandDir, brand.logo))) {
+    fs.copyFileSync(path.join(brandDir, brand.logo), path.join(assets, brand.logo));
   } else brand.logo = "";
   for (const f of brand.fonts.files ?? []) {
-    const src = path.join(BRAND_DIR, "fonts", f.file);
+    const src = path.join(brandDir, "fonts", f.file);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(assets, "fonts", f.file));
   }
   // Copiar las imágenes del usuario que use esta escena
@@ -211,7 +359,7 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   const extra = settings.instructions?.trim();
   const instructionsBrief = extra ? `\n## Indicaciones del usuario\n\n${extra}\n` : "";
 
-  const durS = Math.max(0.5, Math.round((item.endMs - item.startMs) / 100) / 10);
+  const durS = Math.max(MIN_SCENE_DURATION_MS / 1000, Math.round((item.endMs - item.startMs) / 100) / 10);
   const overlay = layout === "overlay";
   const top = settings.style.split.position === "top";
   const where =
@@ -222,14 +370,25 @@ export const initScene = async (id: string, itemId: string, force = false) => {
       : top
         ? "de ARRIBA (el video va abajo)"
         : "de ABAJO (el video va arriba)";
+  // pip / frame: la escena ocupa toda la pantalla y el video se dibuja encima,
+  // dentro de este rectángulo. La escena tiene que dejarlo libre.
+  const hueco = layout === "pip" || layout === "frame" ? videoInset(settings.format, width, height, layout) : null;
+  const huecoTxt = hueco
+    ? `x=${hueco.x}, y=${hueco.y}, ${hueco.width}x${hueco.height}px (esquinas redondeadas ${hueco.radius}px)`
+    : "";
   const layoutText = {
     overlay: "overlay (fondo TRANSPARENTE, se renderiza a WebM con alfa)",
     fullscreen: "pantalla completa (MP4, tapa el video; la voz sigue)",
     split: `pantalla dividida: esta escena ocupa la parte ${where}, ${Math.round(settings.style.split.share * 100)}% de la pantalla (MP4 con fondo)`,
+    pip: `la persona en una esquina (MP4 a pantalla completa; su video va chiquito en un recuadro: ${huecoTxt})`,
+    frame: `video enmarcado (MP4 a pantalla completa; su video va en una tarjeta centrada: ${huecoTxt})`,
   }[layout];
+  const pipNota = `El video de la persona se dibuja ENCIMA de esta escena, en ${huecoTxt}. Ese rectángulo tiene que quedar LIBRE: no pongas nada importante ahí, va a quedar tapado. Diseñá alrededor.\n`;
   const layoutNotes = {
     overlay: "Dejar libre la zona de subtítulos (tercio inferior) y la zona segura de Instagram/TikTok.\n",
     fullscreen: "",
+    pip: `${pipNota}El recuadro es chico y va en una esquina: el protagonista es el gráfico. Usá el resto de la pantalla para el contenido.\n`,
+    frame: `${pipNota}Es un marco de marca: dejá el título ARRIBA del rectángulo y el logo o una barra de marca ABAJO. El gráfico enmarca, no tapa.\n`,
     split:
       settings.format === "horizontal"
         ? "Componer para media pantalla. Dejar libre el borde inferior (~120px): ahí van los subtítulos.\n"
@@ -243,7 +402,7 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   );
   fs.writeFileSync(
     path.join(dir, "BRIEF.md"),
-    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}${imagesBrief}${instructionsBrief}`,
+    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}${motionBrief(settings.style.graphics, durS)}${imagesBrief}${instructionsBrief}`,
   );
   log(id, `[scene] init ${itemId} (${item.type}, ${durS}s, ${layout}, ${width}x${height})`);
   console.log(`Escena lista para editar: ${path.relative(process.cwd(), path.join(dir, "index.html"))}`);
@@ -255,6 +414,9 @@ export const renderScene = async (id: string, itemId: string) => {
   const plan = loadPlan(id);
   const item = plan.items.find((i) => i.id === itemId);
   if (!item) throw new Error(`No hay ítem "${itemId}" en plan.json`);
+  if (!hasMinimumSceneDuration(item)) {
+    throw new Error(`La escena ${item.id} dura menos de ${MIN_SCENE_DURATION_MS / 1000} segundos. Ajustá el plan antes de renderizarla.`);
+  }
   const dir = path.join(p.scenesSrc, itemId);
   if (!fs.existsSync(path.join(dir, "index.html"))) throw new Error(`Falta ${dir}/index.html (corré init)`);
   const settings = loadSettings(id);

@@ -1,4 +1,4 @@
-import type { EditStyle, Format, SubtitlePosition } from "../pipeline/types";
+import type { EditStyle, Format, SceneLayout, SubtitlePosition } from "../pipeline/types";
 
 /**
  * Zonas seguras para no tapar la interfaz de Instagram/TikTok.
@@ -66,6 +66,51 @@ export const splitRegions = (
         video: { x: 0, y: 0, width, height: height - sh },
         seam: height - sh,
       };
+};
+
+/**
+ * Dónde cae tu video en los layouts "pip" (una esquina) y "frame" (enmarcado).
+ * El gráfico ocupa toda la pantalla y tiene que dejar este rectángulo libre.
+ *
+ * En vertical el recuadro va ARRIBA a la izquierda a propósito: abajo están
+ * los subtítulos y la interfaz de Instagram/TikTok, y a la derecha los botones
+ * de like y comentarios.
+ */
+export const videoInset = (
+  format: Format,
+  width: number,
+  height: number,
+  layout: "pip" | "frame",
+): Rect & { radius: number; border: number } => {
+  const z = SAFE_ZONES[format];
+  if (layout === "pip") {
+    const w = Math.round(width * (format === "horizontal" ? 0.22 : 0.34));
+    const h = Math.round(w * (format === "horizontal" ? 0.56 : 1.33));
+    return format === "horizontal"
+      ? { x: z.left, y: z.top, width: w, height: h, radius: 20, border: 4 }
+      : { x: z.left, y: z.top, width: w, height: h, radius: 28, border: 5 };
+  }
+  // frame: tarjeta centrada, con aire arriba para el título y abajo para la marca
+  const w = Math.round(width - z.left * 2 - (format === "horizontal" ? 120 : 20));
+  const top = z.top + Math.round(height * (format === "horizontal" ? 0.08 : 0.085));
+  const bottom = height - z.bottom - Math.round(height * 0.1);
+  return {
+    x: Math.round((width - w) / 2),
+    y: top,
+    width: w,
+    height: Math.max(200, bottom - top),
+    radius: format === "horizontal" ? 22 : 32,
+    border: 5,
+  };
+};
+
+/** Tramos (en ms) en los que el video va metido en un rectángulo, y con qué layout. */
+export const insetAt = (
+  items: { startMs: number; endMs: number; layout: SceneLayout }[],
+  t: number,
+): "pip" | "frame" | null => {
+  const hit = items.find((i) => t >= i.startMs && t < i.endMs);
+  return hit && (hit.layout === "pip" || hit.layout === "frame") ? hit.layout : null;
 };
 
 /** Escenas divididas seguidas (o casi) se unen en un solo tramo: la pantalla no vuelve a completa entre ellas. */

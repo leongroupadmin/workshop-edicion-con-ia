@@ -9,10 +9,10 @@ import {
   useVideoConfig,
 } from "remotion";
 import type { EditProps, EditStyle, Format, PlanItem } from "../pipeline/types";
-import { AUTO_ZOOM_SCALE, SCENE_TYPES, sceneLayout } from "../pipeline/types";
+import { AUTO_ZOOM_SCALE, INSET_LAYOUTS, SCENE_TYPES, sceneLayout } from "../pipeline/types";
 import { Captions } from "./Captions";
 import { useBrandFonts } from "./fonts";
-import { autoZoomAt, splitAmount, splitRegions, touchesSplit } from "./layout";
+import { autoZoomAt, insetAt, splitAmount, splitRegions, touchesSplit, videoInset } from "./layout";
 
 const activeItems = (items: PlanItem[]) =>
   items.filter((i) => i.status !== "removed" && i.endMs > i.startMs);
@@ -132,6 +132,49 @@ const SplitScene: React.FC<{
   );
 };
 
+/**
+ * Tu video metido en un rectángulo, dibujado ENCIMA del gráfico a pantalla
+ * completa: "pip" (una esquina) o "frame" (enmarcado).
+ *
+ * Va montado en la línea de tiempo principal (no dentro de un Sequence) para
+ * que siempre muestre el mismo momento que el video de abajo. El audio sale
+ * del video base, por eso acá va en silencio.
+ */
+const InsetVideo: React.FC<{
+  props: EditProps;
+  insets: { startMs: number; endMs: number; layout: ReturnType<typeof sceneLayout> }[];
+}> = ({ props, insets }) => {
+  const frame = useCurrentFrame();
+  const { fps, width, height } = useVideoConfig();
+  const layout = insetAt(insets, (frame / fps) * 1000);
+  if (!layout) return null;
+  const r = videoInset(props.settings.format, width, height, layout);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: r.x,
+        top: r.y,
+        width: r.width,
+        height: r.height,
+        overflow: "hidden",
+        borderRadius: r.radius,
+        backgroundColor: props.brand.colors.background,
+        boxShadow: `0 0 0 ${r.border}px ${props.brand.colors.primary}, 0 24px 60px rgba(0,0,0,0.45)`,
+      }}
+    >
+      <Video
+        name={`Video ${layout}`}
+        src={`${props.baseUrl}/${props.cutVideo}`}
+        muted
+        objectFit="cover"
+        // Encuadre un poco más arriba: en un recuadro chico la cara tiene que quedar centrada
+        style={{ width: "100%", height: "100%", objectPosition: "50% 35%" }}
+      />
+    </div>
+  );
+};
+
 const Transition: React.FC<{ item: PlanItem; color: string }> = ({ item, color }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -159,7 +202,7 @@ const Transition: React.FC<{ item: PlanItem; color: string }> = ({ item, color }
 
 export const Edit: React.FC<EditProps> = (props) => {
   const { fps, durationInFrames, width, height } = useVideoConfig();
-  useBrandFonts(props.brand, props.baseUrl);
+  useBrandFonts(props.brand, props.baseUrl, props.brandAssetsPath);
   const all = useMemo(() => activeItems(props.plan?.items ?? []), [props.plan]);
   const speech = useMemo(() => speechRanges(props.words), [props.words]);
   const f = (ms: number) => Math.round((ms / 1000) * fps);
@@ -169,7 +212,13 @@ export const Edit: React.FC<EditProps> = (props) => {
   const splitScenes = scenes.filter((i) => sceneLayout(i) === "split");
   // Con pantalla dividida no hay transiciones (ni su sonido): corte directo
   const items = all.filter((i) => !(i.type === "transition" && touchesSplit(i, splitScenes)));
-  const fullscreen = scenes.filter((i) => sceneLayout(i) === "fullscreen");
+  // pip y frame también tapan la pantalla: el video se dibuja encima, aparte.
+  const fullscreen = scenes.filter(
+    (i) => sceneLayout(i) === "fullscreen" || INSET_LAYOUTS.has(sceneLayout(i)),
+  );
+  const insets = scenes
+    .filter((i) => INSET_LAYOUTS.has(sceneLayout(i)))
+    .map((i) => ({ startMs: i.startMs, endMs: i.endMs, layout: sceneLayout(i) }));
   const splits = scenes.filter((i) => sceneLayout(i) === "split");
   const overlays = scenes.filter((i) => sceneLayout(i) === "overlay");
   const sounds = props.settings.sfx.enabled ? items.filter((i) => i.sound) : [];
@@ -232,6 +281,8 @@ export const Edit: React.FC<EditProps> = (props) => {
           </AbsoluteFill>
         </Sequence>
       ))}
+
+      {insets.length ? <InsetVideo props={props} insets={insets} /> : null}
 
       {overlays.map((it) => (
         <Sequence

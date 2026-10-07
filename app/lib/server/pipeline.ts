@@ -1,7 +1,7 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
-import { LAYOUT_LABELS, PACE_LABELS, SCENE_TYPES, sceneLayout } from "../defaults";
+import { LAYOUT_LABELS, mixedLayout, PACE_LABELS, SCENE_TYPES, sceneLayout } from "../defaults";
 import type { EditStyle, Plan, PlanItem, SceneLayout } from "../types";
 import { runAgent } from "./agent";
 import { imagesPromptBlock } from "./images";
@@ -10,7 +10,8 @@ import { paths, readPlan, readSettings, writePlan, writeStatus } from "./project
 
 const PLAN_BASE = `El video ya está transcripto y cortado (pasos 1 y 2 listos).
 Hacé el paso 3 del pipeline: leé cut.transcript.json, fijate qué efectos de
-sonido hay en assets/music/sfx y la marca en assets/brand, y escribí
+sonido hay en assets/music/sfx y la marca del proyecto en brand/ (si no existe,
+usá assets/brand como compatibilidad para proyectos anteriores), y escribí
 plan.json en borrador con títulos, motion graphics, overlays, transiciones,
 zooms y efectos (con timestamp y por qué). Respetá el estilo de edición de
 settings.json (style.graphicsCount = cantidad EXACTA de gráficos repartidos
@@ -20,7 +21,9 @@ true y settings.music.track está vacío, elegí la música de fondo según el t
 del video con: npx tsx scripts/music.ts pick <id> "<estilo en inglés>" (y
 contame cuál elegiste). Después resumime el plan en
 pocas líneas y terminá ahí: lo reviso y toco "Renderizar" en el panel (eso lo
-aprueba). No generes escenas todavía.`;
+aprueba). REGLA INVIOLABLE: cada título, motion graphic, overlay, lower third o
+b-roll debe durar al menos 2000 ms. No aplica a subtítulos, transiciones,
+zooms ni efectos de sonido. No generes escenas todavía.`;
 
 /** Indicaciones libres que escribió el usuario para este video (si hay). */
 const instructionsBlock = (id: string) => {
@@ -42,7 +45,7 @@ export const startPrepare = (id: string, autoPlan = true) => {
       runAgent(id, planPrompt(id), {
         kind: "plan",
         role: "system",
-        visibleText: "Video transcripto y cortado. Pidiéndole a Claude el plan de edición…",
+        visibleText: `Video transcripto y cortado. Pidiéndole a ${readSettings(id).aiProvider === "openai" ? "OpenAI" : "Claude"} el plan de edición…`,
       });
     } catch (err) {
       writeStatus(id, "error", "No se pudo pedir el plan", { error: (err as Error).message });
@@ -109,20 +112,27 @@ export const setItemLayout = (id: string, itemId: string, layout: SceneLayout) =
 
 /**
  * Aplica "Cómo se ven los gráficos" al plan actual (todo encima del video, todo
- * en pantalla dividida o todo a pantalla completa). Con "auto" no toca nada:
- * los layouts los eligió Claude. Devuelve cuántos gráficos cambiaron.
+ * en pantalla dividida, todo a pantalla completa, o "combinado": los tres
+ * rotando sin repetir). Con "auto" no toca nada: los layouts los eligió Claude.
+ * Devuelve cuántos gráficos cambiaron.
  */
 export const applyLayoutUse = (id: string, use: EditStyle["layoutUse"]) => {
   const plan = readPlan(id);
   if (!plan || use === "auto") return { changed: 0 };
+  // En "combinado" el orden importa: se rota siguiendo la línea de tiempo.
+  const items = plan.items
+    .filter((i) => SCENE_TYPES.has(i.type) && i.status !== "removed")
+    .sort((a, b) => a.startMs - b.startMs);
   let changed = 0;
-  for (const item of plan.items) {
-    if (!SCENE_TYPES.has(item.type) || item.status === "removed") continue;
+  let prev: SceneLayout | undefined;
+  items.forEach((item, index) => {
     const current = sceneLayout(item);
-    if (use === current) continue;
-    applyLayout(id, plan, item, use);
+    const target = use === "mixed" ? mixedLayout(index, Boolean(item.images?.length), prev) : use;
+    prev = target;
+    if (target === current) return;
+    applyLayout(id, plan, item, target);
     changed++;
-  }
+  });
   if (changed) writePlan(id, plan);
   return { changed };
 };

@@ -23,9 +23,12 @@ const Group = ({ title, when, children }: { title: string; when: string; childre
 
 const LAYOUT_USE_HINT: Record<EditStyle["layoutUse"], string> = {
   auto: "Claude mezcla los tres según el contenido. En el plan lo podés cambiar gráfico por gráfico.",
+  mixed: "Los gráficos rotan entre las cinco formas, sin repetir dos iguales seguidas: pantalla completa, encima del video, pantalla dividida, vos en una esquina y video enmarcado.",
   overlay: "Todos los gráficos van encima del video, sin tapar tu cara.",
   split: "Todos los gráficos van en pantalla dividida: el gráfico y tu cara a la vez.",
   fullscreen: "Cada gráfico tapa la pantalla unos segundos, como un b-roll, y después volvés a aparecer. Tu voz sigue.",
+  pip: "El gráfico ocupa toda la pantalla y vos quedás chiquito en un recuadro arriba a la izquierda.",
+  frame: "Tu video queda enmarcado en una tarjeta, con el título arriba y tu marca abajo.",
 };
 
 export const PACE_HINT: Record<EditStyle["pace"], string> = {
@@ -147,7 +150,7 @@ export const StyleFields = ({
     <div className={`grid grid-cols-1 gap-3 ${stacked ? "" : "lg:grid-cols-2"}`}>
       <Group title="Gráficos" when={graphicsWhen}>
         <Row label="Cómo se ven los gráficos">
-          <Seg value={st.layoutUse} onChange={(layoutUse) => set({ layoutUse })} options={options(LAYOUT_USE_LABELS)} />
+          <Seg value={st.layoutUse} onChange={(layoutUse) => set({ layoutUse })} options={options(LAYOUT_USE_LABELS)} cols={4} />
           <Hint>
             {LAYOUT_USE_HINT[st.layoutUse]}
             {notes.layoutUse ? ` ${notes.layoutUse}` : ""}

@@ -2,6 +2,7 @@ import type { EditStyle, Format, PlanItem, SceneLayout, SceneSpec, Settings } fr
 
 // Mantener en sync con DEFAULT_SETTINGS de /src/pipeline/types.ts
 export const DEFAULT_SETTINGS: Settings = {
+  aiProvider: "anthropic",
   format: "vertical",
   fps: 30,
   subtitles: { style: "karaoke", size: 72, position: "bottom", maxWords: 3, uppercase: false },
@@ -62,9 +63,12 @@ export const GRAPHICS_LABELS: Record<EditStyle["graphics"], string> = {
 
 export const LAYOUT_USE_LABELS: Record<EditStyle["layoutUse"], string> = {
   auto: "Que decida Claude",
+  mixed: "Combinado",
   overlay: "Encima del video",
   split: "Pantalla dividida",
   fullscreen: "Pantalla completa",
+  pip: "Vos en una esquina",
+  frame: "Video enmarcado",
 };
 
 export const CUT_LABELS: Record<EditStyle["cut"], string> = {
@@ -118,6 +122,18 @@ export const TYPE_LABELS: Record<string, string> = {
 // Mantener en sync con SCENE_TYPES / sceneLayout de /src/pipeline/types.ts
 export const SCENE_TYPES = new Set(["title", "motion_graphic", "overlay", "lower_third", "broll"]);
 const OVERLAY_BY_DEFAULT = new Set(["title", "overlay", "lower_third"]);
+// Mantener en sync con mixedLayout de /src/pipeline/types.ts
+export const MIXED_ORDER: SceneLayout[] = ["fullscreen", "overlay", "split", "pip", "frame"];
+
+/** "Combinado": rota los tres layouts sin repetir. Las fotos nunca van en overlay. */
+export const mixedLayout = (index: number, hasImages = false, prev?: SceneLayout): SceneLayout => {
+  // Candidatos: la rotación empezando por el que le toca a este gráfico.
+  const turno = index % MIXED_ORDER.length;
+  const candidatos = MIXED_ORDER.map((_, i) => MIXED_ORDER[(turno + i) % MIXED_ORDER.length]);
+  const sirve = (l: SceneLayout) => l !== prev && (!hasImages || l !== "overlay");
+  return candidatos.find(sirve) ?? candidatos.find((l) => l !== prev) ?? candidatos[0];
+};
+
 export const sceneLayout = (it: Pick<PlanItem, "type" | "layout">): SceneLayout =>
   it.layout ?? (OVERLAY_BY_DEFAULT.has(it.type) ? "overlay" : "fullscreen");
 
@@ -143,4 +159,6 @@ export const LAYOUT_LABELS: Record<SceneLayout, string> = {
   overlay: "Encima del video",
   fullscreen: "Pantalla completa",
   split: "Pantalla dividida",
+  pip: "Vos en una esquina",
+  frame: "Video enmarcado",
 };

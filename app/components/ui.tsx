@@ -27,12 +27,18 @@ export const Seg = <T extends string>({
   value,
   options,
   onChange,
+  /** Si hay muchas opciones, repartirlas en varias filas de `cols` columnas. */
+  cols,
 }: {
   value: T;
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
+  cols?: number;
 }) => (
-  <div className="grid grid-flow-col auto-cols-fr gap-1 bg-black/40 p-1 rounded-lg border border-line">
+  <div
+    className={`grid gap-1 bg-black/40 p-1 rounded-lg border border-line ${cols ? "" : "grid-flow-col auto-cols-fr"}`}
+    style={cols ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined}
+  >
     {options.map((o) => (
       <button
         key={o.value}
@@ -186,7 +192,7 @@ export const LayoutIcon = ({
   horizontal = false,
   className = "w-5 h-8",
 }: {
-  layout: "overlay" | "fullscreen" | "split";
+  layout: "overlay" | "fullscreen" | "split" | "pip" | "frame";
   split?: { position: "top" | "bottom"; share: number };
   horizontal?: boolean;
   className?: string;
@@ -200,6 +206,17 @@ export const LayoutIcon = ({
   if (layout === "fullscreen") {
     graphic = inner;
     video = { ...inner, w: 0, h: 0 };
+  } else if (layout === "pip") {
+    // El gráfico ocupa todo y el video va chiquito arriba a la izquierda
+    graphic = inner;
+    const vw = inner.w * 0.38;
+    video = { x: inner.x + 1.5, y: inner.y + 1.5, w: vw, h: vw * (horizontal ? 0.62 : 1.25) };
+  } else if (layout === "frame") {
+    // El gráfico ocupa todo y el video va enmarcado en el centro
+    graphic = inner;
+    const vw = inner.w * 0.74;
+    const vh = inner.h * (horizontal ? 0.6 : 0.46);
+    video = { x: inner.x + (inner.w - vw) / 2, y: inner.y + inner.h * (horizontal ? 0.2 : 0.26), w: vw, h: vh };
   } else if (layout === "split") {
     const first = split.position === "top";
     if (horizontal) {
@@ -213,24 +230,29 @@ export const LayoutIcon = ({
     }
   }
   const head = Math.min(video.w, video.h) * 0.22;
+  // En "pip" y "frame" el gráfico ocupa toda la pantalla y el video va ENCIMA.
+  const videoArriba = layout === "pip" || layout === "frame";
+  const persona =
+    video.w > 0 ? (
+      <g>
+        <rect x={video.x} y={video.y} width={video.w} height={video.h} rx={1.5} fill="#3f3f46" stroke={videoArriba ? "#0b0b0d" : "none"} strokeWidth={videoArriba ? 0.8 : 0} />
+        <circle cx={video.x + video.w / 2} cy={video.y + video.h * 0.45} r={head} fill="#a1a1aa" />
+        <rect
+          x={video.x + video.w / 2 - head * 1.8}
+          y={video.y + video.h * 0.45 + head * 1.25}
+          width={head * 3.6}
+          height={Math.max(0, video.y + video.h - (video.y + video.h * 0.45 + head * 1.25))}
+          rx={head}
+          fill="#a1a1aa"
+        />
+      </g>
+    ) : null;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={className} aria-hidden>
       <rect x={0.75} y={0.75} width={W - 1.5} height={H - 1.5} rx={3} fill="#0b0b0d" stroke="currentColor" strokeWidth={1.5} />
-      {video.w > 0 ? (
-        <g>
-          <rect x={video.x} y={video.y} width={video.w} height={video.h} rx={1.5} fill="#3f3f46" />
-          <circle cx={video.x + video.w / 2} cy={video.y + video.h * 0.45} r={head} fill="#a1a1aa" />
-          <rect
-            x={video.x + video.w / 2 - head * 1.8}
-            y={video.y + video.h * 0.45 + head * 1.25}
-            width={head * 3.6}
-            height={Math.max(0, video.y + video.h - (video.y + video.h * 0.45 + head * 1.25))}
-            rx={head}
-            fill="#a1a1aa"
-          />
-        </g>
-      ) : null}
+      {videoArriba ? null : persona}
       {graphic ? <rect x={graphic.x} y={graphic.y} width={graphic.w} height={graphic.h} rx={1.5} fill="var(--color-accent)" /> : null}
+      {videoArriba ? persona : null}
       {layout === "overlay" ? (
         <rect x={inner.x + inner.w * 0.15} y={inner.y + inner.h * 0.14} width={inner.w * 0.7} height={inner.h * 0.16} rx={1.5} fill="var(--color-accent)" />
       ) : null}

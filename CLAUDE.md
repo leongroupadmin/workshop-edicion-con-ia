@@ -80,6 +80,22 @@ mirá qué archivos ya existen para retomar donde quedó.
    - En `split` la escena mide media pantalla (1080x960 en vertical): lo dice
      el `BRIEF.md`. Si cambia el layout de una escena ya creada, regenerar la
      plantilla con `scene.ts init <id> <itemId> --force`.
+   - **Respetar la sección "Movimiento" del `BRIEF.md`**: trae la personalidad
+     de movimiento del video (duración de entrada, curva, rebote, salida,
+     escalonado) y es la MISMA para todas las escenas. No inventes otros
+     tiempos por escena: así el video entero se mueve como una sola pieza.
+     Cada escena tiene cuatro actos (anticipación → acción → reacción →
+     resolución) y tres capas (principal + secundaria + ambiente). Si falta
+     la capa secundaria o la de ambiente, la escena se ve plana.
+   - Antes de renderizar, pasá el control de calidad: (1) nada de `linear`
+     para movimiento, solo para rotación continua o barras de progreso;
+     (2) ningún cambio importante solo con opacidad, sumarle posición o
+     escala; (3) las tres capas presentes; (4) como máximo un tercio de los
+     elementos moviéndose a la vez y escalonado total menor a 0.5 s; (5) la
+     salida termina con su respiro, la escena nunca corta en movimiento.
+   - En overlay (fondo transparente) **no uses degradados grandes y suaves**:
+     el WebM con alfa los comprime mal y dejan franjas de color. Ahí el
+     ambiente es movimiento (una respiración lenta del conjunto), no un halo.
    - `npx hyperframes lint <carpeta>` y arreglar errores.
    - `npx tsx scripts/scene.ts render <id> <itemId>` → `scenes/<itemId>.mp4`
      (pantalla completa o dividida) o `.webm` con transparencia (overlay). Actualiza
@@ -124,11 +140,21 @@ mirá qué archivos ya existen para retomar donde quedó.
 ```
 
 - `id` corto y único (`s1`, `t1`, `z1`, `fx1`…). Ordenar por `startMs`.
+- **Regla inviolable de duración:** cada `title`, `motion_graphic`, `overlay`,
+  `lower_third` o `broll` dura **al menos 2000 ms**. No aplica a subtítulos,
+  transiciones, zooms ni efectos de sonido.
 - `layout`: `overlay` = encima del video con fondo transparente (títulos,
   lower thirds, datos chicos); `fullscreen` = inserto que tapa el video
   (motion graphics grandes; la voz sigue); `split` = pantalla dividida:
   escena arriba y video abajo (en horizontal: escena a la izquierda y video a
-  la derecha), ideal para explicar algo sin perder la cara. Si una escena
+  la derecha), ideal para explicar algo sin perder la cara; `pip` = la escena
+  ocupa toda la pantalla y el video de la persona va chiquito en un recuadro
+  (arriba a la izquierda en vertical, para no chocar con los subtítulos ni con
+  la interfaz de Instagram/TikTok); `frame` = la escena ocupa toda la pantalla
+  y el video va enmarcado en una tarjeta centrada, con el título arriba y la
+  marca abajo. En `pip` y `frame` la escena se genera a pantalla completa y
+  **tiene que dejar libre el rectángulo del video**: el `BRIEF.md` dice las
+  coordenadas exactas. La voz sigue sonando en los dos. Si una escena
   fullscreen ya tiene texto propio, poner `hideCaptions: true`. En `split` los
   subtítulos van solos sobre la unión de las dos mitades. El usuario puede
   cambiar el layout de cada escena desde el panel (antes o después de
@@ -220,7 +246,14 @@ mirá qué archivos ya existen para retomar donde quedó.
     video; `split` = todos en pantalla dividida; `fullscreen` = todos tapan la
     pantalla unos segundos, como un b-roll, y después vuelve la cara (la voz
     sigue); `auto` = elegís vos según el contenido y mezclás los tres (ver
-    `layout` arriba). Cuando el usuario lo cambia, el panel ya actualiza el
+    `layout` arriba); `mixed` ("Combinado") = los cinco **rotando en
+    orden**, sin dos iguales seguidos: el gráfico 1 `fullscreen` (es el
+    gancho), el 2 `overlay`, el 3 `split`, el 4 `pip`, el 5 `frame`, el 6
+    `fullscreen`… Es obligatorio, no una
+    sugerencia como `auto`. Única excepción: un gráfico con fotos nunca va en
+    `overlay` (ahí la foto queda chica); si le tocaba `overlay`, va al layout
+    grande que no repita con el anterior. La rotación se cuenta por orden de
+    `startMs`, solo entre ítems con escena. Cuando el usuario lo cambia, el panel ya actualiza el
     plan actual. Antes esto se llamaba `splitUse`: los settings viejos se
     convierten solos (`never`→`overlay`, `always`→`split`).
   - `split` = pantalla dividida: `position` `top|bottom` (en horizontal:
