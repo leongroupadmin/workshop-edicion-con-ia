@@ -15,11 +15,12 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { hasMinimumSceneDuration, MIN_SCENE_DURATION_MS } from "../src/pipeline/types";
 import type { CutsFile, EditProps, Plan, Transcript } from "../src/pipeline/types";
 import { ROOT, projectPaths } from "./lib/config";
 import { startFileServer } from "./lib/fileserver";
 import { probeVideo, readJson, run, writeJson } from "./lib/media";
-import { listVersions, loadBrand, loadSettings, pickMusic } from "./lib/project";
+import { listVersions, loadBrand, loadSettings, pickMusic, projectBrandDir } from "./lib/project";
 import { setStatus } from "./lib/status";
 
 const hashDir = (dir: string, h = crypto.createHash("sha1")) => {
@@ -90,6 +91,10 @@ export const buildProps = async (id: string, baseUrl: string): Promise<EditProps
   const info = await probeVideo(p.cut);
   const settings = loadSettings(id);
   const rawPlan = readJson<Plan | null>(p.plan, null);
+  const invalidScenes = (rawPlan?.items ?? []).filter((item) => item.status !== "removed" && !hasMinimumSceneDuration(item));
+  if (invalidScenes.length) {
+    throw new Error(`El plan contiene escenas visuales de menos de ${MIN_SCENE_DURATION_MS / 1000} segundos. Rehacé el plan antes de renderizar.`);
+  }
   const plan: Plan | null =
     rawPlan && rawPlan.status === "approved"
       ? {
@@ -118,7 +123,8 @@ export const buildProps = async (id: string, baseUrl: string): Promise<EditProps
     words: t.words,
     plan,
     settings,
-    brand: loadBrand(),
+    brand: loadBrand(id),
+    brandAssetsPath: path.relative(ROOT, projectBrandDir(id)).split(path.sep).join("/"),
     musicFile: pickMusic(settings),
     cutPoints: cutPoints(readJson<CutsFile | null>(p.cutsApplied, null) ?? readJson<CutsFile | null>(p.cuts, null)),
   };

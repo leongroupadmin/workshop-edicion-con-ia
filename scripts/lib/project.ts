@@ -24,9 +24,14 @@ export const ensureSettings = (id: string) => {
   if (!fs.existsSync(p.settings)) writeJson(p.settings, loadDefaultSettings());
 };
 
-/** /assets/brand/brand.json (se usa siempre que exista). */
-export const loadBrand = (): Brand => {
-  const b = readJson<Partial<Brand>>(path.join(BRAND_DIR, "brand.json"), {});
+/** Los proyectos anteriores sin marca propia conservan la marca global. */
+export const projectBrandDir = (id?: string) => {
+  const dir = id ? path.join(projectPaths(id).dir, "brand") : BRAND_DIR;
+  return fs.existsSync(path.join(dir, "brand.json")) ? dir : BRAND_DIR;
+};
+
+export const loadBrand = (id?: string): Brand => {
+  const b = readJson<Partial<Brand>>(path.join(projectBrandDir(id), "brand.json"), {});
   return {
     ...DEFAULT_BRAND,
     ...b,

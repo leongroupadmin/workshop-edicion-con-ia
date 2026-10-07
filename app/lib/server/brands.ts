@@ -2,7 +2,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import type { Brand } from "../types";
-import { BRAND_DIR, ROOT, moveToTrash, readJson, safeFilename, writeJson } from "./fsutil";
+import { BRAND_DIR, ROOT, projectDir, moveToTrash, readJson, safeFilename, writeJson } from "./fsutil";
 import { readBrand } from "./brand";
 
 /** Marcas guardadas: cada una con su brand.json, sus tipografías y su logo. */
@@ -64,4 +64,13 @@ export const deleteBrand = async (slug: string) => {
   const dir = dirOf(slug);
   if (!fs.existsSync(dir)) return;
   await moveToTrash([dir]);
+};
+
+/** Congela la marca elegida y sus archivos dentro del proyecto. */
+export const snapshotProjectBrand = (id: string, slug: string) => {
+  const saved = listBrands().find((brand) => brand.slug === slug);
+  if (!saved) throw new Error("La marca seleccionada ya no existe. Elegí otra marca.");
+  const { slug: savedSlug, ...brand } = saved;
+  copyBrand(brand, dirOf(savedSlug), path.join(projectDir(id), "brand"));
+  return brand;
 };

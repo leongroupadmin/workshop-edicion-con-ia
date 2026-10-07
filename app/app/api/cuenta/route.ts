@@ -1,4 +1,4 @@
-import { abrirLogin, cerrarSesion, leerCuenta } from "@/lib/server/cuenta";
+import { abrirLogin, abrirLoginOpenAI, cerrarSesion, leerCuenta, leerCuentaOpenAI } from "@/lib/server/cuenta";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +7,7 @@ const error = (e: unknown) => Response.json({ error: e instanceof Error ? e.mess
 /** GET: con qué cuenta de Claude está funcionando el panel. */
 export async function GET() {
   try {
-    return Response.json({ cuenta: await leerCuenta() });
+    return Response.json({ cuenta: await leerCuenta(), openai: await leerCuentaOpenAI() });
   } catch (e) {
     return error(e);
   }
@@ -24,6 +24,10 @@ export async function POST(req: Request) {
     if (action === "salir") {
       await cerrarSesion();
       return Response.json({ ok: true, cuenta: await leerCuenta() });
+    }
+    if (action === "conectar-openai") {
+      await abrirLoginOpenAI();
+      return Response.json({ ok: true });
     }
     return Response.json({ error: "Acción desconocida." }, { status: 400 });
   } catch (e) {

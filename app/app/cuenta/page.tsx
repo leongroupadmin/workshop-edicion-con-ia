@@ -8,8 +8,10 @@ type Cuenta = { loggedIn: boolean; email: string | null; plan: string | null; vi
 
 export default function CuentaPage() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
+  const [openai, setOpenai] = useState<Cuenta | null>(null);
   const [email, setEmail] = useState("");
   const [esperando, setEsperando] = useState(false);
+  const [esperandoOpenAI, setEsperandoOpenAI] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Email que había cuando empezó el cambio: sirve para saber si ya cambió.
@@ -17,9 +19,10 @@ export default function CuentaPage() {
 
   const cargar = async () => {
     try {
-      const r = await api<{ cuenta: Cuenta }>("/api/cuenta");
+      const r = await api<{ cuenta: Cuenta; openai: Cuenta }>("/api/cuenta");
       setCuenta(r.cuenta);
-      return r.cuenta;
+      setOpenai(r.openai);
+      return r;
     } catch (e) {
       setError(e instanceof Error ? e.message : "No pude leer la cuenta.");
       return null;
@@ -36,7 +39,8 @@ export default function CuentaPage() {
     if (!esperando) return;
     const desde = Date.now();
     const t = setInterval(async () => {
-      const c = await cargar();
+      const r = await cargar();
+      const c = r?.cuenta;
       if (c?.loggedIn && c.email && c.email !== anterior.current) {
         setEsperando(false);
         setMsg(`Listo: el panel ahora usa ${c.email}.`);
@@ -48,6 +52,22 @@ export default function CuentaPage() {
     return () => clearInterval(t);
   }, [esperando]);
 
+  useEffect(() => {
+    if (!esperandoOpenAI) return;
+    const desde = Date.now();
+    const t = setInterval(async () => {
+      const r = await cargar();
+      if (r?.openai.loggedIn) {
+        setEsperandoOpenAI(false);
+        setMsg("Listo: OpenAI quedó conectada con tu cuenta de ChatGPT.");
+      } else if (Date.now() - desde > 5 * 60_000) {
+        setEsperandoOpenAI(false);
+        setMsg("Pasaron 5 minutos y OpenAI no terminó de conectarse. Probá de nuevo.");
+      }
+    }, 2500);
+    return () => clearInterval(t);
+  }, [esperandoOpenAI]);
+
   const cambiar = async () => {
     setError(null);
     setMsg(null);
@@ -57,6 +77,17 @@ export default function CuentaPage() {
       setEsperando(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No pude abrir el login.");
+    }
+  };
+
+  const conectarOpenAI = async () => {
+    setError(null);
+    setMsg(null);
+    try {
+      await api("/api/cuenta", { method: "POST", body: JSON.stringify({ action: "conectar-openai" }) });
+      setEsperandoOpenAI(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No pude abrir el login de OpenAI.");
     }
   };
 
@@ -126,6 +157,30 @@ export default function CuentaPage() {
         Se usa una cuenta por vez. Si tenías una edición corriendo cuando cambiaste, dejala terminar: la cuenta nueva se
         aplica a lo que arranque después.
       </p>
+
+      <div className="border-t border-line pt-5 flex flex-col gap-4">
+        <div>
+          <h2 className="text-[18px] font-semibold tracking-tight">Cuenta de OpenAI</h2>
+          <p className="text-[13px] text-neutral-400 mt-1">Sirve para el plan y el chat cuando elegís OpenAI en un proyecto.</p>
+        </div>
+        <Panel title="Cuenta en uso">
+          <div className="flex flex-col gap-3">
+            {openai === null ? (
+              <div className="flex items-center gap-2 text-[13px] text-neutral-400"><Spinner /> Leyendo…</div>
+            ) : openai.loggedIn ? (
+              <div className="text-[13px] text-emerald-300">Conectada con tu cuenta de ChatGPT mediante Codex.</div>
+            ) : (
+              <div className="text-[13px] text-amber-300">Todavía no hay una cuenta de ChatGPT conectada.</div>
+            )}
+            <div className="border-t border-line pt-3 flex items-center gap-3">
+              <Button variant="primary" onClick={() => void conectarOpenAI()} disabled={esperandoOpenAI}>
+                {esperandoOpenAI ? "Esperando…" : openai?.loggedIn ? "Cambiar cuenta" : "Conectar ChatGPT"}
+              </Button>
+              <p className="text-[12px] text-neutral-500">Se abre una Terminal y después el navegador para autorizar la cuenta.</p>
+            </div>
+          </div>
+        </Panel>
+      </div>
     </div>
   );
 }

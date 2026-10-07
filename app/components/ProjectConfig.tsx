@@ -10,11 +10,25 @@ import { Button, Panel, Row, Seg } from "./ui";
 
 type Saved = { layouts?: { changed: number } };
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-3">
-    <h3 className="text-[13px] font-semibold text-neutral-100">{title}</h3>
-    {children}
-  </div>
+const Section = ({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => (
+  <details open={defaultOpen} className="group rounded-lg border border-line bg-black/15">
+    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-[13px] font-semibold text-neutral-100 [&::-webkit-details-marker]:hidden">
+      {title}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-open:rotate-180"
+        aria-hidden
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </summary>
+    <div className="flex flex-col gap-3 border-t border-line px-3 pb-3 pt-3">{children}</div>
+  </details>
 );
 
 /**
@@ -42,10 +56,10 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
   const save = async (next: Settings, prev: Settings) => {
     setSaving("saving");
     try {
-      const { format, subtitles, music, sfx, style } = next;
+      const { aiProvider, format, subtitles, music, sfx, style } = next;
       const r = await api<Saved>(`/api/projects/${id}/settings`, {
         method: "POST",
-        body: JSON.stringify({ settings: { format, subtitles, music, sfx, style } }),
+        body: JSON.stringify({ settings: { aiProvider, format, subtitles, music, sfx, style } }),
       });
       dirty.current = false;
       setSaving("saved");
@@ -96,7 +110,26 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
       }
       bodyClassName="p-4 flex flex-col gap-5"
     >
-      <Section title="Formato">
+      {state.meta.brandName ? (
+        <Row label="Marca del proyecto">
+          <span className="text-[13px] text-neutral-100">{state.meta.brandName}</span>
+        </Row>
+      ) : null}
+      <Section title="Inteligencia artificial">
+        <Seg
+          value={s.aiProvider}
+          onChange={(aiProvider) => update({ aiProvider })}
+          options={[
+            { value: "anthropic", label: "Claude (Anthropic)" },
+            { value: "openai", label: "OpenAI" },
+          ]}
+        />
+        {s.aiProvider === "openai" ? (
+          <p className="text-[11px] text-neutral-500">Plan y chat usan la cuenta de ChatGPT iniciada en Codex; las escenas de HyperFrames siguen usando Claude.</p>
+        ) : null}
+      </Section>
+
+      <Section title="Formato" defaultOpen>
         <Seg
           value={s.format}
           onChange={(format) => update({ format })}
@@ -108,13 +141,14 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
         />
       </Section>
 
-      <Section title="Subtítulos">
+      <Section title="Subtítulos" defaultOpen>
         <Seg
           value={s.subtitles.style}
           onChange={(style) => sub({ style })}
           options={[
             { value: "karaoke", label: "Karaoke" },
             { value: "simple", label: "Simples" },
+            { value: "pop", label: "Pop" },
             { value: "none", label: "Sin subtítulos" },
           ]}
         />
@@ -249,25 +283,29 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
         </p>
       </Section>
 
-      <StyleFields
-        value={s.style}
-        onChange={(style) => update({ style })}
-        format={s.format}
-        graphicsWhen="Claude los genera al renderizar"
-        videoWhen="Se aplica al renderizar"
-        showPace={false}
-        stacked
-        notes={{
-          layoutUse: s.style.layoutUse !== "auto" && state.plan ? "Cambia también el plan de este video." : undefined,
-          cut: state.plan ? "Al renderizar se vuelve a cortar y los tiempos del plan se acomodan solos." : undefined,
-        }}
-      />
+      <Section title="Edición y gráficos">
+        <StyleFields
+          value={s.style}
+          onChange={(style) => update({ style })}
+          format={s.format}
+          graphicsWhen="Claude los genera al renderizar"
+          videoWhen="Se aplica al renderizar"
+          showPace={false}
+          stacked
+          notes={{
+            layoutUse: s.style.layoutUse !== "auto" && state.plan ? "Cambia también el plan de este video." : undefined,
+            cut: state.plan ? "Al renderizar se vuelve a cortar y los tiempos del plan se acomodan solos." : undefined,
+          }}
+        />
+      </Section>
 
-      <InstructionsField
-        value={s.instructions}
-        onChange={(instructions) => update({ instructions }, 800)}
-        nota={state.plan ? "Si ya hay un plan, pedile por el chat que lo rehaga para que las aplique." : undefined}
-      />
+      <Section title="Instrucciones para la IA">
+        <InstructionsField
+          value={s.instructions}
+          onChange={(instructions) => update({ instructions }, 800)}
+          nota={state.plan ? "Si ya hay un plan, pedile por el chat que lo rehaga para que las aplique." : undefined}
+        />
+      </Section>
 
       {msg ? <p className={`text-[12px] ${msg.error ? "text-red-300" : "text-neutral-300"}`}>{msg.text}</p> : null}
 

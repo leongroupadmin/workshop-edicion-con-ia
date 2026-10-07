@@ -62,6 +62,7 @@ const CaptionPage: React.FC<{
   const fontSize = settings.size * scale;
   const box = captionBox(format, settings.position, width, height, centerY);
   const karaoke = settings.style === "karaoke";
+  const popStyle = settings.style === "pop";
 
   // Entrada de la página
   const enter = interpolate(frame, [0, 5], [0, 1], {
@@ -71,6 +72,7 @@ const CaptionPage: React.FC<{
   });
 
   const active = page.words.reduce((acc, w, i) => (w.startMs <= t ? i : acc), -1);
+  const activeIndex = Math.max(0, active);
 
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
@@ -100,15 +102,15 @@ const CaptionPage: React.FC<{
         {page.words.map((w, i) => {
           const isKeyword = keywords.has(clean(w.text));
           const spoken = i <= active;
-          const isActive = karaoke && i === active;
+          const isActive = (karaoke && i === active) || (popStyle && i === activeIndex);
           const sinceStart = t - w.startMs;
           const pop = isActive
-            ? interpolate(sinceStart, [0, 90, 180], [1, 1.14, 1.08], {
+            ? interpolate(sinceStart, [0, 90, 180], popStyle ? [0.84, 1.2, 1] : [1, 1.14, 1.08], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               })
             : 1;
-          const pill = isKeyword && (!karaoke || spoken);
+          const pill = popStyle || (isKeyword && (!karaoke || spoken));
           const color = pill
             ? brand.colors.background
             : isActive
@@ -118,16 +120,19 @@ const CaptionPage: React.FC<{
             <span
               key={i}
               style={{
-                display: "inline-block",
+                display: popStyle && i !== activeIndex ? "none" : "inline-block",
                 transform: `scale(${pop})`,
+                // El scale no ocupa lugar en el flex: sin este margen, una palabra larga
+                // agrandada se come el espacio y queda pegada a sus vecinas.
+                margin: `0 ${(Math.max(0, pop - 1) * w.text.length * fontSize * 0.6) / 2}px`,
                 color,
                 opacity: karaoke && !spoken ? 0.55 : 1,
-                padding: pill ? `0 ${fontSize * 0.18}px` : 0,
-                borderRadius: fontSize * 0.18,
+                padding: pill ? (popStyle ? `${fontSize * 0.12}px ${fontSize * 0.26}px` : `0 ${fontSize * 0.18}px`) : 0,
+                borderRadius: popStyle ? fontSize * 0.24 : fontSize * 0.18,
                 background: pill ? brand.colors.primary : "transparent",
                 WebkitTextStroke: pill ? undefined : `${fontSize * 0.14}px rgba(0,0,0,0.9)`,
                 paintOrder: "stroke fill",
-                textShadow: pill ? undefined : `0 ${fontSize * 0.06}px ${fontSize * 0.2}px rgba(0,0,0,0.55)`,
+                textShadow: pill ? (popStyle ? `0 ${fontSize * 0.08}px ${fontSize * 0.2}px rgba(0,0,0,0.35)` : undefined) : `0 ${fontSize * 0.06}px ${fontSize * 0.2}px rgba(0,0,0,0.55)`,
               }}
             >
               {w.text}

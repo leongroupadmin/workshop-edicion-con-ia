@@ -40,6 +40,18 @@ export default function ProjectPage() {
     }
   };
 
+  const changeAi = async (aiProvider: "anthropic" | "openai") => {
+    try {
+      await api(`/api/projects/${id}/settings`, {
+        method: "POST",
+        body: JSON.stringify({ settings: { aiProvider } }),
+      });
+      void refresh();
+    } catch (e) {
+      setRetryError(e instanceof Error ? e.message : "No pude cambiar la IA.");
+    }
+  };
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="px-4 h-11 flex items-center gap-3 border-b border-line">
@@ -49,6 +61,18 @@ export default function ProjectPage() {
         <span className="text-neutral-700">/</span>
         <h1 className="font-semibold truncate">{state.meta.title}</h1>
         <span className="text-[11px] text-neutral-600 font-mono truncate">{id}</span>
+        <label className="ml-auto flex items-center gap-2 text-[12px] text-neutral-400 shrink-0">
+          IA
+          <select
+            value={state.settings.aiProvider}
+            onChange={(e) => void changeAi(e.target.value as "anthropic" | "openai")}
+            disabled={busy}
+            className="rounded-md border border-line bg-panel-2 px-2 py-1 text-neutral-100 outline-none focus:border-accent/60 disabled:opacity-50"
+          >
+            <option value="anthropic">Claude</option>
+            <option value="openai">OpenAI</option>
+          </select>
+        </label>
         <Button variant="ghost" className="ml-auto shrink-0 hover:text-red-300" onClick={() => setConfirmDelete(true)}>
           <TrashIcon />
           Eliminar proyecto

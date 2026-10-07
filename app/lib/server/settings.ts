@@ -22,8 +22,9 @@ const cleanStyle = (st: EditStyle, prev: EditStyle): EditStyle => ({
 /** Aplica un cambio parcial de ajustes y deja todo dentro de valores válidos. */
 export const normalizeSettings = (patch: Partial<Settings>, base: Settings): Settings => {
   const next = mergeSettings(patch, base);
+  if (next.aiProvider !== "openai" && next.aiProvider !== "anthropic") next.aiProvider = base.aiProvider;
   if (!["vertical", "horizontal", "square"].includes(next.format)) next.format = base.format;
-  if (!["karaoke", "simple", "none"].includes(next.subtitles.style)) next.subtitles.style = base.subtitles.style;
+  if (!["karaoke", "simple", "pop", "none"].includes(next.subtitles.style)) next.subtitles.style = base.subtitles.style;
   next.style = cleanStyle(next.style, base.style);
   next.subtitles.size = Math.max(32, Math.min(140, Math.round(next.subtitles.size)));
   next.subtitles.maxWords = Math.max(1, Math.min(4, Math.round(next.subtitles.maxWords)));

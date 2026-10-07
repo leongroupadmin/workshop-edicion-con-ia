@@ -37,6 +37,25 @@ npx remotion render
 npx remotion upgrade
 ```
 
+## Proveedor de IA del panel
+
+Claude (Anthropic) sigue siendo el proveedor predeterminado. En cada proyecto,
+el selector **IA** permite usar OpenAI para el plan y el chat sin alterar la
+sesión ni las credenciales de Claude. OpenAI usa la cuenta de ChatGPT ya
+iniciada en Codex CLI, por lo que no hace falta una API key. Verificá o iniciá
+esa sesión con:
+
+```console
+codex login status
+codex login
+```
+
+Por defecto, el panel usa `gpt-5.6-terra` para OpenAI. Opcionalmente,
+`OPENAI_MODEL` en `app/.env.local` permite elegir otro modelo para Codex.
+
+La generación local de escenas para HyperFrames continúa usando Claude, porque
+es el agente que tiene integrado el entorno y las skills de render del proyecto.
+
 ## Docs
 
 Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).

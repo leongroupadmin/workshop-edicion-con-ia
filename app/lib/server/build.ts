@@ -2,6 +2,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { LAYOUT_LABELS, SCENE_TYPES, TYPE_LABELS, sceneLayout, sceneSpecFor } from "../defaults";
+import { hasMinimumSceneDuration, MIN_SCENE_DURATION_MS } from "../types";
 import type { BuildInfo, CutsFile, Plan, PlanItem, ProjectState, SceneSpec, Settings } from "../types";
 import { isBusy, runAgent } from "./agent";
 import { describeChanges } from "./describe";
@@ -135,6 +136,12 @@ NO corras scripts/render.ts: el panel arma el video cuando termines. Al final co
 
 export const build = (id: string) => {
   if (isBusy(id)) throw new Error("Ya hay algo trabajando en este proyecto. Esperá a que termine.");
+  const invalidScenes = (readPlan(id)?.items ?? []).filter((item) => item.status !== "removed" && !hasMinimumSceneDuration(item));
+  if (invalidScenes.length) {
+    throw new Error(
+      `El plan tiene ${invalidScenes.length === 1 ? "una escena" : `${invalidScenes.length} escenas`} de menos de ${MIN_SCENE_DURATION_MS / 1000} segundos. Pedile a la IA que rehaga el plan antes de renderizar.`,
+    );
+  }
   const info = buildInfo(id);
   if (info.mode === "waiting") throw new Error("El video todavía se está preparando (transcripción y corte).");
   const note = !listVersions(id).length

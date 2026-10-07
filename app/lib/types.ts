@@ -20,7 +20,13 @@ export type {
   Word,
 } from "../../src/pipeline/types";
 
-import type { Plan, ProjectMeta, ProjectStatus, Settings } from "../../src/pipeline/types";
+import type { Plan, PlanItem, ProjectMeta, ProjectStatus, Settings } from "../../src/pipeline/types";
+
+/** Mantener en sync con /src/pipeline/types.ts. Vive acá para que Next no cargue código fuera de /app. */
+export const MIN_SCENE_DURATION_MS = 2_000;
+export const SCENE_TYPES = new Set<PlanItem["type"]>(["title", "motion_graphic", "overlay", "lower_third", "broll"]);
+export const hasMinimumSceneDuration = (item: Pick<PlanItem, "type" | "startMs" | "endMs">) =>
+  !SCENE_TYPES.has(item.type) || item.endMs - item.startMs >= MIN_SCENE_DURATION_MS;
 
 export type ChatTool = { name: string; summary: string };
 

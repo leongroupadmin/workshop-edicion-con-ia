@@ -3,7 +3,7 @@ import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS } from "../
 import type { Settings } from "../types";
 
 const FORMAT = { vertical: "vertical", horizontal: "horizontal", square: "cuadrado" } as const;
-const STYLE = { karaoke: "karaoke", simple: "simples", none: "sin subtítulos" } as const;
+const STYLE = { karaoke: "karaoke", simple: "simples", pop: "pop", none: "sin subtítulos" } as const;
 const POS = { bottom: "abajo", middle: "al medio", top: "arriba" } as const;
 
 /**

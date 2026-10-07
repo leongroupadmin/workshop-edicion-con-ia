@@ -5,16 +5,16 @@ import type { Brand } from "../pipeline/types";
 const loaded = new Set<string>();
 
 /** Carga las tipografías de /assets/brand/fonts antes de renderizar. */
-export const useBrandFonts = (brand: Brand, baseUrl: string) => {
+export const useBrandFonts = (brand: Brand, baseUrl: string, assetsPath = "assets/brand") => {
   const [handle] = useState(() => delayRender("Cargando tipografías de marca"));
 
   useEffect(() => {
     const files = brand.fonts.files ?? [];
     Promise.all(
       files.map(async (f) => {
-        const key = `${f.family}|${f.file}|${f.weight ?? "normal"}`;
+        const url = `${baseUrl}/${assetsPath}/fonts/${encodeURIComponent(f.file)}`;
+        const key = `${url}|${f.family}|${f.weight ?? "normal"}`;
         if (loaded.has(key)) return;
-        const url = `${baseUrl}/assets/brand/fonts/${encodeURIComponent(f.file)}`;
         const face = new FontFace(f.family, `url(${url})`, {
           weight: f.weight ? String(f.weight) : "100 900",
         });
@@ -28,7 +28,7 @@ export const useBrandFonts = (brand: Brand, baseUrl: string) => {
         console.warn("No se pudo cargar una tipografía de marca", err);
       })
       .finally(() => continueRender(handle));
-  }, [brand, baseUrl, handle]);
+  }, [brand, baseUrl, assetsPath, handle]);
 };
 
 export const fontStack = (family: string) =>

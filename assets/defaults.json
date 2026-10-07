@@ -1,8 +1,9 @@
 {
+  "aiProvider": "anthropic",
   "format": "vertical",
   "fps": 30,
   "subtitles": {
-    "style": "simple",
+    "style": "none",
     "size": 72,
     "position": "bottom",
     "maxWords": 3,
@@ -20,11 +21,11 @@
   },
   "instructions": "",
   "style": {
-    "pace": "dynamic",
+    "pace": "calm",
     "graphicsCount": 2,
-    "graphics": "minimal",
+    "graphics": "corporate",
     "layoutUse": "fullscreen",
-    "cut": "aggressive",
+    "cut": "soft",
     "autoZoom": true,
     "split": {
       "position": "top",

@@ -49,7 +49,7 @@ export default function Home() {
           <span className="relative mx-auto mb-6 block h-28 w-28 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element -- logo local, sin optimizar */}
             <img
-              src="/clipo-completo.webp"
+              src="/clipo-completo.png"
               alt=""
               className="absolute left-1/2 top-1/2 h-[135%] max-w-none -translate-x-1/2 -translate-y-1/2 mix-blend-screen"
             />

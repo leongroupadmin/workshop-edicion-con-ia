@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <span className="relative block h-8 w-[108px] overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element -- logo local, sin optimizar */}
               <img
-                src="/clipo-horizontal.webp"
+                src="/clipo-horizontal.png"
                 alt="Clipo"
                 className="absolute left-1/2 top-1/2 h-[155%] max-w-none -translate-x-1/2 -translate-y-1/2 mix-blend-screen select-none"
                 draggable={false}

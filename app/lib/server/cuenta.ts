@@ -15,6 +15,8 @@ export type Cuenta = {
   via: string | null;
 };
 
+const codex = () => process.env.CODEX_CLI_PATH || "/Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex";
+
 /** El ejecutable del SDK cambia según el tipo de Mac (arm64 / x64). */
 const binario = (): string => {
   const dir = path.join(ROOT, "app", "node_modules", "@anthropic-ai");
@@ -73,6 +75,38 @@ export const abrirLogin = async (email?: string): Promise<void> => {
         ? `${JSON.stringify(claude)} auth login --email ${JSON.stringify(limpio)}`
         : `${JSON.stringify(claude)} auth login`,
       "printf '\\n  Listo. Volvé al panel: ya se actualiza solo.\\n\\n'",
+      'read -r -p "  Apretá Enter para cerrar esta ventana. " _',
+      "",
+    ].join("\n"),
+    { mode: 0o700 },
+  );
+  await run("/usr/bin/open", ["-a", "Terminal", archivo], { timeout: 15_000 });
+};
+
+/** Estado de la cuenta de ChatGPT que usa Codex CLI, sin exponer credenciales. */
+export const leerCuentaOpenAI = async (): Promise<Cuenta> => {
+  const bin = codex();
+  if (!fs.existsSync(bin)) throw new Error("No encontré Codex CLI en esta Mac.");
+  // Codex CLI escribe el estado en stderr (aunque sea exitoso), por eso
+  // revisamos ambos canales. No incluimos ninguno en la respuesta al navegador.
+  const { stdout, stderr } = await run(bin, ["login", "status"], { timeout: 20_000 });
+  const loggedIn = /logged in using chatgpt/i.test(`${stdout}\n${stderr}`);
+  return { loggedIn, email: null, plan: loggedIn ? "ChatGPT" : null, via: loggedIn ? "sesión de Codex" : null };
+};
+
+/** Abre el login oficial de ChatGPT que administra Codex CLI. */
+export const abrirLoginOpenAI = async (): Promise<void> => {
+  const bin = codex();
+  if (!fs.existsSync(bin)) throw new Error("No encontré Codex CLI en esta Mac.");
+  const archivo = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "cuenta-openai-")), "conectar-openai.command");
+  fs.writeFileSync(
+    archivo,
+    [
+      "#!/bin/bash",
+      "printf '\\n  Conectar cuenta de ChatGPT para el panel\\n  ------------------------------------------\\n\\n'",
+      "printf '  Se abrirá el navegador para que inicies sesión y autorices Codex.\\n\\n'",
+      `${JSON.stringify(bin)} login`,
+      "printf '\\n  Listo. Volvé al panel: esta pantalla se actualiza sola.\\n\\n'",
       'read -r -p "  Apretá Enter para cerrar esta ventana. " _',
       "",
     ].join("\n"),

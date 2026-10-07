@@ -4,12 +4,37 @@
 
 set -e
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
+NPM="$(command -v npm)"
+NODE="$(command -v node)"
+NODE_REAL="$(readlink "$NODE" 2>/dev/null || printf '%s' "$NODE")"
 APP="$HOME/Desktop/Clipo.app"
+AGENTE="$HOME/Library/LaunchAgents/com.clipo.panel.plist"
+UID_ACTUAL="$(id -u)"
 TMP="$(mktemp -d)"
+
+# launchd mantiene el servidor vivo aunque el acceso directo ya haya terminado.
+mkdir -p "$(dirname "$AGENTE")" "$HOME/Library/Logs"
+cat > "$AGENTE" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.clipo.panel</string>
+  <key>ProgramArguments</key><array>
+    <string>$NPM</string><string>run</string><string>panel</string>
+  </array>
+  <key>WorkingDirectory</key><string>$RAIZ</string>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>$(dirname "$NODE_REAL"):$(dirname "$NPM"):/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+  <key>StandardOutPath</key><string>$HOME/Library/Logs/Clipo.log</string>
+  <key>StandardErrorPath</key><string>$HOME/Library/Logs/Clipo.log</string>
+</dict></plist>
+PLIST
+launchctl bootout "gui/$UID_ACTUAL" "$AGENTE" >/dev/null 2>&1 || true
+launchctl bootstrap "gui/$UID_ACTUAL" "$AGENTE"
 
 cat > "$TMP/applet.applescript" <<APPLESCRIPT
 on run
-	do shell script "open -a Terminal " & quoted form of "$RAIZ/scripts/abrir-panel.command"
+	do shell script "launchctl kickstart -kp gui/$UID_ACTUAL/com.clipo.panel"
+	open location "http://localhost:3000"
 end run
 APPLESCRIPT
 

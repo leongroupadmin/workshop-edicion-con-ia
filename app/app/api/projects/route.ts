@@ -1,3 +1,4 @@
+import { listBrands, snapshotProjectBrand } from "@/lib/server/brands";
 import fs from "node:fs";
 import path from "node:path";
 import { saveBody, safeFilename, writeJson } from "@/lib/server/fsutil";
@@ -28,6 +29,10 @@ export async function GET() {
  * x-remember: 1 también queda como predeterminado para los videos nuevos.
  */
 export async function POST(req: Request) {
+  const brandSlug = req.headers.get("x-brand") ?? "";
+  if (!brandSlug || !listBrands().some((brand) => brand.slug === brandSlug)) {
+    return Response.json({ error: "Seleccioná una marca válida antes de crear el proyecto." }, { status: 400 });
+  }
   const original = decodeURIComponent(req.headers.get("x-filename") ?? "video.mp4");
   const ext = path.extname(original).toLowerCase();
   if (!VIDEO_EXTS.includes(ext)) {
@@ -35,12 +40,20 @@ export async function POST(req: Request) {
   }
   const id = newProjectId(original);
   const p = paths(id);
+  let brand;
+  try {
+    brand = snapshotProjectBrand(id, brandSlug);
+  } catch (err) {
+    return Response.json({ error: (err as Error).message }, { status: 400 });
+  }
   fs.mkdirSync(p.raw, { recursive: true });
   writeMeta(id, {
     id,
     title: original.replace(/\.[^.]+$/, ""),
     createdAt: new Date().toISOString(),
     originalName: original,
+    brandSlug,
+    brandName: brand.name,
   });
   let chosen: Partial<Settings> = {};
   try {

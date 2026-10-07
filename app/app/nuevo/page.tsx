@@ -6,7 +6,7 @@ import { InstructionsField } from "@/components/InstructionsField";
 import { StyleFields } from "@/components/StyleFields";
 import { Row, Seg } from "@/components/ui";
 import { api, uploadFile } from "@/lib/client";
-import type { Settings } from "@/lib/types";
+import type { Brand, Settings } from "@/lib/types";
 
 export default function NewVideo() {
   const router = useRouter();
@@ -17,29 +17,39 @@ export default function NewVideo() {
   const [error, setError] = useState<string | null>(null);
   // Cómo querés la edición: arranca con tus ajustes guardados
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [brands, setBrands] = useState<(Brand & { slug: string })[] | null>(null);
+  const [brandSlug, setBrandSlug] = useState("");
+  const uploading = useRef(false);
+  const canUpload = Boolean(settings && brands?.some((brand) => brand.slug === brandSlug) && progress === null);
   const [remember, setRemember] = useState(true);
 
   useEffect(() => {
+    api<{ brands: (Brand & { slug: string })[] }>("/api/brands")
+      .then((result) => setBrands(result.brands))
+      .catch((e) => setError((e as Error).message));
     api<Settings>("/api/defaults")
       .then(setSettings)
       .catch((e) => setError((e as Error).message));
   }, []);
 
   const start = async (f: File) => {
-    if (!settings) return;
+    if (!settings || !canUpload || uploading.current) return;
+    uploading.current = true;
     setFile(f);
     setError(null);
     setProgress(0);
-    const { format, subtitles, style } = settings;
+    const { aiProvider, format, subtitles, style } = settings;
     try {
       const res = await uploadFile("/api/projects", f, setProgress, {
-        "x-settings": encodeURIComponent(JSON.stringify({ format, subtitles, style })),
+        "x-settings": encodeURIComponent(JSON.stringify({ aiProvider, format, subtitles, style })),
+        "x-brand": brandSlug,
         "x-remember": remember ? "1" : "0",
       });
       router.push(`/p/${res.id as string}`);
     } catch (e) {
       setError((e as Error).message);
       setProgress(null);
+      uploading.current = false;
     }
   };
 
@@ -57,7 +67,34 @@ export default function NewVideo() {
         <h2 className="text-[15px] font-semibold">1. Cómo querés la edición</h2>
         {settings ? (
           <>
+            <label className="flex flex-col gap-2 text-[13px]">
+              <span className="font-semibold">Marca · obligatoria</span>
+              <select
+                value={brandSlug}
+                onChange={(e) => setBrandSlug(e.target.value)}
+                required
+                disabled={!brands?.length || progress !== null}
+                className="rounded-lg border border-line bg-panel-2 px-3 py-2 disabled:opacity-50"
+              >
+                <option value="">{brands === null ? "Cargando marcas…" : "Seleccioná una marca"}</option>
+                {brands?.map((brand) => <option key={brand.slug} value={brand.slug}>{brand.name}</option>)}
+              </select>
+              <span className="text-neutral-400">
+                {brands?.length === 0 ? "Todavía no tenés marcas guardadas. " : "Elegí la marca que va a usar este proyecto. "}
+                <a href="/marca" className="text-accent underline">Administrar marcas</a>
+              </span>
+            </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Row label="IA">
+                <Seg
+                  value={settings.aiProvider}
+                  onChange={(aiProvider) => setSettings({ ...settings, aiProvider })}
+                  options={[
+                    { value: "anthropic", label: "Claude" },
+                    { value: "openai", label: "OpenAI" },
+                  ]}
+                />
+              </Row>
               <Row label="Formato">
                 <Seg
                   value={settings.format}
@@ -76,6 +113,7 @@ export default function NewVideo() {
                   options={[
                     { value: "karaoke", label: "Karaoke" },
                     { value: "simple", label: "Simples" },
+                    { value: "pop", label: "Pop" },
                     { value: "none", label: "Sin subtítulos" },
                   ]}
                 />
@@ -97,7 +135,7 @@ export default function NewVideo() {
               Recordar estas opciones para los próximos videos
             </label>
             <p className="text-[12px] text-neutral-500">
-              Todo esto lo podés cambiar después dentro del proyecto. Tamaño de subtítulos y música están en “Ajustes rápidos”.
+              La marca queda guardada en este proyecto. Los ajustes de edición los podés cambiar después. Tamaño de subtítulos y música están en “Ajustes rápidos”.
             </p>
           </>
         ) : (
@@ -110,7 +148,7 @@ export default function NewVideo() {
         <div
           onDragOver={(e) => {
             e.preventDefault();
-            setDrag(true);
+            if (canUpload) setDrag(true);
           }}
           onDragLeave={() => setDrag(false)}
           onDrop={(e) => {
@@ -119,14 +157,24 @@ export default function NewVideo() {
             const f = e.dataTransfer.files[0];
             if (f) void start(f);
           }}
-          onClick={() => progress === null && settings && input.current?.click()}
-          className={`rounded-2xl border-2 border-dashed p-14 text-center cursor-pointer transition ${
+          onClick={() => canUpload && input.current?.click()}
+          role="button"
+          tabIndex={canUpload ? 0 : -1}
+          aria-disabled={!canUpload}
+          onKeyDown={(e) => {
+            if (canUpload && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              input.current?.click();
+            }
+          }}
+          className={`rounded-2xl border-2 border-dashed p-14 text-center transition ${!canUpload ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${
             drag ? "border-accent bg-accent-soft" : "border-line hover:border-neutral-500 bg-panel"
           }`}
         >
           <input
             ref={input}
             type="file"
+            disabled={!canUpload}
             accept="video/*,.mov,.mkv"
             className="hidden"
             onChange={(e) => e.target.files?.[0] && start(e.target.files[0])}
@@ -134,8 +182,8 @@ export default function NewVideo() {
           {progress === null ? (
             <>
               <div className="text-4xl mb-3">🎬</div>
-              <div className="text-lg font-medium">Soltá el video acá</div>
-              <div className="text-neutral-500 mt-1">o hacé click para elegirlo · MP4, MOV, WEBM, MKV</div>
+              <div className="text-lg font-medium">{brandSlug ? "Soltá el video acá" : "Primero seleccioná una marca"}</div>
+              <div className="text-neutral-500 mt-1">{brandSlug ? "o hacé click para elegirlo · MP4, MOV, WEBM, MKV" : "La marca es obligatoria para crear el proyecto."}</div>
             </>
           ) : (
             <div className="max-w-md mx-auto">

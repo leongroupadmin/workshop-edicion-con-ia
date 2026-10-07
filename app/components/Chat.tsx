@@ -76,6 +76,7 @@ const Message = ({ e, live }: { e: ChatEntry; live?: boolean }) => {
 };
 
 export const Chat = ({ id, state, live }: { id: string; state: ProjectState; live: ChatEntry | null }) => {
+  const assistantName = state.settings.aiProvider === "openai" ? "OpenAI" : "Claude";
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -107,11 +108,11 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
     : ["¿Qué cortaste del video?", "Proponé el plan de edición"];
 
   return (
-    <Panel title="Chat con Claude" className="h-full" bodyClassName="flex-1 flex flex-col min-h-0">
+    <Panel title={`Chat con ${assistantName}`} className="h-full" bodyClassName="flex-1 flex flex-col min-h-0">
       <div ref={scroller} className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3">
         {state.chat.length === 0 && !live ? (
           <div className="text-neutral-500 text-[13px] p-2">
-            Escribile a Claude qué querés cambiar del video en lenguaje normal. Recuerda todo lo que hablaron en este proyecto.
+            Escribile a {assistantName} qué querés cambiar del video en lenguaje normal. Recuerda todo lo que hablaron en este proyecto.
           </div>
         ) : null}
         {state.chat.map((e) => (live && e.id === live.id ? null : <Message key={e.id} e={e} />))}
@@ -143,7 +144,7 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
               }
             }}
             rows={2}
-            placeholder={busy ? "Esperá a que termine el proceso actual…" : "Pedile un cambio a Claude…"}
+            placeholder={busy ? "Esperá a que termine el proceso actual…" : `Pedile un cambio a ${assistantName}…`}
             className="flex-1 resize-none bg-panel-2 border border-line rounded-lg px-3 py-2 outline-none focus:border-accent/60"
           />
           <Button variant="primary" onClick={send} disabled={busy || sending || !text.trim()} className="h-[42px] px-4">

@@ -6,18 +6,25 @@ import {
   type SDKMessage,
 } from "@anthropic-ai/claude-agent-sdk";
 import crypto from "node:crypto";
+import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
-import type { ChatEntry, ChatTool } from "../types";
+import { MIN_SCENE_DURATION_MS, SCENE_TYPES } from "../types";
+import type { ChatEntry, ChatTool, Plan, PlanItem } from "../types";
 import { emit, setRunning, store } from "./bus";
 import { ROOT } from "./fsutil";
 import {
   appendChat,
   appendLog,
   listVersions,
+  paths,
+  readChat,
   readMeta,
   readPlan,
+  readSettings,
   readStatus,
   writeMeta,
+  writePlan,
   writeStatus,
 } from "./projects";
 
@@ -53,6 +60,7 @@ Estás atendiendo el chat del panel de edición para el proyecto \`${id}\`
   El panel muestra las versiones solo; no hace falta que pases rutas.
 - Si necesitás una decisión o un archivo del usuario, preguntalo en el texto
   y terminá el turno (no hay diálogos interactivos).
+- La marca de este proyecto está en \`projects/${id}/brand/\`: usá sus colores, logo y fuentes. Solo si esa carpeta no existe, usá \`assets/brand/\`.
 - Trabajá solo dentro de este repo. No borres ni pises versions/ ni raw/.
 - Escribí SIEMPRE en español, también los comentarios cortos entre pasos.
 - Antes de contar qué tiene una versión, verificalo (p.ej. \`music\` en
@@ -126,6 +134,11 @@ export const runAgent = (
     onDone?: (error: string | null) => void;
   } = {},
 ) => {
+  // La generación de escenas conserva el agente de Claude: es el que hoy tiene
+  // el entorno local, las skills de HyperFrames y los permisos acotados para
+  // crear los archivos que después usa Remotion. Plan y chat sí respetan el
+  // proveedor elegido en la configuración del proyecto.
+  if (readSettings(id).aiProvider === "openai" && opts.kind !== "approve") return runOpenAiAgent(id, text, opts);
   if (isBusy(id)) throw new Error("Claude o un render ya están trabajando en este proyecto. Esperá a que termine.");
   const kind = opts.kind ?? "chat";
 
@@ -263,13 +276,197 @@ const consume = async (
   entry.text = entry.text.trim();
 };
 
-/** Deja status.json coherente con lo que pasó en el turno de Claude. */
+/**
+ * Implementación separada para OpenAI. No toca la sesión de Claude ni sus
+ * credenciales: usa la sesión de ChatGPT ya iniciada en Codex CLI. No requiere
+ * API key ni lee los tokens; Codex CLI los administra en su propio almacén.
+ * Guardamos el contexto del proyecto localmente para que cada llamada pueda
+ * entender el video y el plan vigente.
+ */
+const CODEX_BIN = process.env.CODEX_CLI_PATH || "/Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex";
+// Terra ofrece buena calidad de planificación con un costo muy inferior a Astra.
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-terra";
+
+type RunOptions = {
+  kind?: AgentKind;
+  visibleText?: string;
+  role?: ChatEntry["role"];
+  onDone?: (error: string | null) => void;
+};
+
+const projectContext = (id: string) => {
+  const p = paths(id);
+  const transcript = fs.existsSync(p.cutTranscript) ? fs.readFileSync(p.cutTranscript, "utf8").slice(0, 50_000) : "(aún no disponible)";
+  const plan = readPlan(id);
+  const history = readChat(id).slice(-12).map((entry) => `${entry.role}: ${entry.text}`).join("\n");
+  return `Proyecto ${id}. Ajustes: ${JSON.stringify(readSettings(id))}\n\nPlan actual: ${JSON.stringify(plan)}\n\nConversación reciente:\n${history}\n\nTranscripción del video ya cortado:\n${transcript}`;
+};
+
+const validPlan = (value: unknown): Plan | null => {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  if (!Array.isArray(raw.items)) return null;
+  const allowed = new Set(["title", "motion_graphic", "overlay", "lower_third", "broll", "transition", "sfx", "zoom"]);
+  const items: PlanItem[] = [];
+  for (const [index, item] of raw.items.entries()) {
+    if (!item || typeof item !== "object") return null;
+    const it = item as Record<string, unknown>;
+    const type = typeof it.type === "string" && allowed.has(it.type) ? it.type as PlanItem["type"] : null;
+    const startMs = Number(it.startMs);
+    const endMs = Number(it.endMs);
+    if (!type || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+    if (SCENE_TYPES.has(type) && endMs - startMs < MIN_SCENE_DURATION_MS) return null;
+    items.push({
+      id: typeof it.id === "string" && /^[a-z0-9_-]+$/i.test(it.id) ? it.id : `item-${index + 1}`,
+      type,
+      startMs: Math.max(0, Math.round(startMs)),
+      endMs: Math.round(endMs),
+      description: typeof it.description === "string" ? it.description.slice(0, 1000) : "",
+      reason: typeof it.reason === "string" ? it.reason.slice(0, 1000) : "",
+      ...(typeof it.text === "string" ? { text: it.text.slice(0, 300) } : {}),
+      ...(it.layout === "overlay" || it.layout === "fullscreen" || it.layout === "split" ? { layout: it.layout } : {}),
+      ...(typeof it.transition === "string" ? { transition: it.transition.slice(0, 80) } : {}),
+      ...(Number.isFinite(Number(it.scale)) ? { scale: Number(it.scale) } : {}),
+      ...(typeof it.hideCaptions === "boolean" ? { hideCaptions: it.hideCaptions } : {}),
+      status: "pending",
+    });
+  }
+  return {
+    version: 1,
+    status: "draft",
+    createdAt: new Date().toISOString(),
+    ...(typeof raw.summary === "string" ? { summary: raw.summary.slice(0, 2000) } : {}),
+    ...(Array.isArray(raw.keywords) ? { keywords: raw.keywords.filter((x): x is string => typeof x === "string").slice(0, 30) } : {}),
+    items,
+  };
+};
+
+/** Codex puede envolver la salida estructurada en un bloque Markdown. */
+const parseOpenAiReply = (raw: string): { reply?: unknown; plan?: unknown } => {
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
+  const candidate = (fenced ?? raw).trim();
+  try {
+    return JSON.parse(candidate) as { reply?: unknown; plan?: unknown };
+  } catch {
+    const start = candidate.indexOf("{");
+    if (start >= 0) {
+      let depth = 0;
+      let quoted = false;
+      let escaped = false;
+      for (let i = start; i < candidate.length; i++) {
+        const char = candidate[i];
+        if (quoted) {
+          if (escaped) escaped = false;
+          else if (char === "\\") escaped = true;
+          else if (char === '"') quoted = false;
+          continue;
+        }
+        if (char === '"') quoted = true;
+        else if (char === "{") depth++;
+        else if (char === "}" && --depth === 0) {
+          return JSON.parse(candidate.slice(start, i + 1)) as { reply?: unknown; plan?: unknown };
+        }
+      }
+    }
+    throw new Error("OpenAI no devolvió una respuesta válida. Reintentá.");
+  }
+};
+
+const openAiRequest = async (instructions: string, input: string, signal: AbortSignal) => {
+  if (!fs.existsSync(CODEX_BIN)) throw new Error("No encontré Codex CLI para usar tu cuenta de ChatGPT.");
+  const prompt = `${instructions}\n\n${input}`;
+  const args = ["exec", "--json", "--ephemeral", "--sandbox", "read-only", "-C", ROOT];
+  args.push("--model", OPENAI_MODEL);
+  args.push(prompt);
+  return await new Promise<string>((resolve, reject) => {
+    const child = spawn(CODEX_BIN, args, { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] });
+    let out = "";
+    let err = "";
+    const stop = () => child.kill("SIGTERM");
+    signal.addEventListener("abort", stop, { once: true });
+    child.stdout.on("data", (chunk: Buffer) => { out += chunk.toString(); });
+    child.stderr.on("data", (chunk: Buffer) => { err += chunk.toString(); });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      signal.removeEventListener("abort", stop);
+      if (signal.aborted) return reject(new Error("Detenido por el usuario."));
+      if (code !== 0) return reject(new Error(err.trim() || `Codex terminó con código ${code}.`));
+      const messages = out
+        .split("\n")
+        .flatMap((line) => {
+          try { return [JSON.parse(line) as { type?: string; item?: { type?: string; text?: string } }]; } catch { return []; }
+        })
+        .filter((event) => event.type === "item.completed" && event.item?.type === "agent_message")
+        .map((event) => event.item?.text ?? "");
+      const text = messages.join("\n").trim();
+      if (!text) return reject(new Error("Codex no devolvió una respuesta."));
+      resolve(text);
+    });
+  });
+};
+
+const runOpenAiAgent = (id: string, text: string, opts: RunOptions = {}) => {
+  if (isBusy(id)) throw new Error("OpenAI o un render ya están trabajando en este proyecto. Esperá a que termine.");
+  const kind = opts.kind ?? "chat";
+  appendChat(id, { id: crypto.randomUUID(), role: opts.role ?? "user", text: opts.visibleText ?? text, createdAt: new Date().toISOString() });
+  const entry: ChatEntry = { id: crypto.randomUUID(), role: "assistant", text: "", createdAt: new Date().toISOString(), tools: [] };
+  store.live.set(id, entry);
+  emit(id, { type: "chat", entry: { ...entry } });
+  const abort = new AbortController();
+  setRunning(id, { kind: "agent", label: "OpenAI está trabajando…", abort: () => abort.abort() });
+  if (kind === "plan") writeStatus(id, "planning", "OpenAI está armando el plan de edición…");
+  if (kind === "changes") writeStatus(id, "planning", "OpenAI está ajustando el plan…");
+  const versionsBefore = listVersions(id).at(-1)?.version ?? 0;
+  void (async () => {
+    try {
+      const wantsPlan = kind === "plan" || kind === "changes";
+      const instructions = `Sos la IA de una app de edición de video. Respondé SIEMPRE con JSON válido, sin Markdown: {"reply":"respuesta breve en español","plan":null}. Si el pedido es armar o cambiar el plan de edición, reemplazá null con el plan completo. El plan debe tener version:1, summary, keywords y items. Cada item requiere id, type, startMs, endMs, description y reason. Usá solo title, motion_graphic, overlay, lower_third, broll, transition, sfx o zoom. REGLA INVIOLABLE: title, motion_graphic, overlay, lower_third y broll deben durar al menos 2000 ms (endMs - startMs >= 2000); no aplica a subtítulos, transiciones, zooms ni efectos de sonido. El plan queda en borrador; no generes escenas ni renderices.${wantsPlan ? " Este pedido exige que plan no sea null." : ""}`;
+      const request = wantsPlan
+        ? "Armá o actualizá el plan de edición usando la transcripción, los ajustes y el plan actual incluidos en el contexto."
+        : text;
+      const context = `${projectContext(id)}\n\nPedido: ${request}`;
+      let parsed = parseOpenAiReply(await openAiRequest(instructions, context, abort.signal));
+      // Algunos turnos de Codex responden el envoltorio de chat con plan:null,
+      // aun cuando el pedido inicial es explícitamente de planificación. En ese
+      // caso hacemos un único repreguntado acotado, con el contrato sin
+      // ambigüedad, antes de marcar el proyecto como fallido.
+      if (wantsPlan && !parsed.plan) {
+        const retryInstructions = `Respondé ÚNICAMENTE JSON válido, sin Markdown ni texto adicional. La respuesta DEBE tener esta forma: {"reply":"resumen breve en español","plan":{"version":1,"summary":"...","keywords":["..."],"items":[...]}}. plan no puede ser null. Cada item exige id, type, startMs, endMs, description y reason. Tipos permitidos: title, motion_graphic, overlay, lower_third, broll, transition, sfx, zoom. REGLA INVIOLABLE: cada title, motion_graphic, overlay, lower_third o broll debe durar 2000 ms o más. Armá ahora el plan completo con el contexto recibido.`;
+        parsed = parseOpenAiReply(await openAiRequest(retryInstructions, context, abort.signal));
+      }
+      if (parsed.plan) {
+        const plan = validPlan(parsed.plan);
+        if (!plan) throw new Error("OpenAI devolvió un plan incompleto. Reintentá.");
+        writePlan(id, plan);
+        entry.tools!.push({ name: "Write", summary: "plan.json" });
+        entry.text = typeof parsed.reply === "string" ? parsed.reply : plan.summary || "Plan actualizado.";
+      } else {
+        if (wantsPlan) throw new Error("OpenAI no devolvió un plan. Reintentá.");
+        entry.text = typeof parsed.reply === "string" ? parsed.reply : "OpenAI no devolvió una respuesta.";
+      }
+      emit(id, { type: "delta", entryId: entry.id, text: entry.text });
+    } catch (err) {
+      entry.error = abort.signal.aborted ? "Detenido por el usuario." : (err as Error).message;
+    } finally {
+      store.live.delete(id);
+      appendChat(id, entry);
+      setRunning(id, null);
+      if (opts.onDone) opts.onDone(entry.error ?? null);
+      else reconcile(id, kind, versionsBefore, entry);
+      emit(id, { type: "refresh" });
+    }
+  })();
+  return entry.id;
+};
+
+/** Deja status.json coherente con lo que pasó en el turno de la IA elegida. */
 const reconcile = (id: string, kind: AgentKind, versionsBefore: number, entry: ChatEntry) => {
+  const provider = readSettings(id).aiProvider === "openai" ? "OpenAI" : "Claude";
   const status = readStatus(id);
   const plan = readPlan(id);
   const versionsNow = listVersions(id).at(-1)?.version ?? 0;
   if (entry.error && status.step !== "error") {
-    writeStatus(id, "error", "Claude no pudo completar el pedido", { error: entry.error });
+    writeStatus(id, "error", `${provider} no pudo completar el pedido`, { error: entry.error });
     return;
   }
   if (status.step === "error") return;
@@ -282,6 +479,6 @@ const reconcile = (id: string, kind: AgentKind, versionsBefore: number, entry: C
     return;
   }
   if (["planning", "generating_scenes", "assembling", "rendering"].includes(status.step)) {
-    writeStatus(id, versionsNow ? "done" : "idle", kind === "plan" ? "Claude no dejó un plan. Pedíselo por el chat." : "Claude terminó.");
+    writeStatus(id, versionsNow ? "done" : "idle", kind === "plan" ? `${provider} no dejó un plan. Pedíselo por el chat.` : `${provider} terminó.`);
   }
 };
