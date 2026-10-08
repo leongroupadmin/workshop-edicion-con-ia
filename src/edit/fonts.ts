@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { continueRender, delayRender } from "remotion";
+import { cancelRender, continueRender, delayRender, staticFile } from "remotion";
 import type { Brand } from "../pipeline/types";
 
 const loaded = new Set<string>();
@@ -33,3 +33,18 @@ export const useBrandFonts = (brand: Brand, baseUrl: string, assetsPath = "asset
 
 export const fontStack = (family: string) =>
   `"${family}", "Futura", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+
+/** Fuente incluida para los énfasis: esperar su carga antes de capturar un frame. */
+export const useCaptionFont = (enabled: boolean) => {
+  const [handle] = useState(() => delayRender("Cargando cursiva de subtítulos"));
+  useEffect(() => {
+    if (!enabled) { continueRender(handle); return; }
+    const face = new FontFace("Clipo Lora", `url(${staticFile("fonts/Lora-Italic.ttf")})`, {
+      style: "italic", weight: "400 700",
+    });
+    face.load().then(() => {
+      document.fonts.add(face);
+      continueRender(handle);
+    }).catch(cancelRender);
+  }, [enabled, handle]);
+};

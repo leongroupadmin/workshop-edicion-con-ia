@@ -1,0 +1,84 @@
+[
+  {
+    "family": "Geist",
+    "file": "Geist[wght].ttf"
+  },
+  {
+    "family": "Inter",
+    "file": "Inter[opsz,wght].ttf"
+  },
+  {
+    "family": "Manrope",
+    "file": "Manrope[wght].ttf"
+  },
+  {
+    "family": "Montserrat",
+    "file": "Montserrat[wght].ttf"
+  },
+  {
+    "family": "Archivo Black",
+    "file": "ArchivoBlack-Regular.ttf",
+    "weight": 400
+  },
+  {
+    "family": "DM Serif Display",
+    "file": "DMSerifDisplay-Regular.ttf",
+    "weight": 400
+  },
+  {
+    "family": "DM Sans",
+    "file": "DMSans[opsz,wght].ttf"
+  },
+  {
+    "family": "Sora",
+    "file": "Sora[wght].ttf"
+  },
+  {
+    "family": "Anton",
+    "file": "Anton-Regular.ttf",
+    "weight": 400
+  },
+  {
+    "family": "Poppins",
+    "file": "Poppins-Regular.ttf",
+    "weight": 400
+  },
+  {
+    "family": "Poppins",
+    "file": "Poppins-SemiBold.ttf",
+    "weight": 600
+  },
+  {
+    "family": "Poppins",
+    "file": "Poppins-Bold.ttf",
+    "weight": 700
+  },
+  {
+    "family": "Poppins",
+    "file": "Poppins-ExtraBold.ttf",
+    "weight": 800
+  },
+  {
+    "family": "Poppins",
+    "file": "Poppins-Black.ttf",
+    "weight": 900
+  },
+  {
+    "family": "Instrument Serif",
+    "file": "InstrumentSerif-Regular.ttf",
+    "weight": 400
+  },
+  {
+    "family": "Space Grotesk",
+    "file": "SpaceGrotesk[wght].ttf"
+  },
+  {
+    "family": "Roboto",
+    "file": "Roboto[wdth,wght].ttf"
+  },
+  {
+    "family": "Bebas Neue",
+    "file": "BebasNeue-Regular.ttf",
+    "weight": 400
+  }
+]

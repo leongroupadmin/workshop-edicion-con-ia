@@ -36,6 +36,7 @@ const hashDir = (dir: string, h = crypto.createHash("sha1")) => {
 const getBundle = async (onProgress: (p: number) => void) => {
   const h = hashDir(path.join(ROOT, "src"));
   h.update(fs.readFileSync(path.join(ROOT, "package.json")));
+  if (fs.existsSync(path.join(ROOT, "public"))) hashDir(path.join(ROOT, "public"), h);
   const outDir = path.join(ROOT, ".cache", `remotion-bundle-${h.digest("hex").slice(0, 12)}`);
   if (fs.existsSync(path.join(outDir, "index.html"))) return outDir;
   fs.mkdirSync(path.dirname(outDir), { recursive: true });

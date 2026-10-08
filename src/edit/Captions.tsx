@@ -8,7 +8,8 @@ import {
   useVideoConfig,
 } from "remotion";
 import type { Brand, Format, Settings, Word } from "../pipeline/types";
-import { fontStack } from "./fonts";
+import { fontStack, useCaptionFont } from "./fonts";
+import { captionAccent } from "./caption-typography";
 import { captionBox } from "./layout";
 
 type Page = { startMs: number; endMs: number; words: Word[] };
@@ -61,8 +62,12 @@ const CaptionPage: React.FC<{
   const scale = Math.min(width, height) / 1080;
   const fontSize = settings.size * scale;
   const box = captionBox(format, settings.position, width, height, centerY);
+  const accentFont = captionAccent(settings, brand);
   const karaoke = settings.style === "karaoke";
   const popStyle = settings.style === "pop";
+  // Minimal: sin contorno grueso ni cápsulas. El movimiento es la palabra
+  // subiendo a su lugar cuando se dice, y un subrayado fino en las clave.
+  const minimal = settings.style === "minimal";
 
   // Entrada de la página
   const enter = interpolate(frame, [0, 5], [0, 1], {
@@ -70,6 +75,15 @@ const CaptionPage: React.FC<{
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
+  // Minimal se va con un desvanecido corto: nunca corta de golpe.
+  const pageFrames = ((page.endMs - page.startMs) / 1000) * fps;
+  const leave = minimal
+    ? interpolate(frame, [pageFrames - 6, pageFrames], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.in(Easing.cubic),
+      })
+    : 1;
 
   const active = page.words.reduce((acc, w, i) => (w.startMs <= t ? i : acc), -1);
   const activeIndex = Math.max(0, active);
@@ -84,7 +98,7 @@ const CaptionPage: React.FC<{
           top: "top" in box ? box.top : undefined,
           bottom: "bottom" in box ? box.bottom : undefined,
           transform: `${"translateY" in box ? `translateY(${box.translateY}) ` : ""}translateY(${(1 - enter) * 20}px)`,
-          opacity: enter,
+          opacity: enter * leave,
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "center",
@@ -92,15 +106,25 @@ const CaptionPage: React.FC<{
           rowGap: fontSize * 0.1,
           columnGap: fontSize * 0.32,
           textAlign: "center",
-          fontFamily: fontStack(brand.fonts.heading),
-          fontWeight: 800,
+          fontFamily: fontStack(brand.fonts[settings.primaryFont ?? "heading"]),
+          fontWeight: minimal ? 700 : 800,
+          letterSpacing: minimal ? fontSize * 0.008 : undefined,
           fontSize,
-          lineHeight: 1.1,
+          lineHeight: minimal ? 1.25 : 1.1,
           textTransform: settings.uppercase ? "uppercase" : "none",
         }}
       >
         {page.words.map((w, i) => {
           const isKeyword = keywords.has(clean(w.text));
+          const accent = settings.mixFonts && isKeyword;
+          const cursive = accent && accentFont.cursive;
+          const typography: React.CSSProperties = accent ? {
+            fontFamily: cursive ? '"Clipo Lora", Georgia, serif' : fontStack(accentFont.family),
+            fontStyle: cursive ? "italic" : "normal",
+            fontWeight: cursive ? 600 : 800,
+            // Dar aire a los trazos inclinados sin variar el tamaño durante la frase.
+            paddingInline: cursive ? "0.06em" : undefined,
+          } : {};
           const spoken = i <= active;
           const isActive = (karaoke && i === active) || (popStyle && i === activeIndex);
           const sinceStart = t - w.startMs;
@@ -110,6 +134,60 @@ const CaptionPage: React.FC<{
                 extrapolateRight: "clamp",
               })
             : 1;
+          if (minimal) {
+            // Cada palabra sube a su lugar cuando se dice (el espacio ya está
+            // reservado, así que la línea no salta), y la clave se subraya sola.
+            const appear = interpolate(sinceStart, [0, 170], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing: Easing.out(Easing.cubic),
+            });
+            const underline = isKeyword
+              ? interpolate(sinceStart, [60, 320], [0, 1], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                  easing: Easing.out(Easing.cubic),
+                })
+              : 0;
+            return (
+              <span
+                key={i}
+                style={{
+                  ...typography,
+                  position: "relative",
+                  display: "inline-block",
+                  transform: `translateY(${(1 - appear) * fontSize * 0.3}px)`,
+                  opacity: appear,
+                  color: isKeyword ? brand.colors.highlight : brand.colors.text,
+                  // Contorno fino: la mitad que el karaoke, pero suficiente para
+                  // que se lea sobre fondos claros (ropa, pared, cielo).
+                  fontWeight: cursive ? 600 : isKeyword ? 800 : undefined,
+                  // Sin contorno: a este peso se comería la letra. Un halo oscuro
+                  // en capas la despega de fondos claros sin ensuciar el dibujo.
+                  textShadow: [
+                    `0 ${fontSize * 0.02}px ${fontSize * 0.05}px rgba(0,0,0,0.85)`,
+                    `0 ${fontSize * 0.05}px ${fontSize * 0.18}px rgba(0,0,0,0.65)`,
+                    `0 0 ${fontSize * 0.45}px rgba(0,0,0,0.45)`,
+                  ].join(", "),
+                }}
+              >
+                {w.text}
+                {isKeyword ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      bottom: -fontSize * 0.12,
+                      height: fontSize * 0.065,
+                      width: `${underline * 100}%`,
+                      borderRadius: fontSize * 0.03,
+                      background: brand.colors.highlight,
+                    }}
+                  />
+                ) : null}
+              </span>
+            );
+          }
           const pill = popStyle || (isKeyword && (!karaoke || spoken));
           const color = pill
             ? brand.colors.background
@@ -120,6 +198,7 @@ const CaptionPage: React.FC<{
             <span
               key={i}
               style={{
+                ...typography,
                 display: popStyle && i !== activeIndex ? "none" : "inline-block",
                 transform: `scale(${pop})`,
                 // El scale no ocupa lugar en el flex: sin este margen, una palabra larga
@@ -130,7 +209,7 @@ const CaptionPage: React.FC<{
                 padding: pill ? (popStyle ? `${fontSize * 0.12}px ${fontSize * 0.26}px` : `0 ${fontSize * 0.18}px`) : 0,
                 borderRadius: popStyle ? fontSize * 0.24 : fontSize * 0.18,
                 background: pill ? brand.colors.primary : "transparent",
-                WebkitTextStroke: pill ? undefined : `${fontSize * 0.14}px rgba(0,0,0,0.9)`,
+                WebkitTextStroke: pill ? undefined : `${fontSize * (cursive ? 0.055 : 0.14)}px rgba(0,0,0,0.9)`,
                 paintOrder: "stroke fill",
                 textShadow: pill ? (popStyle ? `0 ${fontSize * 0.08}px ${fontSize * 0.2}px rgba(0,0,0,0.35)` : undefined) : `0 ${fontSize * 0.06}px ${fontSize * 0.2}px rgba(0,0,0,0.55)`,
               }}
@@ -156,6 +235,7 @@ export const Captions: React.FC<{
   /** Altura de la unión de la pantalla dividida (px). */
   splitSeam?: number;
 }> = ({ words, settings, brand, keywords, format, hiddenRanges, splitRanges = [], splitSeam }) => {
+  useCaptionFont(settings.style !== "none" && !!settings.mixFonts && captionAccent(settings, brand).cursive);
   const { fps } = useVideoConfig();
   const maxWords = Math.max(1, Math.min(4, settings.maxWords));
   const pages = useMemo(() => buildPages(words, maxWords), [words, maxWords]);

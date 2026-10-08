@@ -205,6 +205,12 @@ mirá qué archivos ya existen para retomar donde quedó.
   (`plan.keywords`) resaltadas, máximo 3-4 palabras en pantalla, siempre dentro
   de la zona segura (no tapar la interfaz de Instagram/TikTok). Ver
   `src/edit/Captions.tsx` y `src/edit/layout.ts`.
+  Combinación opcional: `subtitles.mixFonts` (false por defecto), `primaryFont`
+  (heading/body) y `accentFont` (brand/lora/heading/body; brand por defecto). La segunda
+  fuente se aplica solo a `plan.keywords`. `brand.fonts.subtitleAccent` define
+  la fuente de énfasis de la marca (Lora cursiva si falta); activar la combinación
+  selecciona automáticamente esa fuente. Se puede elegir antes de crear el video. Lora cursiva está incluida con su
+  licencia en `public/fonts/` y `app/public/fonts/`.
 - **Marca:** usar siempre `/assets/brand` si existe (`brand.json`, `fonts/`,
   logo). No inventar colores ni tipografías. En `/assets/brands/` hay marcas
   guardadas: el usuario cambia de una a otra desde el panel y eso reemplaza
@@ -218,7 +224,7 @@ mirá qué archivos ya existen para retomar donde quedó.
   plan y en el `BRIEF.md` de cada escena. Manda sobre tus criterios por
   defecto, salvo que choque con las reglas de formato o zona segura.
 - **settings.json:** formato (`vertical|horizontal|square`), subtítulos
-  (`style: karaoke|simple|none`, `size`, `position: bottom|middle|top`,
+  (`style: karaoke|simple|pop|minimal|none`, `size`, `position: bottom|middle|top`,
   `maxWords`, `uppercase`), música (`enabled`, `volume`, `duckTo`, `track`) y
   estilo de edición (`style`, ver abajo). Los ajustes se leen de ahí: para
   cambiarlos, editar `settings.json` y re-renderizar. Si cambia el formato,

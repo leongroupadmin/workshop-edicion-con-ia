@@ -44,12 +44,18 @@ export async function POST(req: Request) {
   return Response.json({ brand });
 }
 
-/** Borrar una tipografía: ?file=nombre.woff2 */
+/** Borrar el logo (?kind=logo) o una tipografía (?file=nombre.woff2). */
 export async function DELETE(req: Request) {
-  const file = new URL(req.url).searchParams.get("file") ?? "";
+  const url = new URL(req.url);
   const brand = readBrand();
-  brand.fonts.files = (brand.fonts.files ?? []).filter((f) => f.file !== file);
-  if (file && /^[\w.-]+$/.test(file)) fs.rmSync(path.join(BRAND_DIR, "fonts", file), { force: true });
+  if (url.searchParams.get("kind") === "logo") {
+    for (const e of LOGO_EXTS) fs.rmSync(path.join(BRAND_DIR, `logo${e}`), { force: true });
+    brand.logo = "";
+  } else {
+    const file = url.searchParams.get("file") ?? "";
+    brand.fonts.files = (brand.fonts.files ?? []).filter((f) => f.file !== file);
+    if (file && /^[\w.-]+$/.test(file)) fs.rmSync(path.join(BRAND_DIR, "fonts", file), { force: true });
+  }
   writeJson(path.join(BRAND_DIR, "brand.json"), brand);
   return Response.json({ brand });
 }

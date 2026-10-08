@@ -3,7 +3,7 @@
   "format": "vertical",
   "fps": 30,
   "subtitles": {
-    "style": "none",
+    "style": "minimal",
     "size": 72,
     "position": "bottom",
     "maxWords": 3,
@@ -21,10 +21,10 @@
   },
   "instructions": "",
   "style": {
-    "pace": "calm",
-    "graphicsCount": 2,
+    "pace": "dynamic",
+    "graphicsCount": 0,
     "graphics": "corporate",
-    "layoutUse": "fullscreen",
+    "layoutUse": "mixed",
     "cut": "soft",
     "autoZoom": true,
     "split": {

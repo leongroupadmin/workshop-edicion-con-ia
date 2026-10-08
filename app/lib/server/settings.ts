@@ -24,7 +24,10 @@ export const normalizeSettings = (patch: Partial<Settings>, base: Settings): Set
   const next = mergeSettings(patch, base);
   if (next.aiProvider !== "openai" && next.aiProvider !== "anthropic") next.aiProvider = base.aiProvider;
   if (!["vertical", "horizontal", "square"].includes(next.format)) next.format = base.format;
-  if (!["karaoke", "simple", "pop", "none"].includes(next.subtitles.style)) next.subtitles.style = base.subtitles.style;
+  if (!["karaoke", "simple", "pop", "minimal", "none"].includes(next.subtitles.style)) next.subtitles.style = base.subtitles.style;
+  next.subtitles.mixFonts = next.subtitles.mixFonts === true;
+  next.subtitles.primaryFont = next.subtitles.primaryFont === "body" ? "body" : "heading";
+  if (!["brand", "lora", "heading", "body"].includes(next.subtitles.accentFont ?? "")) next.subtitles.accentFont = "brand";
   next.style = cleanStyle(next.style, base.style);
   next.subtitles.size = Math.max(32, Math.min(140, Math.round(next.subtitles.size)));
   next.subtitles.maxWords = Math.max(1, Math.min(4, Math.round(next.subtitles.maxWords)));

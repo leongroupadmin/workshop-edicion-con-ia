@@ -5,7 +5,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aiProvider: "anthropic",
   format: "vertical",
   fps: 30,
-  subtitles: { style: "karaoke", size: 72, position: "bottom", maxWords: 3, uppercase: false },
+  subtitles: { style: "karaoke", size: 72, position: "bottom", maxWords: 3, uppercase: false, mixFonts: false, primaryFont: "heading", accentFont: "brand" },
   music: { enabled: true, volume: 0.25, duckTo: 0.3, track: "" },
   sfx: { enabled: true, volume: 0.4 },
   instructions: "",

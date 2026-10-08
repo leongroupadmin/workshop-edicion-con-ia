@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { CaptionTypographyFields } from "@/components/CaptionTypographyFields";
 import { InstructionsField } from "@/components/InstructionsField";
 import { StyleFields } from "@/components/StyleFields";
 import { Row, Seg } from "@/components/ui";
@@ -108,15 +109,21 @@ export default function NewVideo() {
               </Row>
               <Row label="Subtítulos">
                 <Seg
+                  cols={3}
                   value={settings.subtitles.style}
                   onChange={(style) => setSettings({ ...settings, subtitles: { ...settings.subtitles, style } })}
                   options={[
                     { value: "karaoke", label: "Karaoke" },
                     { value: "simple", label: "Simples" },
                     { value: "pop", label: "Pop" },
+                    { value: "minimal", label: "Finos" },
                     { value: "none", label: "Sin subtítulos" },
                   ]}
                 />
+                {settings.subtitles.style !== "none" ? (
+                  <CaptionTypographyFields value={settings.subtitles}
+                    onChange={(patch) => setSettings({ ...settings, subtitles: { ...settings.subtitles, ...patch } })} />
+                ) : null}
               </Row>
             </div>
             <StyleFields
@@ -135,7 +142,7 @@ export default function NewVideo() {
               Recordar estas opciones para los próximos videos
             </label>
             <p className="text-[12px] text-neutral-500">
-              La marca queda guardada en este proyecto. Los ajustes de edición los podés cambiar después. Tamaño de subtítulos y música están en “Ajustes rápidos”.
+              La marca queda guardada en este proyecto. Los ajustes de edición los podés cambiar después. Tamaño de subtítulos y música están en “Configuración” dentro del proyecto.
             </p>
           </>
         ) : (

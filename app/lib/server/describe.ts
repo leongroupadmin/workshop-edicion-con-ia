@@ -3,7 +3,7 @@ import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS } from "../
 import type { Settings } from "../types";
 
 const FORMAT = { vertical: "vertical", horizontal: "horizontal", square: "cuadrado" } as const;
-const STYLE = { karaoke: "karaoke", simple: "simples", pop: "pop", none: "sin subtítulos" } as const;
+const STYLE = { karaoke: "karaoke", simple: "simples", pop: "pop", minimal: "finos", none: "sin subtítulos" } as const;
 const POS = { bottom: "abajo", middle: "al medio", top: "arriba" } as const;
 
 /**
@@ -24,6 +24,9 @@ export const describeChanges = (
   if (a.subtitles.position !== b.subtitles.position) out.push(`subtítulos ${POS[b.subtitles.position]}`);
   if (a.subtitles.maxWords !== b.subtitles.maxWords) out.push(`${b.subtitles.maxWords} palabras por subtítulo`);
   if (a.subtitles.uppercase !== b.subtitles.uppercase) out.push(b.subtitles.uppercase ? "subtítulos en mayúsculas" : "subtítulos en minúsculas");
+  if (!!a.subtitles.mixFonts !== !!b.subtitles.mixFonts) out.push(b.subtitles.mixFonts ? "subtítulos con dos tipografías" : "subtítulos con una tipografía");
+  if ((a.subtitles.primaryFont ?? "heading") !== (b.subtitles.primaryFont ?? "heading")) out.push("tipografía principal de subtítulos");
+  if (b.subtitles.mixFonts && (a.subtitles.accentFont ?? "brand") !== (b.subtitles.accentFont ?? "brand")) out.push("tipografía de palabras clave");
   if (a.music.enabled !== b.music.enabled) out.push(b.music.enabled ? "música activada" : "sin música");
   if (a.music.volume !== b.music.volume) out.push(`música al ${Math.round(b.music.volume * 100)}%`);
   if (a.music.track !== b.music.track) out.push(`música: ${b.music.track || "automática"}`);

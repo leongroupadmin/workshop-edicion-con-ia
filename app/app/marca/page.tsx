@@ -38,11 +38,13 @@ export default function BrandPage() {
   const [saved, setSaved] = useState<string>("");
   const [msg, setMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [library, setLibrary] = useState<Brand["fonts"]["files"]>([]);
   const [stamp, setStamp] = useState(0);
 
   const load = async () => {
-    const r = await api<{ brand: Brand }>("/api/brand");
+    const r = await api<{ brand: Brand; library: Brand["fonts"]["files"] }>("/api/brand");
     setBrand(r.brand);
+    setLibrary(r.library);
     setSaved(JSON.stringify(r.brand));
     setStamp(Date.now());
   };
@@ -53,13 +55,17 @@ export default function BrandPage() {
 
   // Previsualizar las tipografías de marca en esta página
   useEffect(() => {
-    for (const f of brand?.fonts.files ?? []) {
-      const face = new FontFace(f.family, `url(/api/brand/file/fonts/${encodeURIComponent(f.file)})`, {
+    const uploaded = brand?.fonts.files ?? [];
+    const selected = new Set([brand?.fonts.heading, brand?.fonts.body, brand?.fonts.subtitleAccent]);
+    const builtin = library.filter((f) => selected.has(f.family) && !uploaded.some((u) => u.family === f.family));
+    for (const f of [...uploaded, ...builtin]) {
+      const url = builtin.includes(f) ? `/fonts/library/${encodeURIComponent(f.file)}` : `/api/brand/file/fonts/${encodeURIComponent(f.file)}`;
+      const face = new FontFace(f.family, `url(${url})`, {
         weight: f.weight ? String(f.weight) : "100 900",
       });
       face.load().then((ff) => document.fonts.add(ff)).catch(() => {});
     }
-  }, [brand?.fonts.files]);
+  }, [brand?.fonts.files, brand?.fonts.heading, brand?.fonts.body, brand?.fonts.subtitleAccent, library]);
 
   // La marca se guarda sola (igual que la configuración de cada proyecto).
   useEffect(() => {
@@ -83,7 +89,7 @@ export default function BrandPage() {
 
   if (!brand) return <div className="p-10 text-neutral-500">Cargando…</div>;
   const dirty = JSON.stringify(brand) !== saved;
-  const families = Array.from(new Set([...(brand.fonts.files ?? []).map((f) => f.family), "Futura", "Helvetica Neue", "Inter"]));
+  const families = Array.from(new Set([...library.map((f) => f.family), ...(brand.fonts.files ?? []).map((f) => f.family), brand.fonts.heading, brand.fonts.body, brand.fonts.subtitleAccent ?? "Lora cursiva", "Lora cursiva", "Futura", "Helvetica", "Helvetica Neue"]));
 
   const upload = async (url: string, f: File, ok: string) => {
     setMsg(`Subiendo ${f.name}…`);
@@ -133,7 +139,22 @@ export default function BrandPage() {
                   <span className="text-[11px] text-neutral-500">sin logo</span>
                 )}
               </div>
-              <FilePick accept=".png,.svg,.jpg,.jpeg,.webp" label="Subir logo" onFile={(f) => upload("/api/brand/upload?kind=logo", f, "Logo actualizado.")} />
+              <div className="flex flex-col items-start gap-2">
+                <FilePick accept=".png,.svg,.jpg,.jpeg,.webp" label={brand.logo ? "Cambiar logo" : "Subir logo"} onFile={(f) => upload("/api/brand/upload?kind=logo", f, "Logo actualizado.")} />
+                {brand.logo ? (
+                  <button
+                    type="button"
+                    className="text-[12px] text-neutral-500 hover:text-red-300"
+                    onClick={async () => {
+                      await api("/api/brand/upload?kind=logo", { method: "DELETE" });
+                      await load();
+                      setMsg("Logo quitado.");
+                    }}
+                  >
+                    Quitar logo
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -165,20 +186,24 @@ export default function BrandPage() {
 
         <div className="flex flex-col gap-5">
           <Panel title="Tipografías" bodyClassName="p-4 flex flex-col gap-4">
-            {(["heading", "body"] as const).map((k) => (
+            {(["heading", "body", "subtitleAccent"] as const).map((k) => (
               <label key={k} className="flex items-center gap-3">
-                <span className="w-28 text-[12px] text-neutral-400">{k === "heading" ? "Títulos y subtítulos" : "Texto"}</span>
+                <span className="w-28 text-[12px] text-neutral-400">{k === "heading" ? "Títulos y subtítulos" : k === "body" ? "Texto" : "Énfasis de subtítulos"}</span>
                 <select
-                  value={brand.fonts[k]}
+                  value={brand.fonts[k] ?? "Lora cursiva"}
                   onChange={(e) => setBrand({ ...brand, fonts: { ...brand.fonts, [k]: e.target.value } })}
                   className="flex-1 bg-panel-2 border border-line rounded-md px-2 py-1.5"
                 >
-                  {families.map((f) => (
-                    <option key={f}>{f}</option>
+                  {families.filter((f) => f !== "Lora cursiva" || k === "subtitleAccent").map((f) => (
+                    <option key={f} value={f}>{f === "Helvetica" ? "Helvetica (del sistema)" : f}</option>
                   ))}
+                  {!families.includes("Neue Haas Grotesk") ? <option disabled>Neue Haas Grotesk — requiere archivo</option> : null}
                 </select>
               </label>
             ))}
+            <style>{`@font-face { font-family: 'Lora cursiva'; src: url('/fonts/Lora-Italic.ttf') format('truetype'); font-style: italic; font-weight: 400 700; font-display: swap; }`}</style>
+            <p className="text-[12px] text-neutral-400">Al activar “Combinar tipografías”, los subtítulos usan la fuente de títulos y las palabras clave usan la de énfasis. Guardá la marca para elegir esta combinación al crear un video.</p>
+            <p className="text-[12px] text-neutral-400">Biblioteca incluida: {new Set(library.map((f) => f.family)).size} familias. Elegí una arriba para verla en la vista previa. Helvetica usa la fuente instalada en este equipo.</p>
             <ul className="text-[12px] text-neutral-400 flex flex-col gap-1">
               {(brand.fonts.files ?? []).map((f) => (
                 <li key={f.file} className="flex items-center gap-2">
@@ -197,13 +222,21 @@ export default function BrandPage() {
                 </li>
               ))}
             </ul>
+            <div className="rounded-lg border border-line p-3 flex flex-col gap-2">
+              <p className="text-[12px] text-neutral-400">Neue Haas Grotesk requiere tu archivo con licencia.</p>
+              <FilePick accept=".woff2,.woff,.ttf,.otf" label="Subir Neue Haas Grotesk" onFile={(f) => upload("/api/brand/upload?kind=font&family=Neue%20Haas%20Grotesk", f, "Neue Haas Grotesk agregada.")} />
+            </div>
             <FilePick accept=".woff2,.woff,.ttf,.otf" label="Subir tipografía (WOFF2/TTF/OTF)" onFile={(f) => upload("/api/brand/upload?kind=font", f, "Tipografía agregada.")} />
           </Panel>
 
           <Panel title="Vista previa" bodyClassName="p-0">
             <div className="p-6 rounded-b-xl flex flex-col items-center gap-3" style={{ background: brand.colors.background }}>
               <div style={{ fontFamily: `"${brand.fonts.heading}"`, color: brand.colors.text, fontWeight: 800, fontSize: 28 }}>
-                Así se ven tus <span style={{ color: brand.colors.highlight }}>subtítulos</span>
+                Así se ven tus <span style={{ color: brand.colors.highlight,
+                  fontFamily: `"${brand.fonts.subtitleAccent ?? "Lora cursiva"}"`,
+                  fontStyle: (brand.fonts.subtitleAccent ?? "Lora cursiva") === "Lora cursiva" ? "italic" : "normal",
+                  fontWeight: (brand.fonts.subtitleAccent ?? "Lora cursiva") === "Lora cursiva" ? 600 : 800,
+                }}>subtítulos</span>
               </div>
               <span
                 style={{

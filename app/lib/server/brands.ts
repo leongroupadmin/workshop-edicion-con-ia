@@ -28,13 +28,25 @@ export const listBrands = (): SavedBrand[] => {
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
 };
 
+const LOGO_EXTS = [".png", ".svg", ".jpg", ".jpeg", ".webp"];
+
 /** Copia brand.json + las tipografías que usa + el logo. Nada más de la carpeta. */
 const copyBrand = (brand: Brand, from: string, to: string) => {
   fs.mkdirSync(path.join(to, "fonts"), { recursive: true });
   writeJson(path.join(to, "brand.json"), brand);
+  // Sacar el logo que hubiera antes: si esta marca no tiene, no tiene que quedar el viejo.
+  for (const e of LOGO_EXTS) {
+    if (brand.logo !== `logo${e}`) fs.rmSync(path.join(to, `logo${e}`), { force: true });
+  }
   for (const f of brand.fonts.files ?? []) {
     const src = path.join(from, "fonts", f.file);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(to, "fonts", f.file));
+  }
+  const fontsDir = path.join(from, "fonts");
+  if (fs.existsSync(fontsDir)) {
+    for (const file of fs.readdirSync(fontsDir).filter((f) => f.endsWith("-OFL.txt"))) {
+      fs.copyFileSync(path.join(fontsDir, file), path.join(to, "fonts", file));
+    }
   }
   if (brand.logo) {
     const src = path.join(from, brand.logo);

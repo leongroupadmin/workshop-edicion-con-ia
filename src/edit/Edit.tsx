@@ -8,7 +8,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import type { EditProps, EditStyle, Format, PlanItem } from "../pipeline/types";
+import type { EditProps, EditStyle, Format, PlanItem, SceneLayout } from "../pipeline/types";
 import { AUTO_ZOOM_SCALE, INSET_LAYOUTS, SCENE_TYPES, sceneLayout } from "../pipeline/types";
 import { Captions } from "./Captions";
 import { useBrandFonts } from "./fonts";
@@ -16,6 +16,35 @@ import { autoZoomAt, insetAt, splitAmount, splitRegions, touchesSplit, videoInse
 
 const activeItems = (items: PlanItem[]) =>
   items.filter((i) => i.status !== "removed" && i.endMs > i.startMs);
+
+/** Layouts en los que el gráfico tapa la pantalla (el video no se ve entero). */
+const COVERING = new Set<SceneLayout>(["fullscreen", "split", "pip", "frame"]);
+
+/**
+ * Dos gráficos seguidos con un hueco chico entre ellos dejaban asomar 2 o 3
+ * frames del video crudo. Acá el primero se sostiene (congela su último
+ * cuadro) hasta que entra el segundo, así el corte es limpio.
+ */
+const BRIDGE_MS = 400;
+
+const bridgeScenes = (items: PlanItem[]) => {
+  const scenes = items
+    .filter((i) => SCENE_TYPES.has(i.type) && i.file)
+    .sort((a, b) => a.startMs - b.startMs);
+  const nuevoFin = new Map<string, number>();
+  scenes.forEach((it, i) => {
+    const next = scenes[i + 1];
+    if (!next) return;
+    const hueco = next.startMs - it.endMs;
+    if (hueco <= 0 || hueco > BRIDGE_MS) return;
+    // Si el que sigue es un overlay, el video TIENE que volver: ahí no se estira.
+    if (!COVERING.has(sceneLayout(it)) || !COVERING.has(sceneLayout(next))) return;
+    nuevoFin.set(it.id, next.startMs);
+  });
+  return nuevoFin.size
+    ? items.map((i) => (nuevoFin.has(i.id) ? { ...i, endMs: nuevoFin.get(i.id)! } : i))
+    : items;
+};
 
 /** Intervalos en los que hay voz (para el ducking de la música). */
 const speechRanges = (words: EditProps["words"]) => {
@@ -203,7 +232,7 @@ const Transition: React.FC<{ item: PlanItem; color: string }> = ({ item, color }
 export const Edit: React.FC<EditProps> = (props) => {
   const { fps, durationInFrames, width, height } = useVideoConfig();
   useBrandFonts(props.brand, props.baseUrl, props.brandAssetsPath);
-  const all = useMemo(() => activeItems(props.plan?.items ?? []), [props.plan]);
+  const all = useMemo(() => bridgeScenes(activeItems(props.plan?.items ?? [])), [props.plan]);
   const speech = useMemo(() => speechRanges(props.words), [props.words]);
   const f = (ms: number) => Math.round((ms / 1000) * fps);
   const url = (rel: string) => `${props.baseUrl}/${rel}`;

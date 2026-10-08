@@ -160,7 +160,7 @@ export type Plan = {
 };
 
 export type Format = "vertical" | "horizontal" | "square";
-export type SubtitleStyle = "karaoke" | "simple" | "pop" | "none";
+export type SubtitleStyle = "karaoke" | "simple" | "pop" | "minimal" | "none";
 export type SubtitlePosition = "bottom" | "middle" | "top";
 
 export type Settings = {
@@ -175,6 +175,9 @@ export type Settings = {
     position: SubtitlePosition;
     maxWords: number;
     uppercase: boolean;
+    mixFonts?: boolean;
+    primaryFont?: "heading" | "body";
+    accentFont?: "brand" | "lora" | "heading" | "body";
   };
   music: {
     enabled: boolean;
@@ -252,6 +255,9 @@ export const DEFAULT_SETTINGS: Settings = {
     position: "bottom",
     maxWords: 3,
     uppercase: false,
+    mixFonts: false,
+    primaryFont: "heading",
+    accentFont: "brand",
   },
   music: {
     enabled: true,
@@ -337,6 +343,8 @@ export type Brand = {
   fonts: {
     heading: string;
     body: string;
+    /** Segunda fuente para palabras clave cuando se combinan subtítulos. */
+    subtitleAccent?: string;
     /** Archivos de fuente en /assets/brand/fonts (nombre de archivo). */
     files: { family: string; file: string; weight?: number }[];
   };
@@ -356,6 +364,7 @@ export const DEFAULT_BRAND: Brand = {
   fonts: {
     heading: "Inter",
     body: "Inter",
+    subtitleAccent: "Lora cursiva",
     files: [],
   },
   logo: "",

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Recomendaciones } from "@/components/Recomendaciones";
 
 const LINKS = [
   { href: "/", label: "Proyectos" },
@@ -31,6 +32,8 @@ export const Nav = () => {
           {l.label}
         </Link>
       ))}
+      {/* No es otra pantalla: se abre acá mismo como desplegable. */}
+      <Recomendaciones />
     </nav>
   );
 };

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/client";
 import { LAYOUT_USE_LABELS } from "@/lib/defaults";
 import type { ProjectState, Settings } from "@/lib/types";
+import { CaptionTypographyFields } from "./CaptionTypographyFields";
 import { InstructionsField } from "./InstructionsField";
 import { StyleFields } from "./StyleFields";
 import { Button, Panel, Row, Seg } from "./ui";
@@ -143,17 +144,20 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
 
       <Section title="Subtítulos" defaultOpen>
         <Seg
+          cols={3}
           value={s.subtitles.style}
           onChange={(style) => sub({ style })}
           options={[
             { value: "karaoke", label: "Karaoke" },
             { value: "simple", label: "Simples" },
             { value: "pop", label: "Pop" },
+            { value: "minimal", label: "Finos" },
             { value: "none", label: "Sin subtítulos" },
           ]}
         />
         {s.subtitles.style !== "none" ? (
           <>
+            <CaptionTypographyFields value={s.subtitles} onChange={sub} />
             <Row label={`Tamaño · ${s.subtitles.size}px`}>
               <input
                 type="range"
