@@ -7,7 +7,10 @@
     "size": 72,
     "position": "bottom",
     "maxWords": 3,
-    "uppercase": false
+    "uppercase": false,
+    "mixFonts": false,
+    "primaryFont": "heading",
+    "accentFont": "brand"
   },
   "music": {
     "enabled": true,
