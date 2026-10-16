@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { CaptionTypographyFields } from "@/components/CaptionTypographyFields";
+import { EditingPresets } from "@/components/EditingPresets";
 import { InstructionsField } from "@/components/InstructionsField";
 import { StyleFields } from "@/components/StyleFields";
 import { Row, Seg } from "@/components/ui";
@@ -85,6 +86,10 @@ export default function NewVideo() {
                 <a href="/marca" className="text-accent underline">Administrar marcas</a>
               </span>
             </label>
+            <EditingPresets
+              value={settings.style}
+              onChange={(style) => setSettings({ ...settings, style })}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Row label="IA">
                 <Seg

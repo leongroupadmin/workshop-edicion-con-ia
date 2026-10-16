@@ -5,6 +5,7 @@ import { api } from "@/lib/client";
 import { LAYOUT_USE_LABELS } from "@/lib/defaults";
 import type { ProjectState, Settings } from "@/lib/types";
 import { CaptionTypographyFields } from "./CaptionTypographyFields";
+import { EditingPresets } from "./EditingPresets";
 import { InstructionsField } from "./InstructionsField";
 import { StyleFields } from "./StyleFields";
 import { Button, Panel, Row, Seg } from "./ui";
@@ -288,6 +289,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
       </Section>
 
       <Section title="Edición y gráficos">
+        <EditingPresets value={s.style} onChange={(style) => update({ style })} />
         <StyleFields
           value={s.style}
           onChange={(style) => update({ style })}

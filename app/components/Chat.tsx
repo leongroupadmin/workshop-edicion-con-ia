@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { api } from "@/lib/client";
-import type { ChatEntry, ProjectState } from "@/lib/types";
+import { api, uploadFile } from "@/lib/client";
+import type { ChatEntry, ProjectImage, ProjectState } from "@/lib/types";
 import { Button, Panel, Spinner } from "./ui";
 
 const TOOL_ICON: Record<string, string> = {
@@ -80,6 +80,10 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [images, setImages] = useState<ProjectImage[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [imageInputError, setImageInputError] = useState<string | null>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const busy = Boolean(state.running);
 
@@ -94,12 +98,36 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
     setSending(true);
     setError(null);
     try {
-      await api(`/api/projects/${id}/chat`, { method: "POST", body: JSON.stringify({ message: text }) });
+      const attachmentContext = images.length
+        ? `\n\nArchivos adjuntos para este pedido: ${images.map((image) => image.file).join(", ")}`
+        : "";
+      await api(`/api/projects/${id}/chat`, {
+        method: "POST",
+        body: JSON.stringify({ message: `${text.trim()}${attachmentContext}` }),
+      });
       setText("");
+      setImages([]);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setSending(false);
+    }
+  };
+
+  const uploadImages = async (files: File[]) => {
+    if (!files.length) return;
+    setUploading(true);
+    setImageInputError(null);
+    try {
+      for (const file of files) {
+        const endpoint = file.type.startsWith("video/") ? "broll" : "images";
+        const result = await uploadFile(`/api/projects/${id}/${endpoint}`, file, () => {});
+        if (typeof result.file === "string") setImages((current) => [...current, { file: result.file as string, note: "" }]);
+      }
+    } catch (e) {
+      setImageInputError(e instanceof Error ? e.message : "No se pudo subir el archivo.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -133,7 +161,49 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
           </div>
         ) : null}
         {error ? <div className="text-[12px] text-red-300">{error}</div> : null}
+        {images.length ? (
+          <div className="flex flex-wrap gap-1.5">
+            {images.map((image) => (
+              <div key={image.file} className="flex items-center gap-1 rounded-md border border-line bg-panel-2 px-1.5 py-1 text-[11px] text-neutral-300">
+                {/[.]mp4$|[.]mov$|[.]webm$|[.]m4v$/i.test(image.file) ? (
+                  <video src={`/api/projects/${id}/file/broll/${encodeURIComponent(image.file)}`} muted className="h-7 w-7 rounded object-cover" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- miniatura del archivo local
+                  <img src={`/api/projects/${id}/file/images/${encodeURIComponent(image.file)}`} alt="" className="h-7 w-7 rounded object-cover" />
+                )}
+                <span className="max-w-[150px] truncate">{image.file}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {images.length ? (
+          <div className="rounded-md border border-accent/30 bg-accent/5 px-2 py-1.5 text-[12px] text-neutral-300">
+            Escribí qué querés que haga la IA con estos archivos antes de enviar el mensaje.
+          </div>
+        ) : null}
+        {imageInputError ? <div className="text-[12px] text-red-300">{imageInputError}</div> : null}
         <div className="flex gap-2 items-end">
+          <input
+            ref={imageInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml,video/mp4,video/quicktime,video/webm,video/x-m4v"
+            multiple
+            className="hidden"
+            onChange={(event) => {
+              void uploadImages(Array.from(event.target.files ?? []));
+              event.target.value = "";
+            }}
+          />
+          <Button
+            variant="ghost"
+            aria-label="Adjuntar imágenes o videos"
+            title="Adjuntar imágenes o videos para usar en el video"
+            onClick={() => imageInput.current?.click()}
+            disabled={busy || sending || uploading}
+            className="h-[42px] px-3 text-lg"
+          >
+            {uploading ? <Spinner /> : "📎"}
+          </Button>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -144,7 +214,13 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
               }
             }}
             rows={2}
-            placeholder={busy ? "Esperá a que termine el proceso actual…" : `Pedile un cambio a ${assistantName}…`}
+            placeholder={
+              busy
+                ? "Esperá a que termine el proceso actual…"
+                : images.length
+                  ? `¿Cómo querés usar ${images.length === 1 ? "este archivo" : "estos archivos"} en el video?`
+                  : `Pedile un cambio a ${assistantName}…`
+            }
             className="flex-1 resize-none bg-panel-2 border border-line rounded-lg px-3 py-2 outline-none focus:border-accent/60"
           />
           <Button variant="primary" onClick={send} disabled={busy || sending || !text.trim()} className="h-[42px] px-4">

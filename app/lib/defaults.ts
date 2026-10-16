@@ -77,6 +77,49 @@ export const CUT_LABELS: Record<EditStyle["cut"], string> = {
   aggressive: "Agresivos",
 };
 
+export const EDITING_PRESETS: Record<string, { label: string; description: string; style: EditStyle }> = {
+  limpio: {
+    label: "Limpio",
+    description: "Pocos cortes, gráficos minimalistas y mucho aire.",
+    style: { pace: "calm", graphicsCount: 0, graphics: "minimal", layoutUse: "overlay", split: { position: "top", share: 0.5 }, cut: "soft", autoZoom: false },
+  },
+  dinamico: {
+    label: "Dinámico",
+    description: "Ritmo rápido, zooms y gráficos con impacto.",
+    style: { pace: "dynamic", graphicsCount: 0, graphics: "bold", layoutUse: "mixed", split: { position: "top", share: 0.5 }, cut: "aggressive", autoZoom: true },
+  },
+  corporativo: {
+    label: "Corporativo",
+    description: "Sobrio, ordenado y fácil de seguir.",
+    style: { pace: "normal", graphicsCount: 0, graphics: "corporate", layoutUse: "split", split: { position: "top", share: 0.4 }, cut: "normal", autoZoom: false },
+  },
+  redes: {
+    label: "Redes sociales",
+    description: "Más cambios visuales, pantalla completa y cortes ágiles.",
+    style: { pace: "dynamic", graphicsCount: 0, graphics: "bold", layoutUse: "fullscreen", split: { position: "top", share: 0.5 }, cut: "normal", autoZoom: true },
+  },
+  podcast: {
+    label: "Podcast",
+    description: "Conversación natural, pocos gráficos y cortes suaves.",
+    style: { pace: "calm", graphicsCount: 0, graphics: "minimal", layoutUse: "pip", split: { position: "top", share: 0.5 }, cut: "soft", autoZoom: false },
+  },
+  educativo: {
+    label: "Educativo",
+    description: "Explicaciones claras, gráficos ordenados y ritmo parejo.",
+    style: { pace: "normal", graphicsCount: 0, graphics: "corporate", layoutUse: "mixed", split: { position: "top", share: 0.5 }, cut: "normal", autoZoom: false },
+  },
+  cinematografico: {
+    label: "Cinematográfico",
+    description: "Ritmo pausado, composiciones amplias y transiciones suaves.",
+    style: { pace: "calm", graphicsCount: 0, graphics: "minimal", layoutUse: "fullscreen", split: { position: "top", share: 0.5 }, cut: "soft", autoZoom: false },
+  },
+  testimonio: {
+    label: "Testimonio",
+    description: "La persona es protagonista, con apoyos visuales puntuales.",
+    style: { pace: "normal", graphicsCount: 0, graphics: "minimal", layoutUse: "frame", split: { position: "top", share: 0.5 }, cut: "normal", autoZoom: true },
+  },
+};
+
 export const SPLIT_SHARES = [
   { value: 0.4, label: "Más video" },
   { value: 0.5, label: "Mitad y mitad" },

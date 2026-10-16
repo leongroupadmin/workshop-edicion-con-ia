@@ -16,7 +16,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Brand, EditStyle, Plan, PlanItem, ProjectImage } from "../src/pipeline/types";
-import { FORMAT_SIZE, hasMinimumSceneDuration, MIN_SCENE_DURATION_MS, SCENE_TYPES, sceneLayout, sceneSpecFor, splitSceneSize } from "../src/pipeline/types";
+import { FORMAT_SIZE, hasMinimumSceneDuration, MIN_SCENE_DURATION_MS, MIN_SCENE_READ_MS, SCENE_TYPES, sceneLayout, sceneSpecFor, splitSceneSize } from "../src/pipeline/types";
 import { videoInset } from "../src/edit/layout";
 import { projectPaths } from "./lib/config";
 import { readJson, run, writeJson } from "./lib/media";
@@ -163,6 +163,7 @@ la cambies por escena.
 | Qué | Cuánto |
 | --- | --- |
 | Entrada del elemento principal | ${m.enterS}s con \`${m.ease}\`, desde \`${m.enter}\` |
+| Lectura del contenido principal | al menos ${MIN_SCENE_READ_MS / 1000}s continuos completamente visible, sin contar entrada ni salida; puede durar más |
 | Freno | ${m.overshoot} |
 | Salida | ${m.exitS}s con \`${m.exitEase}\` hacia \`{ ${m.exitTo} }\`, arranca en ${exitAt.toFixed(2)}s |
 | Respiro final | al menos ${m.settleS}s entre que termina la salida y termina la escena |
@@ -173,7 +174,7 @@ la cambies por escena.
 
 1. **Anticipación** — un gesto mínimo antes de la entrada (comprimir, juntar, atenuar el resto).
 2. **Acción** — la entrada del elemento principal: lo que el espectador tiene que leer.
-3. **Reacción** — la capa secundaria responde ${m.secondary}s después (sombra, ícono, línea de acento).
+3. **Reacción y lectura** — la capa secundaria responde ${m.secondary}s después (sombra, ícono, línea de acento). Todo el contenido principal debe terminar de entrar como máximo en ${(exitAt - MIN_SCENE_READ_MS / 1000).toFixed(2)}s y permanecer legible hasta la salida. Cada dato que reemplace a otro también necesita al menos ${MIN_SCENE_READ_MS / 1000}s. Si no alcanza, ampliar el plan antes de generar; no acelerar ni reducir la lectura.
 4. **Resolución** — salida + respiro. Nunca cortar de golpe en el último cuadro.
 
 ### Las tres capas (si falta una, la escena se ve plana)
@@ -188,7 +189,8 @@ la cambies por escena.
 2. Ningún cambio importante solo con opacidad: sumarle posición o escala.
 3. Las tres capas presentes.
 4. Como máximo un tercio de los elementos moviéndose a la vez.
-5. La salida termina con el respiro: la escena no corta en movimiento.
+5. Verificar al menos ${MIN_SCENE_READ_MS / 1000}s entre el final de la última entrada de contenido principal y su salida. Puede ser más según el contenido.
+6. La salida termina con el respiro: la escena no corta en movimiento.
 `;
 };
 
@@ -359,7 +361,7 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   const extra = settings.instructions?.trim();
   const instructionsBrief = extra ? `\n## Indicaciones del usuario\n\n${extra}\n` : "";
 
-  const durS = Math.max(MIN_SCENE_DURATION_MS / 1000, Math.round((item.endMs - item.startMs) / 100) / 10);
+  const durS = Math.max(MIN_SCENE_DURATION_MS / 1000, (item.endMs - item.startMs) / 1000);
   const overlay = layout === "overlay";
   const top = settings.style.split.position === "top";
   const where =

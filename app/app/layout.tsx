@@ -31,14 +31,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </span>
           </Link>
           <Nav />
-          <div className="ml-auto">
-            <Link
-              href="/nuevo"
-              className="px-3 py-1.5 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover shadow-[0_6px_18px_-10px_var(--color-accent)]"
-            >
-              + Nuevo video
-            </Link>
-          </div>
         </header>
         <main className="flex-1 min-h-0 overflow-y-auto flex flex-col">{children}</main>
       </body>

@@ -34,6 +34,8 @@ export const projectPaths = (id: string) => {
     images: path.join(dir, "images"),
     /** Descripción corta de cada imagen, para que Claude sepa cuándo usarla. */
     imagesMeta: path.join(dir, "images.json"),
+    broll: path.join(dir, "broll"),
+    brollMeta: path.join(dir, "broll.json"),
     scenes: path.join(dir, "scenes"),
     scenesSrc: path.join(dir, "scenes-src"),
     versions: path.join(dir, "versions"),

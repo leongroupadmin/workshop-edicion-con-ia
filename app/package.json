@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:e2e": "playwright test",
     "claude:login": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude auth login",
     "claude:status": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude auth status",
     "claude:token": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude setup-token",
@@ -21,6 +22,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

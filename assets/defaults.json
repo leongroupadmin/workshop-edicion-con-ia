@@ -26,9 +26,9 @@
   "style": {
     "pace": "dynamic",
     "graphicsCount": 0,
-    "graphics": "corporate",
+    "graphics": "bold",
     "layoutUse": "mixed",
-    "cut": "soft",
+    "cut": "aggressive",
     "autoZoom": true,
     "split": {
       "position": "top",

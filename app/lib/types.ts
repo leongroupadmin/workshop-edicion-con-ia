@@ -23,7 +23,11 @@ export type {
 import type { Plan, PlanItem, ProjectMeta, ProjectStatus, Settings } from "../../src/pipeline/types";
 
 /** Mantener en sync con /src/pipeline/types.ts. Vive acá para que Next no cargue código fuera de /app. */
-export const MIN_SCENE_DURATION_MS = 2_000;
+export const MIN_SCENE_READ_MS = 2_000;
+// Reserva para entrada (0.6s), escalonado (<0.5s), anticipación (0.07s),
+// salida (0.4s) y respiro (0.2s), redondeada hacia arriba.
+export const SCENE_ANIMATION_BUDGET_MS = 1_800;
+export const MIN_SCENE_DURATION_MS = MIN_SCENE_READ_MS + SCENE_ANIMATION_BUDGET_MS;
 export const SCENE_TYPES = new Set<PlanItem["type"]>(["title", "motion_graphic", "overlay", "lower_third", "broll"]);
 export const hasMinimumSceneDuration = (item: Pick<PlanItem, "type" | "startMs" | "endMs">) =>
   !SCENE_TYPES.has(item.type) || item.endMs - item.startMs >= MIN_SCENE_DURATION_MS;

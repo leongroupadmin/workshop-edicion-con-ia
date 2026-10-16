@@ -13,6 +13,7 @@ import { MIN_SCENE_DURATION_MS, SCENE_TYPES } from "../types";
 import type { ChatEntry, ChatTool, Plan, PlanItem } from "../types";
 import { emit, setRunning, store } from "./bus";
 import { ROOT } from "./fsutil";
+import { BROLL_EXTS, listImages } from "./images";
 import {
   appendChat,
   appendLog,
@@ -61,6 +62,8 @@ Estás atendiendo el chat del panel de edición para el proyecto \`${id}\`
 - Si necesitás una decisión o un archivo del usuario, preguntalo en el texto
   y terminá el turno (no hay diálogos interactivos).
 - La marca de este proyecto está en \`projects/${id}/brand/\`: usá sus colores, logo y fuentes. Solo si esa carpeta no existe, usá \`assets/brand/\`.
+- Si hay imágenes en \`projects/${id}/images/\`, son referencias que el usuario subió para este video. Podés leerlas y usarlas en escenas; respetá las indicaciones que estén en \`projects/${id}/images.json\` y preguntá si no queda claro dónde o cómo usarlas.
+- Si hay videos en \`projects/${id}/broll/\`, son clips adicionales de B-roll. Para usarlos en el plan, poné \`file: "broll/<archivo>"\` en un ítem \`broll\`; no reemplazan \`cut.mp4\`.
 - Trabajá solo dentro de este repo. No borres ni pises versions/ ni raw/.
 - Escribí SIEMPRE en español, también los comentarios cortos entre pasos.
 - Antes de contar qué tiene una versión, verificalo (p.ej. \`music\` en
@@ -299,7 +302,19 @@ const projectContext = (id: string) => {
   const transcript = fs.existsSync(p.cutTranscript) ? fs.readFileSync(p.cutTranscript, "utf8").slice(0, 50_000) : "(aún no disponible)";
   const plan = readPlan(id);
   const history = readChat(id).slice(-12).map((entry) => `${entry.role}: ${entry.text}`).join("\n");
-  return `Proyecto ${id}. Ajustes: ${JSON.stringify(readSettings(id))}\n\nPlan actual: ${JSON.stringify(plan)}\n\nConversación reciente:\n${history}\n\nTranscripción del video ya cortado:\n${transcript}`;
+  const images = listImages(id);
+  const broll = fs.existsSync(p.broll)
+    ? fs.readdirSync(p.broll).filter((file) => BROLL_EXTS.includes(path.extname(file).toLowerCase())).sort()
+    : [];
+  const imageContext = images.length
+    ? `\n\nImágenes subidas por el usuario (podés usarlas en el plan; respetá el nombre de archivo y la descripción):\n${images
+        .map((image) => `- ${image.file}${image.note ? ` — ${image.note}` : ""}`)
+        .join("\n")}`
+    : "";
+  const brollContext = broll.length
+    ? `\n\nClips B-roll adicionales disponibles (usá \`file: "broll/<archivo>"\` en ítems \`broll\`):\n${broll.map((file) => `- broll/${file}`).join("\n")}`
+    : "";
+  return `Proyecto ${id}. Ajustes: ${JSON.stringify(readSettings(id))}\n\nPlan actual: ${JSON.stringify(plan)}\n${imageContext}${brollContext}\n\nConversación reciente:\n${history}\n\nTranscripción del video ya cortado:\n${transcript}`;
 };
 
 const validPlan = (value: unknown): Plan | null => {
@@ -328,6 +343,7 @@ const validPlan = (value: unknown): Plan | null => {
       ...(typeof it.transition === "string" ? { transition: it.transition.slice(0, 80) } : {}),
       ...(Number.isFinite(Number(it.scale)) ? { scale: Number(it.scale) } : {}),
       ...(typeof it.hideCaptions === "boolean" ? { hideCaptions: it.hideCaptions } : {}),
+      ...(typeof it.file === "string" && /^broll\/[\w.-]+\.(mp4|mov|webm|m4v)$/i.test(it.file) ? { file: it.file } : {}),
       status: "pending",
     });
   }
@@ -420,7 +436,7 @@ const runOpenAiAgent = (id: string, text: string, opts: RunOptions = {}) => {
   void (async () => {
     try {
       const wantsPlan = kind === "plan" || kind === "changes";
-      const instructions = `Sos la IA de una app de edición de video. Respondé SIEMPRE con JSON válido, sin Markdown: {"reply":"respuesta breve en español","plan":null}. Si el pedido es armar o cambiar el plan de edición, reemplazá null con el plan completo. El plan debe tener version:1, summary, keywords y items. Cada item requiere id, type, startMs, endMs, description y reason. Usá solo title, motion_graphic, overlay, lower_third, broll, transition, sfx o zoom. REGLA INVIOLABLE: title, motion_graphic, overlay, lower_third y broll deben durar al menos 2000 ms (endMs - startMs >= 2000); no aplica a subtítulos, transiciones, zooms ni efectos de sonido. El plan queda en borrador; no generes escenas ni renderices.${wantsPlan ? " Este pedido exige que plan no sea null." : ""}`;
+      const instructions = `Sos la IA de una app de edición de video. Respondé SIEMPRE con JSON válido, sin Markdown: {"reply":"respuesta breve en español","plan":null}. Si el pedido es armar o cambiar el plan de edición, reemplazá null con el plan completo. El plan debe tener version:1, summary, keywords y items. Cada item requiere id, type, startMs, endMs, description y reason. Usá solo title, motion_graphic, overlay, lower_third, broll, transition, sfx o zoom. Si usás un clip B-roll adicional, agregá file con la ruta broll/<archivo> que figura en el contexto; no inventes nombres ni reemplaces cut.mp4. REGLA INVIOLABLE: title, motion_graphic, overlay, lower_third y broll deben durar al menos ${MIN_SCENE_DURATION_MS} ms totales, reservando al menos 2000 ms de lectura continua después de la entrada y antes de la salida. Es un mínimo, pueden durar más según el contenido; no superpongas escenas que se tapen ni excedas el video; no aplica a subtítulos, transiciones, zooms ni efectos de sonido. El plan queda en borrador; no generes escenas ni renderices.${wantsPlan ? " Este pedido exige que plan no sea null." : ""}`;
       const request = wantsPlan
         ? "Armá o actualizá el plan de edición usando la transcripción, los ajustes y el plan actual incluidos en el contexto."
         : text;
@@ -431,7 +447,7 @@ const runOpenAiAgent = (id: string, text: string, opts: RunOptions = {}) => {
       // caso hacemos un único repreguntado acotado, con el contrato sin
       // ambigüedad, antes de marcar el proyecto como fallido.
       if (wantsPlan && !parsed.plan) {
-        const retryInstructions = `Respondé ÚNICAMENTE JSON válido, sin Markdown ni texto adicional. La respuesta DEBE tener esta forma: {"reply":"resumen breve en español","plan":{"version":1,"summary":"...","keywords":["..."],"items":[...]}}. plan no puede ser null. Cada item exige id, type, startMs, endMs, description y reason. Tipos permitidos: title, motion_graphic, overlay, lower_third, broll, transition, sfx, zoom. REGLA INVIOLABLE: cada title, motion_graphic, overlay, lower_third o broll debe durar 2000 ms o más. Armá ahora el plan completo con el contexto recibido.`;
+        const retryInstructions = `Respondé ÚNICAMENTE JSON válido, sin Markdown ni texto adicional. La respuesta DEBE tener esta forma: {"reply":"resumen breve en español","plan":{"version":1,"summary":"...","keywords":["..."],"items":[...]}}. plan no puede ser null. Cada item exige id, type, startMs, endMs, description y reason. Tipos permitidos: title, motion_graphic, overlay, lower_third, broll, transition, sfx, zoom. REGLA INVIOLABLE: cada title, motion_graphic, overlay, lower_third o broll debe durar ${MIN_SCENE_DURATION_MS} ms o más en total, con al menos 2000 ms de lectura continua sin contar entrada ni salida; extender según el contenido, sin taparse entre escenas ni exceder el video. Armá ahora el plan completo con el contexto recibido.`;
         parsed = parseOpenAiReply(await openAiRequest(retryInstructions, context, abort.signal));
       }
       if (parsed.plan) {

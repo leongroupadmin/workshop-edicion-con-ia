@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { Recomendaciones } from "@/components/Recomendaciones";
 
 const LINKS = [
-  { href: "/", label: "Proyectos" },
+  { href: "/", label: "Edición" },
+  { href: "/clips", label: "Clips" },
   { href: "/marca", label: "Marca" },
   { href: "/musica", label: "Música" },
   { href: "/cuenta", label: "Cuenta" },

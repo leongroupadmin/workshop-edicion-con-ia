@@ -30,6 +30,8 @@ export const paths = (id: string) => {
     plan: path.join(dir, "plan.json"),
     images: path.join(dir, "images"),
     imagesMeta: path.join(dir, "images.json"),
+    broll: path.join(dir, "broll"),
+    brollMeta: path.join(dir, "broll.json"),
     cuts: path.join(dir, "cuts.json"),
     cut: path.join(dir, "cut.mp4"),
     transcript: path.join(dir, "transcript.json"),

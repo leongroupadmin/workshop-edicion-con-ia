@@ -6,6 +6,7 @@ import { moveToTrash, readJson, writeJson } from "./fsutil";
 import { paths } from "./projects";
 
 export const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".svg"];
+export const BROLL_EXTS = [".mp4", ".mov", ".webm", ".m4v"];
 
 /**
  * Imágenes que subió el usuario para este video. La lista sale de los archivos
@@ -51,4 +52,12 @@ export const imagesPromptBlock = (id: string): string => {
     `solo ítem):\n` +
     imgs.map((i) => `- ${i.file}${i.note ? ` — ${i.note}` : ""}`).join("\n")
   );
+};
+
+export const brollPromptBlock = (id: string): string => {
+  const dir = paths(id).broll;
+  if (!fs.existsSync(dir)) return "";
+  const files = fs.readdirSync(dir).filter((file) => BROLL_EXTS.includes(path.extname(file).toLowerCase())).sort();
+  if (!files.length) return "";
+  return `\n\nClips adicionales de B-roll en projects/${id}/broll (podés usarlos en ítems de tipo broll; poné exactamente file: "broll/<archivo>" en el plan):\n${files.map((file) => `- broll/${file}`).join("\n")}`;
 };

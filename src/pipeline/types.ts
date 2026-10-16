@@ -85,7 +85,11 @@ export const SCENE_TYPES = new Set(["title", "motion_graphic", "overlay", "lower
  * Aplica a motion, b-rolls, overlays, títulos y lower thirds; no a subtítulos,
  * transiciones, zooms ni efectos de sonido.
  */
-export const MIN_SCENE_DURATION_MS = 2_000;
+export const MIN_SCENE_READ_MS = 2_000;
+// Reserva para entrada (0.6s), escalonado (<0.5s), anticipación (0.07s),
+// salida (0.4s) y respiro (0.2s), redondeada hacia arriba.
+export const SCENE_ANIMATION_BUDGET_MS = 1_800;
+export const MIN_SCENE_DURATION_MS = MIN_SCENE_READ_MS + SCENE_ANIMATION_BUDGET_MS;
 const OVERLAY_BY_DEFAULT = new Set(["title", "overlay", "lower_third"]);
 
 /**

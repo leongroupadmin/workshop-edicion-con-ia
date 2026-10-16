@@ -141,7 +141,15 @@ mirá qué archivos ya existen para retomar donde quedó.
 
 - `id` corto y único (`s1`, `t1`, `z1`, `fx1`…). Ordenar por `startMs`.
 - **Regla inviolable de duración:** cada `title`, `motion_graphic`, `overlay`,
-  `lower_third` o `broll` dura **al menos 2000 ms**. No aplica a subtítulos,
+  `lower_third` o `broll` tiene **al menos 2000 ms de lectura continua** con
+  todo el contenido principal visible, entre el final de su entrada y el inicio
+  de su salida. Entrada, escalonado, salida y respiro NO cuentan como lectura.
+  Reservar **al menos 3800 ms totales** por escena (2000 de lectura + 1800
+  de margen de animación). Es un piso, no una duración fija ni un máximo:
+  extender según cantidad de texto, imágenes o pasos; cada nuevo dato que
+  reemplace al anterior también necesita 2 s de lectura. Si no entra, ajustar
+  el plan sin superponer escenas que se tapen ni exceder cut.mp4; no acelerar
+  la lectura para cumplir la cantidad de gráficos. No aplica a subtítulos,
   transiciones, zooms ni efectos de sonido.
 - `layout`: `overlay` = encima del video con fondo transparente (títulos,
   lower thirds, datos chicos); `fullscreen` = inserto que tapa el video

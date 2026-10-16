@@ -4,7 +4,7 @@ import { exists, readMeta, paths } from "@/lib/server/projects";
 export const dynamic = "force-dynamic";
 
 const ALLOWED =
-  /^(versions\/v\d+\.mp4|thumb\.jpg|cut\.mp4|scenes\/[\w-]+\.(mp4|webm)|raw\/original\.\w+|images\/[\w.-]+\.(jpg|jpeg|png|webp|svg))$/i;
+  /^(versions\/v\d+\.mp4|thumb\.jpg|cut\.mp4|scenes\/[\w-]+\.(mp4|webm)|broll\/[\w.-]+\.(mp4|mov|webm|m4v)|raw\/original\.\w+|images\/[\w.-]+\.(jpg|jpeg|png|webp|svg))$/i;
 
 /** Sirve archivos del proyecto (videos con Range). ?download=1 para descargar. */
 export async function GET(req: Request, ctx: RouteContext<"/api/projects/[id]/file/[...path]">) {

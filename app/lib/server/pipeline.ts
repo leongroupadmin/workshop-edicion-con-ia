@@ -3,8 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { LAYOUT_LABELS, mixedLayout, PACE_LABELS, SCENE_TYPES, sceneLayout } from "../defaults";
 import type { EditStyle, Plan, PlanItem, SceneLayout } from "../types";
+import { MIN_SCENE_DURATION_MS } from "../types";
 import { runAgent } from "./agent";
-import { imagesPromptBlock } from "./images";
+import { brollPromptBlock, imagesPromptBlock } from "./images";
 import { runScript } from "./jobs";
 import { paths, readPlan, readSettings, writePlan, writeStatus } from "./projects";
 
@@ -22,7 +23,11 @@ del video con: npx tsx scripts/music.ts pick <id> "<estilo en inglés>" (y
 contame cuál elegiste). Después resumime el plan en
 pocas líneas y terminá ahí: lo reviso y toco "Renderizar" en el panel (eso lo
 aprueba). REGLA INVIOLABLE: cada título, motion graphic, overlay, lower third o
-b-roll debe durar al menos 2000 ms. No aplica a subtítulos, transiciones,
+b-roll debe durar al menos ${MIN_SCENE_DURATION_MS} ms totales y dejar al menos
+2000 ms de lectura continua entre entrada y salida. Es un mínimo: extender
+según el contenido, sin superponer escenas que se tapen ni exceder cut.mp4.
+Si no entra la cantidad de gráficos pedida, explicar el conflicto en vez de
+acelerarlos. No aplica a subtítulos, transiciones,
 zooms ni efectos de sonido. No generes escenas todavía.`;
 
 /** Indicaciones libres que escribió el usuario para este video (si hay). */
@@ -34,7 +39,7 @@ const instructionsBlock = (id: string) => {
 };
 
 /** El pedido del plan, con las imágenes y las indicaciones del usuario (si hay). */
-export const planPrompt = (id: string) => PLAN_BASE.replace("<id>", id) + imagesPromptBlock(id) + instructionsBlock(id);
+export const planPrompt = (id: string) => PLAN_BASE.replace("<id>", id) + imagesPromptBlock(id) + brollPromptBlock(id) + instructionsBlock(id);
 
 /** Pasos 1 y 2 (sin Claude) y, si salen bien, Claude propone el plan (paso 3). */
 export const startPrepare = (id: string, autoPlan = true) => {

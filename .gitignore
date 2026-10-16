@@ -22,3 +22,9 @@ samples/
 
 # Skills de HyperFrames: se reinstalan solas desde skills-lock.json
 /.claude/skills/
+
+# Nuevos proyectos del flujo Clips (originales y exportaciones locales)
+/clips/*
+
+# Videos de prueba sueltos en la raíz
+/*.mp4
