@@ -12,6 +12,7 @@ import type { EditProps, EditStyle, Format, PlanItem, SceneLayout } from "../pip
 import { AUTO_ZOOM_SCALE, INSET_LAYOUTS, SCENE_TYPES, fixedLayoutOf, sceneLayout } from "../pipeline/types";
 import { Captions } from "./Captions";
 import { useBrandFonts } from "./fonts";
+import { TransitionOverlay, transitionFx } from "./transitions";
 import { autoZoomAt, insetAt, splitAmount, splitRegions, touchesSplit, videoInset } from "./layout";
 
 const activeItems = (items: PlanItem[]) =>
@@ -67,12 +68,20 @@ const useBaseScale = (items: PlanItem[], autoZoom: number[] | null) => {
     if (it.type === "zoom") {
       const target = Math.min(1.6, Math.max(1, it.scale ?? 1.15));
       const ramp = Math.min(250, (it.endMs - it.startMs) / 3);
-      const s = interpolate(
-        t,
-        [it.startMs, it.startMs + ramp, it.endMs - ramp, it.endMs],
-        [1, target, target, 1],
-        { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) },
-      );
+      // Zoom out: entra de golpe cerca y se aleja despacio hasta el plano normal.
+      const s =
+        it.zoom === "out"
+          ? interpolate(t, [it.startMs, it.startMs + 100, it.endMs], [1, target, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing: Easing.out(Easing.cubic),
+            })
+          : interpolate(
+              t,
+              [it.startMs, it.startMs + ramp, it.endMs - ramp, it.endMs],
+              [1, target, target, 1],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) },
+            );
       scale = Math.max(scale, s);
     }
     if (it.type === "transition" && it.transition === "zoom") {
@@ -237,33 +246,38 @@ const BrandBackdrop: React.FC<{ colors: EditProps["brand"]["colors"]; region?: {
   return <div style={style} />;
 };
 
-const Transition: React.FC<{ item: PlanItem; color: string }> = ({ item, color }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const dur = Math.max(1, ((item.endMs - item.startMs) / 1000) * fps);
-  const p = frame / dur;
-  const kind = item.transition ?? "flash";
-  if (kind === "zoom") return null; // se aplica sobre el video base
-  if (kind === "wipe" || kind === "slide") {
-    const x = interpolate(p, [0, 1], [-110, 110], { easing: Easing.inOut(Easing.cubic) });
-    return (
-      <AbsoluteFill style={{ transform: `translateX(${x}%) skewX(-12deg)`, backgroundColor: color }} />
-    );
-  }
-  const peak = kind === "fade" ? 1 : 0.85;
-  const opacity = interpolate(p, [0, 0.5, 1], [0, peak, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+/**
+ * Aplica el movimiento de las transiciones (barrido, desenfoque, glitch) solo
+ * dentro de una zona: en pantalla dividida fija, la mitad del gráfico.
+ */
+const FxRegion: React.FC<{
+  region: { x: number; y: number; width: number; height: number };
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}> = ({ region, style, children }) => {
+  const { width, height } = useVideoConfig();
   return (
-    <AbsoluteFill
-      style={{ backgroundColor: kind === "fade" ? "#000" : "#fff", opacity }}
-    />
+    <div style={{ position: "absolute", left: region.x, top: region.y, width: region.width, height: region.height, overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute",
+          left: -region.x,
+          top: -region.y,
+          width,
+          height,
+          ...style,
+          transformOrigin: `${region.x + region.width / 2}px ${region.y + region.height / 2}px`,
+        }}
+      >
+        {children}
+      </div>
+    </div>
   );
 };
 
 export const Edit: React.FC<EditProps> = (props) => {
   const { fps, durationInFrames, width, height } = useVideoConfig();
+  const frame = useCurrentFrame();
   useBrandFonts(props.brand, props.baseUrl, props.brandAssetsPath);
   const all = useMemo(() => bridgeScenes(activeItems(props.plan?.items ?? [])), [props.plan]);
   const speech = useMemo(() => speechRanges(props.words), [props.words]);
@@ -307,7 +321,7 @@ export const Edit: React.FC<EditProps> = (props) => {
         from={f(it.startMs)}
         durationInFrames={Math.max(2, f(it.endMs - it.startMs))}
       >
-        <Transition item={it} color={props.brand.colors.primary} />
+        <TransitionOverlay item={it} color={props.brand.colors.primary} />
       </Sequence>
     ));
 
@@ -334,66 +348,91 @@ export const Edit: React.FC<EditProps> = (props) => {
     return music.volume * duck * fadeIn * fadeOut;
   };
 
+  // Barrido, desenfoque y glitch mueven la imagen (no los subtítulos).
+  const fx = transitionFx(items, (frame / fps) * 1000, frame);
+  const fxStyle: React.CSSProperties | undefined = fx ? { transform: fx.transform, filter: fx.filter } : undefined;
+
+  const base = props.cutVideo ? <BaseVideo props={props} items={items} splits={splitRanges} /> : null;
+  const backdrop = fixed ? (
+    <BrandBackdrop colors={props.brand.colors} region={fixed === "split" ? regions.scene : undefined} />
+  ) : null;
+  const splitEls = splits.map((it) => (
+    <Sequence
+      key={it.id}
+      name={`Pantalla dividida ${it.id}`}
+      from={f(it.startMs)}
+      durationInFrames={Math.max(1, f(it.endMs - it.startMs))}
+      premountFor={fps}
+    >
+      <SplitScene
+        src={url(it.file!)}
+        background={props.brand.colors.background}
+        format={props.settings.format}
+        splitStyle={props.settings.style.split}
+      />
+    </Sequence>
+  ));
+  const fullEls = fullscreen.map((it) => (
+    <Sequence
+      key={it.id}
+      name={`Escena ${it.id}`}
+      from={f(it.startMs)}
+      durationInFrames={Math.max(1, f(it.endMs - it.startMs))}
+      premountFor={fps}
+    >
+      <AbsoluteFill style={{ backgroundColor: props.brand.colors.background }}>
+        <Video src={url(it.file!)} muted objectFit="contain" style={{ width: "100%", height: "100%" }} />
+      </AbsoluteFill>
+    </Sequence>
+  ));
+  const insetEl = insets.length ? <InsetVideo props={props} insets={insets} /> : null;
+  const overlayEls = overlays.map((it) => (
+    <Sequence
+      key={it.id}
+      name={`Overlay ${it.id}`}
+      from={f(it.startMs)}
+      durationInFrames={Math.max(1, f(it.endMs - it.startMs))}
+      premountFor={fps}
+    >
+      <Video src={url(it.file!)} muted objectFit="contain" style={{ width: "100%", height: "100%" }} />
+    </Sequence>
+  ));
+
   return (
     <AbsoluteFill style={{ backgroundColor: props.brand.colors.background }}>
-      {props.cutVideo ? <BaseVideo props={props} items={items} splits={splitRanges} /> : null}
-
-      {fixed ? (
-        <BrandBackdrop colors={props.brand.colors} region={fixed === "split" ? regions.scene : undefined} />
-      ) : null}
-
-      {splits.map((it) => (
-        <Sequence
-          key={it.id}
-          name={`Pantalla dividida ${it.id}`}
-          from={f(it.startMs)}
-          durationInFrames={Math.max(1, f(it.endMs - it.startMs))}
-          premountFor={fps}
-        >
-          <SplitScene
-            src={url(it.file!)}
-            background={props.brand.colors.background}
-            format={props.settings.format}
-            splitStyle={props.settings.style.split}
-          />
-        </Sequence>
-      ))}
-
-      {fullscreen.map((it) => (
-        <Sequence
-          key={it.id}
-          name={`Escena ${it.id}`}
-          from={f(it.startMs)}
-          durationInFrames={Math.max(1, f(it.endMs - it.startMs))}
-          premountFor={fps}
-        >
-          <AbsoluteFill style={{ backgroundColor: props.brand.colors.background }}>
-            <Video src={url(it.file!)} muted objectFit="contain" style={{ width: "100%", height: "100%" }} />
+      {fixed === "split" ? (
+        <>
+          {base}
+          {/* Fija: barridos y desenfoques solo en la mitad del gráfico */}
+          <FxRegion region={regions.scene} style={fxStyle}>
+            {backdrop}
+            {splitEls}
+          </FxRegion>
+          {fullEls}
+          {overlayEls}
+        </>
+      ) : fixed ? (
+        <>
+          <AbsoluteFill style={fxStyle}>
+            {base}
+            {backdrop}
+            {splitEls}
+            {fullEls}
+            {/* Fijo con recuadro: la transición pasa detrás de tu video, que nunca se tapa */}
+            {transitions}
           </AbsoluteFill>
-        </Sequence>
-      ))}
-
-      {/* Fijo con recuadro: la transición pasa detrás de tu video, que nunca se tapa */}
-      {fixed === "pip" || fixed === "frame" ? transitions : null}
-
-      {insets.length ? <InsetVideo props={props} insets={insets} /> : null}
-
-      {overlays.map((it) => (
-        <Sequence
-          key={it.id}
-          name={`Overlay ${it.id}`}
-          from={f(it.startMs)}
-          durationInFrames={Math.max(1, f(it.endMs - it.startMs))}
-          premountFor={fps}
-        >
-          <Video
-            src={url(it.file!)}
-            muted
-            objectFit="contain"
-            style={{ width: "100%", height: "100%" }}
-          />
-        </Sequence>
-      ))}
+          {insetEl}
+          {overlayEls}
+        </>
+      ) : (
+        <AbsoluteFill style={fxStyle}>
+          {base}
+          {splitEls}
+          {fullEls}
+          {insetEl}
+          {overlayEls}
+        </AbsoluteFill>
+      )}
 
       <Captions
         words={props.words}

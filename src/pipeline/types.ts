@@ -146,10 +146,12 @@ export type PlanItem = {
   file?: string;
   /** Para sfx: archivo de /assets/music (relativo a /assets). */
   sound?: string;
-  /** Para transition: tipo (fade, slide, wipe, flash, zoom). */
+  /** Para transition: flash, fade, wipe/slide, zoom, whip, blur, glitch o lightleak (ver src/edit/transitions.tsx). */
   transition?: string;
   /** Para zoom: escala (1.0-1.5). */
   scale?: number;
+  /** Para zoom: "in" (acerca y vuelve, por defecto) u "out" (arranca cerca y se aleja despacio). */
+  zoom?: "in" | "out";
   /** Ocultar subtítulos mientras dura este elemento (si la escena ya tiene texto). */
   hideCaptions?: boolean;
   /** Uso interno del panel: escena anterior, para volver a ella sin regenerar si se deshace un cambio de layout. */

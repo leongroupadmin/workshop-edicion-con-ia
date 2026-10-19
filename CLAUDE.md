@@ -130,8 +130,9 @@ mirá qué archivos ya existen para retomar donde quedó.
       "description": "Qué se ve / qué hace",
       "reason": "Por qué va acá",
       "sound": "music/sfx/whoosh.mp3",
-      "transition": "flash | fade | wipe | zoom",
+      "transition": "flash | fade | wipe | zoom | whip | blur | glitch | lightleak",
       "scale": 1.15,
+      "zoom": "in | out",
       "hideCaptions": false,
       "status": "pending"
     }
@@ -172,11 +173,26 @@ mirá qué archivos ya existen para retomar donde quedó.
   `auto`, variá los layouts según el contenido (no todo overlay): alterná
   tramos de cara con `fullscreen` (el gráfico tapa la pantalla unos segundos,
   como un b-roll) y `split`.
-- `transition` va en ítems `type: "transition"` (300-500 ms, centrados en el
-  cambio). **Con pantalla dividida no hay transiciones:** la división entra y
+- `transition` va en ítems `type: "transition"`, centrados en el cambio
+  (un corte de cut.mp4). Hay 8 (están en `src/edit/transitions.tsx`):
+  `flash` destello blanco (300-400 ms, cambio rápido de idea); `fade`
+  fundido a negro (400-600 ms, cierre o pausa); `wipe` barra del color de
+  la marca cruzando (350-500 ms, pasar de tema); `zoom` acercamiento de
+  golpe (300-400 ms, énfasis); `whip` barrido rápido con desenfoque
+  (300-400 ms, ritmo, "y ahora…"); `blur` desenfoque que entra y sale
+  (400-600 ms, salto de tiempo o de lugar, más suave); `glitch` tirones y
+  colores corridos (250-400 ms, solo tono tech o "algo sale mal");
+  `lightleak` destello de luz cálida (600-900 ms, momento emotivo,
+  inspirador o CTA). Variá según lo que pasa, no repitas siempre la misma;
+  en un video corto 2-3 tipos alcanzan. Sonido sugerido: `whip`/`wipe` →
+  `whoosh-short` o `whoosh`; `glitch` → `glitch-*`; `lightleak` →
+  `sparkle` o `whoosh-cinematic`; `flash`/`zoom` → `impact-bass-*` si
+  remata una frase fuerte. **Con pantalla dividida no hay transiciones:** la división entra y
   sale con corte directo y no pongas ítems `transition` dentro de un tramo
   `split` ni pegados a sus bordes (el montaje igual los ignora, con su sonido).
-  Excepción: con `settings.style.fixedLayout` (ver abajo) sí van. `zoom` usa `scale` (1.1-1.3), mínimo 1 s.
+  Excepción: con `settings.style.fixedLayout` (ver abajo) sí van. `zoom` usa `scale` (1.1-1.3), mínimo 1 s; `zoom: "out"` arranca
+  cerca y se aleja despacio (buen gancho de arranque), `"in"` (por defecto)
+  acerca y vuelve.
 - `sound`: ruta relativa a `/assets` (p.ej. `music/sfx/whoosh.mp3`). Solo
   archivos que existan en `assets/music/sfx/`; listalos antes de proponer.
   `assets/music/sfx/manifest.json` tiene la duración y para qué sirve cada
