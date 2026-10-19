@@ -198,7 +198,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
       </Section>
 
       <Section title="Música de fondo">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Seg
             value={s.music.enabled ? "on" : "off"}
             onChange={(v) => music({ enabled: v === "on" })}
@@ -208,7 +208,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
             ]}
           />
           {s.music.enabled ? (
-            <div className="flex-1 flex items-center gap-2">
+            <div className="flex-1 min-w-[120px] flex items-center gap-2">
               <input
                 type="range"
                 min={0}
@@ -255,7 +255,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
       </Section>
 
       <Section title="Efectos de sonido">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Seg
             value={s.sfx.enabled ? "on" : "off"}
             onChange={(v) => sfx({ enabled: v === "on" })}
@@ -265,7 +265,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
             ]}
           />
           {s.sfx.enabled ? (
-            <div className="flex-1 flex items-center gap-2">
+            <div className="flex-1 min-w-[120px] flex items-center gap-2">
               <input
                 type="range"
                 min={0}

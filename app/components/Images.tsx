@@ -113,7 +113,7 @@ export const Images = ({ id }: { id: string }) => {
             Claude las reparte solo entre los gráficos, según lo que estés diciendo en cada momento.
           </div>
         ) : (
-          <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="p-2 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2">
             {images.map((img) => (
               <div key={img.file} className="flex gap-2 rounded-lg border border-line bg-black/20 p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element -- archivo local del proyecto */}

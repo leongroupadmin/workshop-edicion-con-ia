@@ -102,13 +102,15 @@ export default function ProjectPage() {
       {retryError ? <div className="px-4 py-2 text-red-300 text-[13px]">{retryError}</div> : null}
       <RenderBar id={id} state={state} busy={busy} />
 
-      <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] gap-3 p-3 overflow-y-auto xl:overflow-hidden">
-        <div className="xl:min-h-0 xl:overflow-y-auto flex flex-col gap-3 xl:pr-1 [&>*]:shrink-0">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,380px)_minmax(0,1fr)] gap-3 items-start">
-            <Preview id={id} state={state} />
-            <ProjectConfig id={id} state={state} />
-          </div>
+      {/* Tres columnas: configuración angosta | video + línea de tiempo + plan | chat.
+          En pantallas chicas va todo en una columna, con el video primero. */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_380px] gap-3 p-3 overflow-y-auto xl:overflow-hidden">
+        <div className="order-2 xl:order-1 xl:min-h-0 xl:overflow-y-auto flex flex-col gap-3 xl:pr-1 [&>*]:shrink-0">
+          <ProjectConfig id={id} state={state} />
           <Images id={id} />
+        </div>
+        <div className="order-1 xl:order-2 xl:min-h-0 xl:overflow-y-auto flex flex-col gap-3 xl:pr-1 [&>*]:shrink-0">
+          <Preview id={id} state={state} />
           <PlanTimeline id={id} state={state} busy={busy} />
           {state.transcriptText ? (
             <details className="bg-panel border border-line rounded-xl">
@@ -119,7 +121,7 @@ export default function ProjectPage() {
             </details>
           ) : null}
         </div>
-        <div className="h-[640px] xl:h-auto xl:min-h-0">
+        <div className="order-3 h-[640px] xl:h-auto xl:min-h-0">
           <Chat id={id} state={state} live={live} />
         </div>
       </div>
