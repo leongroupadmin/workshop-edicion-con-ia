@@ -14,6 +14,21 @@ import { captionBox } from "./layout";
 
 type Page = { startMs: number; endMs: number; words: Word[] };
 
+/**
+ * Los subtítulos se adelantan un poco a la voz. Whisper marca cada palabra
+ * ~0.1 s tarde (medido contra el audio de los videos) y la palabra además
+ * tarda unas centésimas en aparecer; sin este adelanto se ven atrasados.
+ * Un subtítulo apenas adelantado se siente sincronizado; uno atrasado, no.
+ */
+export const CAPTION_LEAD_MS = 150;
+
+const leadWords = (words: Word[]): Word[] =>
+  words.map((w) => ({
+    ...w,
+    startMs: Math.max(0, w.startMs - CAPTION_LEAD_MS),
+    endMs: Math.max(0, w.endMs - CAPTION_LEAD_MS),
+  }));
+
 const clean = (s: string) =>
   s
     .toLowerCase()
@@ -238,7 +253,7 @@ export const Captions: React.FC<{
   useCaptionFont(settings.style !== "none" && !!settings.mixFonts && captionAccent(settings, brand).cursive);
   const { fps } = useVideoConfig();
   const maxWords = Math.max(1, Math.min(4, settings.maxWords));
-  const pages = useMemo(() => buildPages(words, maxWords), [words, maxWords]);
+  const pages = useMemo(() => buildPages(leadWords(words), maxWords), [words, maxWords]);
   const kw = useMemo(() => new Set(keywords.map(clean).filter(Boolean)), [keywords]);
 
   if (settings.style === "none") return null;
