@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api, fmtTime } from "@/lib/client";
+import { seekTo, usePlayhead } from "@/lib/playhead";
 import { LAYOUT_LABELS, PACE_LABELS, SCENE_TYPES, TYPE_LABELS, sceneLayout } from "@/lib/defaults";
 import type { EditStyle, PlanItem, ProjectState, SceneLayout } from "@/lib/types";
 import { GraphicsCountField, PACE_HINT } from "./StyleFields";
@@ -25,6 +26,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
   const [pending, setPending] = useState(false);
   const [styleChanged, setStyleChanged] = useState(false);
   const style = state.settings.style;
+  const playhead = usePlayhead(id);
 
   /** Ritmo y cantidad de gráficos: se guardan y se ofrece rehacer el plan. */
   const saveStyle = async (patch: Partial<EditStyle>) => {
@@ -173,8 +175,28 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
       {error ? <p className="text-red-300 text-[13px]">{error}</p> : null}
 
       {/* Línea de tiempo */}
-      <div className="rounded-lg border border-line bg-black/30 p-3">
-        <div className="relative h-5 ml-32 text-[10px] text-neutral-500">
+      <div className="relative rounded-lg border border-line bg-black/30 p-3">
+        {/* Marcador: sigue al video del Preview mientras se reproduce */}
+        {playhead !== null ? (
+          <div className="pointer-events-none absolute inset-y-3 left-[calc(8rem+0.75rem)] right-3 z-10">
+            <div
+              className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-white shadow-[0_0_6px_rgba(255,255,255,0.6)]"
+              style={{ left: `${Math.min(100, (playhead / duration) * 100)}%` }}
+            >
+              <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded bg-white px-1 font-mono text-[9px] font-semibold text-black">
+                {fmtTime(playhead)}
+              </span>
+            </div>
+          </div>
+        ) : null}
+        <div
+          className={`relative h-5 ml-32 text-[10px] text-neutral-500 ${playhead !== null ? "cursor-pointer" : ""}`}
+          title={playhead !== null ? "Tocá para saltar a ese momento del video" : undefined}
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            seekTo(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * duration);
+          }}
+        >
           {ticks.map((t) => (
             <span key={t} className="absolute -translate-x-1/2" style={{ left: `${(t / duration) * 100}%` }}>
               {Math.round(t / 1000)}s

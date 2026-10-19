@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, fmtDate, fmtSize, fmtTime } from "@/lib/client";
+import { setPlayhead, setSeeker } from "@/lib/playhead";
 import type { ProjectState } from "@/lib/types";
 import { ConfirmDialog, Panel, TrashIcon } from "./ui";
 
@@ -11,6 +12,50 @@ export const Preview = ({ id, state }: { id: string; state: ProjectState }) => {
   const [selected, setSelected] = useState<number | null>(latest);
   const [compare, setCompare] = useState<number | null>(null);
   const [toDelete, setToDelete] = useState<number | null>(null);
+  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
+
+  // El marcador de la línea de tiempo sigue a este video (el principal, no el de comparar).
+  useEffect(() => {
+    if (!video) return;
+    let raf = 0;
+    const sync = () => setPlayhead({ id, ms: video.currentTime * 1000 });
+    // Mientras se reproduce, en cada cuadro: timeupdate solo avisa ~4 veces por segundo.
+    const loop = () => {
+      sync();
+      raf = requestAnimationFrame(loop);
+    };
+    const play = () => {
+      cancelAnimationFrame(raf);
+      loop();
+    };
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      sync();
+    };
+    video.addEventListener("play", play);
+    video.addEventListener("pause", stop);
+    video.addEventListener("ended", stop);
+    video.addEventListener("seeked", sync);
+    video.addEventListener("loadedmetadata", sync);
+    // Respaldo: si el navegador frena las animaciones (pestaña oculta), igual avanza.
+    video.addEventListener("timeupdate", sync);
+    setSeeker((ms) => {
+      video.currentTime = ms / 1000;
+    });
+    sync();
+    if (!video.paused) play();
+    return () => {
+      cancelAnimationFrame(raf);
+      video.removeEventListener("play", play);
+      video.removeEventListener("pause", stop);
+      video.removeEventListener("ended", stop);
+      video.removeEventListener("seeked", sync);
+      video.removeEventListener("loadedmetadata", sync);
+      video.removeEventListener("timeupdate", sync);
+      setSeeker(null);
+      setPlayhead(null);
+    };
+  }, [video, id]);
 
   // Al aparecer una versión nueva, mostrarla.
   useEffect(() => {
@@ -93,7 +138,14 @@ export const Preview = ({ id, state }: { id: string; state: ProjectState }) => {
                 }`}
               >
                 {item!.src ? (
-                  <video key={item!.src} src={item!.src} controls playsInline className="w-full h-full object-contain" />
+                  <video
+                    key={item!.src}
+                    ref={i === 0 ? setVideo : undefined}
+                    src={item!.src}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
                 ) : (
                   <div className="w-full h-full grid place-items-center text-neutral-600 text-sm p-6 text-center">
                     Todavía no hay video para mostrar.
