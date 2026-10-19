@@ -1,0 +1,33 @@
+{
+  "name": "Impacto Bold",
+  "preset": true,
+  "colors": {
+    "primary": "#D7FF2F",
+    "secondary": "#FF5A1F",
+    "background": "#0B0B0B",
+    "text": "#FFFFFF",
+    "highlight": "#D7FF2F"
+  },
+  "fonts": {
+    "heading": "Anton",
+    "body": "Montserrat",
+    "subtitleAccent": "Archivo Black",
+    "files": [
+      {
+        "family": "Anton",
+        "file": "library-Anton-Regular.ttf",
+        "weight": 400
+      },
+      {
+        "family": "Montserrat",
+        "file": "library-Montserrat[wght].ttf"
+      },
+      {
+        "family": "Archivo Black",
+        "file": "library-ArchivoBlack-Regular.ttf",
+        "weight": 400
+      }
+    ]
+  },
+  "logo": ""
+}

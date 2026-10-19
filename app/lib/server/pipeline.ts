@@ -17,7 +17,7 @@ plan.json en borrador con títulos, motion graphics, overlays, transiciones,
 zooms y efectos (con timestamp y por qué). Respetá el estilo de edición de
 settings.json (style.graphicsCount = cantidad EXACTA de gráficos repartidos
 parejos si es mayor a 0, style.pace = cuántos elementos, style.graphics = estilo visual,
-style.autoZoom, style.layoutUse; ver CLAUDE.md). Si settings.music.enabled es
+style.autoZoom, style.layoutUse, style.fixedLayout; ver CLAUDE.md). Si settings.music.enabled es
 true y settings.music.track está vacío, elegí la música de fondo según el tono
 del video con: npx tsx scripts/music.ts pick <id> "<estilo en inglés>" (y
 contame cuál elegiste). Después resumime el plan en
@@ -152,7 +152,7 @@ export const replanWithStyle = (id: string) => {
     : "";
   return requestPlanChanges(
     id,
-    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.layoutUse y mantené los ítems que sigan sirviendo.${instructionsBlock(id)}`,
+    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.layoutUse y style.fixedLayout, y mantené los ítems que sigan sirviendo.${instructionsBlock(id)}`,
     `🎨 Rehacé el plan con ritmo ${PACE_LABELS[pace].toLowerCase()}${graphicsCount ? ` y ${graphicsCount} gráficos` : ""}.`,
   );
 };

@@ -1,0 +1,33 @@
+{
+  "name": "Editorial Elegante",
+  "preset": true,
+  "colors": {
+    "primary": "#E8C9A0",
+    "secondary": "#B07D62",
+    "background": "#1A1512",
+    "text": "#F7F1E8",
+    "highlight": "#F2D3A8"
+  },
+  "fonts": {
+    "heading": "DM Serif Display",
+    "body": "DM Sans",
+    "subtitleAccent": "Instrument Serif",
+    "files": [
+      {
+        "family": "DM Serif Display",
+        "file": "library-DMSerifDisplay-Regular.ttf",
+        "weight": 400
+      },
+      {
+        "family": "DM Sans",
+        "file": "library-DMSans[opsz,wght].ttf"
+      },
+      {
+        "family": "Instrument Serif",
+        "file": "library-InstrumentSerif-Regular.ttf",
+        "weight": 400
+      }
+    ]
+  },
+  "logo": ""
+}

@@ -25,7 +25,8 @@ export const listBrands = (): SavedBrand[] => {
     .readdirSync(BRANDS_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory() && fs.existsSync(path.join(BRANDS_DIR, d.name, "brand.json")))
     .map((d) => ({ slug: d.name, ...readJson<Brand>(path.join(BRANDS_DIR, d.name, "brand.json"), {} as Brand) }))
-    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+    // Primero las marcas propias, después las predefinidas.
+    .sort((a, b) => Number(!!a.preset) - Number(!!b.preset) || a.name.localeCompare(b.name, "es"));
 };
 
 const LOGO_EXTS = [".png", ".svg", ".jpg", ".jpeg", ".webp"];
@@ -56,7 +57,8 @@ const copyBrand = (brand: Brand, from: string, to: string) => {
 
 /** Guarda la marca que está en uso como una marca más de la biblioteca. */
 export const saveCurrentBrand = (name?: string): SavedBrand => {
-  const brand = readBrand();
+  // Lo que se guarda es una marca propia, aunque haya salido de una predefinida.
+  const brand = { ...readBrand(), preset: undefined };
   const final = { ...brand, name: (name?.trim() || brand.name || "Mi marca").slice(0, 60) };
   const slug = slugify(final.name);
   copyBrand(final, BRAND_DIR, dirOf(slug));

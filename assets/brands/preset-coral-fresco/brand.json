@@ -1,0 +1,53 @@
+{
+  "name": "Coral Fresco",
+  "preset": true,
+  "colors": {
+    "primary": "#FF7A6B",
+    "secondary": "#FFC2D1",
+    "background": "#1E1033",
+    "text": "#FFFFFF",
+    "highlight": "#FFD166"
+  },
+  "fonts": {
+    "heading": "Poppins",
+    "body": "Manrope",
+    "subtitleAccent": "DM Serif Display",
+    "files": [
+      {
+        "family": "Poppins",
+        "file": "library-Poppins-Regular.ttf",
+        "weight": 400
+      },
+      {
+        "family": "Poppins",
+        "file": "library-Poppins-SemiBold.ttf",
+        "weight": 600
+      },
+      {
+        "family": "Poppins",
+        "file": "library-Poppins-Bold.ttf",
+        "weight": 700
+      },
+      {
+        "family": "Poppins",
+        "file": "library-Poppins-ExtraBold.ttf",
+        "weight": 800
+      },
+      {
+        "family": "Poppins",
+        "file": "library-Poppins-Black.ttf",
+        "weight": 900
+      },
+      {
+        "family": "Manrope",
+        "file": "library-Manrope[wght].ttf"
+      },
+      {
+        "family": "DM Serif Display",
+        "file": "library-DMSerifDisplay-Regular.ttf",
+        "weight": 400
+      }
+    ]
+  },
+  "logo": ""
+}

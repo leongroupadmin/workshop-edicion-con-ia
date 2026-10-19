@@ -175,7 +175,8 @@ mirá qué archivos ya existen para retomar donde quedó.
 - `transition` va en ítems `type: "transition"` (300-500 ms, centrados en el
   cambio). **Con pantalla dividida no hay transiciones:** la división entra y
   sale con corte directo y no pongas ítems `transition` dentro de un tramo
-  `split` ni pegados a sus bordes (el montaje igual los ignora, con su sonido). `zoom` usa `scale` (1.1-1.3), mínimo 1 s.
+  `split` ni pegados a sus bordes (el montaje igual los ignora, con su sonido).
+  Excepción: con `settings.style.fixedLayout` (ver abajo) sí van. `zoom` usa `scale` (1.1-1.3), mínimo 1 s.
 - `sound`: ruta relativa a `/assets` (p.ej. `music/sfx/whoosh.mp3`). Solo
   archivos que existan en `assets/music/sfx/`; listalos antes de proponer.
   `assets/music/sfx/manifest.json` tiene la duración y para qué sirve cada
@@ -270,6 +271,17 @@ mirá qué archivos ya existen para retomar donde quedó.
     `startMs`, solo entre ítems con escena. Cuando el usuario lo cambia, el panel ya actualiza el
     plan actual. Antes esto se llamaba `splitUse`: los settings viejos se
     convierten solos (`never`→`overlay`, `always`→`split`).
+  - `fixedLayout` ("Fijo", solo con `layoutUse` `split`, `pip` o `frame`):
+    ese armado queda **todo el video**, la cara nunca vuelve a pantalla
+    completa. El montaje lo garantiza solo: donde no hay escena se ve un fondo
+    de marca animado. Al armar el plan: todos los gráficos en ese layout y
+    **encadenados uno detrás de otro** cubriendo cut.mp4 de punta a punta
+    (el primero arranca en 0, cada uno termina donde empieza el siguiente,
+    huecos de menos de 0.5 s; con `graphicsCount`, cada uno dura D/N sin el
+    −0.3 s). Las transiciones SÍ se usan, centradas en el cambio de una
+    escena a otra: el montaje las deja dentro de la mitad del gráfico (o
+    detrás del recuadro en `pip`/`frame`), nunca tapan la cara. Los zooms van
+    sobre el video como siempre.
   - `split` = pantalla dividida: `position` `top|bottom` (en horizontal:
     izquierda|derecha) y `share` (0.4/0.5/0.6 de la pantalla para el gráfico).
     El tamaño de cada escena split sale de acá (lo dice el `BRIEF.md`).

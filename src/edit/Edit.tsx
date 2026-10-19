@@ -9,7 +9,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import type { EditProps, EditStyle, Format, PlanItem, SceneLayout } from "../pipeline/types";
-import { AUTO_ZOOM_SCALE, INSET_LAYOUTS, SCENE_TYPES, sceneLayout } from "../pipeline/types";
+import { AUTO_ZOOM_SCALE, INSET_LAYOUTS, SCENE_TYPES, fixedLayoutOf, sceneLayout } from "../pipeline/types";
 import { Captions } from "./Captions";
 import { useBrandFonts } from "./fonts";
 import { autoZoomAt, insetAt, splitAmount, splitRegions, touchesSplit, videoInset } from "./layout";
@@ -88,7 +88,7 @@ const useBaseScale = (items: PlanItem[], autoZoom: number[] | null) => {
   return scale;
 };
 
-const BaseVideo: React.FC<{ props: EditProps; items: PlanItem[]; splits: PlanItem[] }> = ({
+const BaseVideo: React.FC<{ props: EditProps; items: PlanItem[]; splits: { startMs: number; endMs: number }[] }> = ({
   props,
   items,
   splits,
@@ -204,6 +204,39 @@ const InsetVideo: React.FC<{
   );
 };
 
+/**
+ * Fondo de marca para cuando el armado es "fijo" y no hay ninguna escena:
+ * la mitad del gráfico (o la pantalla detrás del recuadro) nunca queda vacía
+ * ni muestra el video. Dos manchas de color de la marca respiran despacio.
+ */
+const BrandBackdrop: React.FC<{ colors: EditProps["brand"]["colors"]; region?: { x: number; y: number; width: number; height: number } }> = ({
+  colors,
+  region,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame / fps;
+  const ax = 30 + Math.sin(t * 0.35) * 12;
+  const ay = 35 + Math.cos(t * 0.27) * 10;
+  const bx = 70 + Math.cos(t * 0.31) * 12;
+  const by = 68 + Math.sin(t * 0.23) * 10;
+  const style: React.CSSProperties = {
+    position: "absolute",
+    overflow: "hidden",
+    backgroundColor: colors.background,
+    backgroundImage: [
+      `radial-gradient(circle at ${ax}% ${ay}%, ${colors.primary}38, transparent 55%)`,
+      `radial-gradient(circle at ${bx}% ${by}%, ${colors.secondary}2e, transparent 50%)`,
+      `radial-gradient(${colors.text}14 1.5px, transparent 1.5px)`,
+    ].join(", "),
+    backgroundSize: "100% 100%, 100% 100%, 36px 36px",
+    ...(region
+      ? { left: region.x, top: region.y, width: region.width, height: region.height }
+      : { left: 0, top: 0, right: 0, bottom: 0 }),
+  };
+  return <div style={style} />;
+};
+
 const Transition: React.FC<{ item: PlanItem; color: string }> = ({ item, color }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -239,19 +272,44 @@ export const Edit: React.FC<EditProps> = (props) => {
 
   const scenes = all.filter((i) => SCENE_TYPES.has(i.type) && i.file);
   const splitScenes = scenes.filter((i) => sceneLayout(i) === "split");
-  // Con pantalla dividida no hay transiciones (ni su sonido): corte directo
-  const items = all.filter((i) => !(i.type === "transition" && touchesSplit(i, splitScenes)));
+  // "Fijo": el armado elegido queda de principio a fin, con o sin escena.
+  const fixed = fixedLayoutOf(props.settings.style);
+  const whole = { startMs: 0, endMs: props.durationMs };
+  // Con pantalla dividida (no fija) no hay transiciones (ni su sonido): corte directo.
+  // Fija, la división nunca entra ni sale: las transiciones van dentro de la mitad del gráfico.
+  const items = fixed
+    ? all
+    : all.filter((i) => !(i.type === "transition" && touchesSplit(i, splitScenes)));
   // pip y frame también tapan la pantalla: el video se dibuja encima, aparte.
   const fullscreen = scenes.filter(
     (i) => sceneLayout(i) === "fullscreen" || INSET_LAYOUTS.has(sceneLayout(i)),
   );
-  const insets = scenes
-    .filter((i) => INSET_LAYOUTS.has(sceneLayout(i)))
-    .map((i) => ({ startMs: i.startMs, endMs: i.endMs, layout: sceneLayout(i) }));
+  const insets =
+    fixed === "pip" || fixed === "frame"
+      ? [{ ...whole, layout: fixed }]
+      : scenes
+          .filter((i) => INSET_LAYOUTS.has(sceneLayout(i)))
+          .map((i) => ({ startMs: i.startMs, endMs: i.endMs, layout: sceneLayout(i) }));
   const splits = scenes.filter((i) => sceneLayout(i) === "split");
+  // Tramos con la pantalla dividida (video en su mitad, subtítulos en la unión).
+  const splitRanges = fixed === "split" ? [whole] : splits;
+  const regions = splitRegions(props.settings.format, width, height, props.settings.style.split);
   const overlays = scenes.filter((i) => sceneLayout(i) === "overlay");
   const sounds = props.settings.sfx.enabled ? items.filter((i) => i.sound) : [];
   const hiddenRanges = items.filter((i) => i.hideCaptions);
+
+  const transitions = items
+    .filter((i) => i.type === "transition")
+    .map((it) => (
+      <Sequence
+        key={it.id}
+        name={`Transición ${it.id}`}
+        from={f(it.startMs)}
+        durationInFrames={Math.max(2, f(it.endMs - it.startMs))}
+      >
+        <Transition item={it} color={props.brand.colors.primary} />
+      </Sequence>
+    ));
 
   const music = props.settings.music;
   const musicVolume = (frame: number) => {
@@ -278,7 +336,11 @@ export const Edit: React.FC<EditProps> = (props) => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: props.brand.colors.background }}>
-      {props.cutVideo ? <BaseVideo props={props} items={items} splits={splits} /> : null}
+      {props.cutVideo ? <BaseVideo props={props} items={items} splits={splitRanges} /> : null}
+
+      {fixed ? (
+        <BrandBackdrop colors={props.brand.colors} region={fixed === "split" ? regions.scene : undefined} />
+      ) : null}
 
       {splits.map((it) => (
         <Sequence
@@ -311,6 +373,9 @@ export const Edit: React.FC<EditProps> = (props) => {
         </Sequence>
       ))}
 
+      {/* Fijo con recuadro: la transición pasa detrás de tu video, que nunca se tapa */}
+      {fixed === "pip" || fixed === "frame" ? transitions : null}
+
       {insets.length ? <InsetVideo props={props} insets={insets} /> : null}
 
       {overlays.map((it) => (
@@ -337,22 +402,27 @@ export const Edit: React.FC<EditProps> = (props) => {
         keywords={props.plan?.keywords ?? []}
         format={props.settings.format}
         hiddenRanges={hiddenRanges}
-        splitRanges={splits}
-        splitSeam={splitRegions(props.settings.format, width, height, props.settings.style.split).seam}
+        splitRanges={splitRanges}
+        splitSeam={regions.seam}
       />
 
-      {items
-        .filter((i) => i.type === "transition")
-        .map((it) => (
-          <Sequence
-            key={it.id}
-            name={`Transición ${it.id}`}
-            from={f(it.startMs)}
-            durationInFrames={Math.max(2, f(it.endMs - it.startMs))}
-          >
-            <Transition item={it} color={props.brand.colors.primary} />
-          </Sequence>
-        ))}
+      {fixed === "split" ? (
+        // Fija: la transición queda dentro de la mitad del gráfico (tu cara no se tapa)
+        <div
+          style={{
+            position: "absolute",
+            left: regions.scene.x,
+            top: regions.scene.y,
+            width: regions.scene.width,
+            height: regions.scene.height,
+            overflow: "hidden",
+          }}
+        >
+          {transitions}
+        </div>
+      ) : fixed ? null : (
+        transitions
+      )}
 
       {sounds.map((it) => (
         <Sequence key={`sfx-${it.id}`} name={`SFX ${it.id}`} from={f(it.startMs)} premountFor={fps}>

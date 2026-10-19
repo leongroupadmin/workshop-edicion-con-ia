@@ -1,0 +1,31 @@
+{
+  "name": "Corporativo Azul",
+  "preset": true,
+  "colors": {
+    "primary": "#3D8BFF",
+    "secondary": "#8FB8FF",
+    "background": "#0B1F3A",
+    "text": "#FFFFFF",
+    "highlight": "#4FD1C5"
+  },
+  "fonts": {
+    "heading": "Montserrat",
+    "body": "Roboto",
+    "subtitleAccent": "Geist",
+    "files": [
+      {
+        "family": "Montserrat",
+        "file": "library-Montserrat[wght].ttf"
+      },
+      {
+        "family": "Roboto",
+        "file": "library-Roboto[wdth,wght].ttf"
+      },
+      {
+        "family": "Geist",
+        "file": "library-Geist[wght].ttf"
+      }
+    ]
+  },
+  "logo": ""
+}

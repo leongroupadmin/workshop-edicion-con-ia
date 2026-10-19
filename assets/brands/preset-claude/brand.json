@@ -1,0 +1,33 @@
+{
+  "name": "Claude",
+  "preset": true,
+  "colors": {
+    "primary": "#D97757",
+    "secondary": "#D4A27F",
+    "background": "#1F1E1D",
+    "text": "#FAF9F5",
+    "highlight": "#D97757"
+  },
+  "fonts": {
+    "heading": "DM Serif Display",
+    "body": "Space Grotesk",
+    "subtitleAccent": "Instrument Serif",
+    "files": [
+      {
+        "family": "DM Serif Display",
+        "file": "library-DMSerifDisplay-Regular.ttf",
+        "weight": 400
+      },
+      {
+        "family": "Space Grotesk",
+        "file": "library-SpaceGrotesk[wght].ttf"
+      },
+      {
+        "family": "Instrument Serif",
+        "file": "library-InstrumentSerif-Regular.ttf",
+        "weight": 400
+      }
+    ]
+  },
+  "logo": ""
+}

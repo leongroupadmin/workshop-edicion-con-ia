@@ -21,6 +21,36 @@ const Group = ({ title, when, children }: { title: string; when: string; childre
   </div>
 );
 
+/** Con estos tres, el armado se puede dejar fijo todo el video. */
+const FIXABLE = new Set<EditStyle["layoutUse"]>(["split", "pip", "frame"]);
+
+const FIXED_HINT: Partial<Record<EditStyle["layoutUse"], string>> = {
+  split: "La pantalla queda dividida de principio a fin: tu cara nunca vuelve a ocupar todo.",
+  pip: "Quedás en el recuadro de la esquina todo el video.",
+  frame: "Tu video queda enmarcado todo el tiempo.",
+};
+
+const Switch = ({ on, onChange, label }: { on: boolean; onChange: (on: boolean) => void; label: string }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    onClick={() => onChange(!on)}
+    className="flex items-center gap-2 self-start text-[13px] text-neutral-200"
+  >
+    <span
+      className={`relative h-5 w-9 shrink-0 rounded-full border transition ${
+        on ? "border-accent bg-accent" : "border-line bg-black/40"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white transition-all ${on ? "left-[18px]" : "left-0.5"}`}
+      />
+    </span>
+    {label}
+  </button>
+);
+
 const LAYOUT_USE_HINT: Record<EditStyle["layoutUse"], string> = {
   auto: "Claude mezcla los tres según el contenido. En el plan lo podés cambiar gráfico por gráfico.",
   mixed: "Los gráficos rotan entre las cinco formas, sin repetir dos iguales seguidas: pantalla completa, encima del video, pantalla dividida, vos en una esquina y video enmarcado.",
@@ -155,6 +185,16 @@ export const StyleFields = ({
             {LAYOUT_USE_HINT[st.layoutUse]}
             {notes.layoutUse ? ` ${notes.layoutUse}` : ""}
           </Hint>
+          {FIXABLE.has(st.layoutUse) ? (
+            <>
+              <Switch on={!!st.fixedLayout} onChange={(fixedLayout) => set({ fixedLayout })} label="Fijo" />
+              <Hint>
+                {st.fixedLayout
+                  ? `${FIXED_HINT[st.layoutUse]} Entre gráfico y gráfico se ve un fondo con tu marca; las transiciones y los zooms siguen.`
+                  : "Activalo para que este armado quede todo el video, sin volver a tu cara en pantalla completa entre gráficos."}
+              </Hint>
+            </>
+          ) : null}
         </Row>
 
         {st.layoutUse === "auto" || st.layoutUse === "split" ? (

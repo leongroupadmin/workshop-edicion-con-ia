@@ -1,0 +1,31 @@
+{
+  "name": "Neón Tech",
+  "preset": true,
+  "colors": {
+    "primary": "#00E5FF",
+    "secondary": "#7C4DFF",
+    "background": "#0A0E1F",
+    "text": "#FFFFFF",
+    "highlight": "#FF2BD6"
+  },
+  "fonts": {
+    "heading": "Space Grotesk",
+    "body": "Inter",
+    "subtitleAccent": "Sora",
+    "files": [
+      {
+        "family": "Space Grotesk",
+        "file": "library-SpaceGrotesk[wght].ttf"
+      },
+      {
+        "family": "Inter",
+        "file": "library-Inter[opsz,wght].ttf"
+      },
+      {
+        "family": "Sora",
+        "file": "library-Sora[wght].ttf"
+      }
+    ]
+  },
+  "logo": ""
+}

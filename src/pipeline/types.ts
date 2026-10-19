@@ -111,6 +111,13 @@ export const mixedLayout = (index: number, hasImages = false, prev?: SceneLayout
   return candidatos.find(sirve) ?? candidatos.find((l) => l !== prev) ?? candidatos[0];
 };
 
+/** Layouts que se pueden dejar fijos todo el video ("Fijo" en el panel). */
+export const FIXABLE_LAYOUTS = new Set<EditStyle["layoutUse"]>(["split", "pip", "frame"]);
+
+/** El layout que queda fijo todo el video, o null si no hay ninguno. */
+export const fixedLayoutOf = (style: EditStyle): "split" | "pip" | "frame" | null =>
+  style.fixedLayout && FIXABLE_LAYOUTS.has(style.layoutUse) ? (style.layoutUse as "split" | "pip" | "frame") : null;
+
 export const sceneLayout = (it: Pick<PlanItem, "type" | "layout">): SceneLayout =>
   it.layout ?? (OVERLAY_BY_DEFAULT.has(it.type) ? "overlay" : "fullscreen");
 
@@ -225,6 +232,12 @@ export type EditStyle = {
    * - fullscreen: siempre tapando la pantalla, como un b-roll; la voz sigue.
    */
   layoutUse: "auto" | "mixed" | "overlay" | "split" | "fullscreen" | "pip" | "frame";
+  /**
+   * "Fijo": con layoutUse split, pip o frame, ese armado queda TODO el video
+   * (la pantalla nunca vuelve a la cara completa). Entre escena y escena se ve
+   * un fondo de marca; transiciones y zooms siguen funcionando.
+   */
+  fixedLayout?: boolean;
   split: {
     /** Dónde va el gráfico en pantalla dividida: top = arriba (en horizontal, a la izquierda). */
     position: "top" | "bottom";
@@ -337,6 +350,8 @@ export const splitSceneSize = (format: Format, share = 0.5) => {
 
 export type Brand = {
   name: string;
+  /** Marca predefinida que viene con Clipo (assets/brands/preset-*). */
+  preset?: boolean;
   colors: {
     primary: string;
     secondary: string;

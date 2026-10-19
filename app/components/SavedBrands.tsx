@@ -15,6 +15,18 @@ const Muestra = ({ colors }: { colors: Brand["colors"] }) => (
   </span>
 );
 
+/** Las fuentes de la biblioteca se guardan como library-<archivo>: se previsualizan desde /fonts/library. */
+const usarFuentes = (brands: SavedBrand[]) => {
+  for (const b of brands) {
+    for (const f of b.fonts.files ?? []) {
+      if (f.family !== b.fonts.heading || !f.file.startsWith("library-")) continue;
+      const url = `/fonts/library/${encodeURIComponent(f.file.slice("library-".length))}`;
+      const face = new FontFace(f.family, `url(${url})`, { weight: f.weight ? String(f.weight) : "100 900" });
+      face.load().then((ff) => document.fonts.add(ff)).catch(() => {});
+    }
+  }
+};
+
 /**
  * Biblioteca de marcas: guardar la que está en uso y volver a cualquiera.
  * Cada marca guarda sus colores, sus tipografías y su logo.
@@ -45,6 +57,7 @@ export const SavedBrands = ({
     try {
       const r = await api<{ brands: SavedBrand[] }>("/api/brands");
       setBrands(r.brands);
+      usarFuentes(r.brands);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No pude leer las marcas.");
     }
@@ -132,7 +145,19 @@ export const SavedBrands = ({
               <li key={b.slug} className="flex items-center gap-2 rounded-lg border border-line bg-black/20 px-2 py-1.5">
                 <Muestra colors={b.colors} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] text-neutral-200">{b.name}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="truncate text-[14px] text-neutral-200"
+                      style={{ fontFamily: `"${b.fonts.heading}", system-ui` }}
+                    >
+                      {b.name}
+                    </span>
+                    {b.preset ? (
+                      <span className="shrink-0 rounded-full border border-line px-1.5 text-[10px] uppercase tracking-wide text-neutral-500">
+                        Predefinida
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="block truncate text-[11px] text-neutral-500">
                     {b.fonts.heading}
                     {b.fonts.body !== b.fonts.heading ? ` · ${b.fonts.body}` : ""}
