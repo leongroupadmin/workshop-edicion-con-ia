@@ -6,8 +6,8 @@ import { setPlayhead, setSeeker } from "@/lib/playhead";
 import type { ProjectState } from "@/lib/types";
 import { ConfirmDialog, Panel, TrashIcon } from "./ui";
 
-/** Alto del video vertical o cuadrado: lo que sobra de la pantalla, entre 300 y 560 px. */
-const VIDEO_H = "clamp(300px, 100vh - 580px, 560px)";
+/** Alto del video vertical o cuadrado: el mismo que tenía antes (62% de la pantalla, hasta 640 px). */
+const VIDEO_H = "min(62vh, 640px)";
 
 export const Preview = ({ id, state }: { id: string; state: ProjectState }) => {
   const versions = state.versions;
@@ -157,7 +157,6 @@ export const Preview = ({ id, state }: { id: string; state: ProjectState }) => {
       {side ? null : bar}
       <div
         className={`grid gap-2 ${other ? "grid-cols-2" : "grid-cols-1"} ${side ? "shrink-0" : ""}`}
-        // Alto según la pantalla: que la línea de tiempo del plan entre debajo sin bajar
         style={side ? { width: portrait ? `calc(${VIDEO_H} * 9 / 16)` : VIDEO_H } : undefined}
       >
         {[current ? { label: `v${current.version}`, src } : { label: fallback ? "Video cortado (sin edición)" : "", src }, other ? { label: `v${other.version}`, src: `/api/projects/${id}/file/${other.file}?v=${other.createdAt}` } : null]
