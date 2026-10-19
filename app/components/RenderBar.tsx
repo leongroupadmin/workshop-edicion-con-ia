@@ -48,7 +48,7 @@ export const RenderBar = ({ id, state, busy }: { id: string; state: ProjectState
   const minutes = Math.max(1, Math.round(0.6 + (b.recut ? 0.3 : 0) + b.scenes.length * 1.2));
 
   let text: React.ReactNode;
-  if (busy) text = "Mirá el avance en la barra de arriba. Cuando termine, el video nuevo aparece en el reproductor.";
+  if (busy) text = "Mirá el avance en esta misma barra (pasá el cursor por el estado para ver los pasos). Cuando termine, el video nuevo aparece en el reproductor.";
   else if (b.mode === "waiting") text = "Se está transcribiendo y cortando el video. Después vas a poder renderizar.";
   else if (b.mode === "uptodate") text = "El video tiene todos tus ajustes. Si cambiás algo, este botón se activa.";
   else {
@@ -70,16 +70,22 @@ export const RenderBar = ({ id, state, busy }: { id: string; state: ProjectState
     );
   }
 
+  // En la barra va una frase corta; el detalle aparece al pasar el cursor.
+  const short = busy
+    ? null
+    : b.mode === "rerender" && b.pending.length
+      ? `${b.pending.length === 1 ? "1 cambio" : `${b.pending.length} cambios`} sin renderizar`
+      : b.mode === "render"
+        ? `~${minutes} min`
+        : null;
+
   return (
-    <div
-      className={`mx-3 mt-3 rounded-xl border px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 ${
-        actionable && !busy ? "border-accent/30 bg-panel-2" : "border-line bg-panel"
-      }`}
-    >
+    <div className="group relative flex shrink-0 items-center gap-2" tabIndex={-1}>
+      {short ? <span className="hidden text-[12px] text-neutral-400 lg:inline">{short}</span> : null}
       <button
         onClick={run}
         disabled={!actionable || busy || pending}
-        className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[15px] font-semibold transition ${
+        className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-[13px] font-semibold transition ${
           actionable && !busy
             ? "bg-accent text-white hover:bg-accent-hover shadow-[0_10px_28px_-14px_var(--color-accent)]"
             : "bg-white/[0.06] text-neutral-400 border border-line cursor-default"
@@ -88,10 +94,10 @@ export const RenderBar = ({ id, state, busy }: { id: string; state: ProjectState
         {busy || pending ? <Spinner /> : null}
         {label}
       </button>
-      <div className="flex-1 min-w-[240px] text-[12px] text-neutral-400 leading-relaxed">
+      <div className="absolute right-0 top-full z-30 mt-1 hidden w-[360px] rounded-lg border border-line bg-panel-2 p-3 text-[12px] leading-relaxed text-neutral-400 shadow-xl group-hover:block group-focus-within:block">
         {text}
-        {error ? <span className="block text-red-300 mt-1">{error}</span> : null}
       </div>
+      {error ? <span className="max-w-[260px] truncate text-[12px] text-red-300" title={error}>{error}</span> : null}
     </div>
   );
 };

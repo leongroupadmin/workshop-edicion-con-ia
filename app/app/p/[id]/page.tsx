@@ -54,30 +54,6 @@ export default function ProjectPage() {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <div className="px-4 h-11 flex items-center gap-3 border-b border-line">
-        <Link href="/" className="text-neutral-500 hover:text-white">
-          Proyectos
-        </Link>
-        <span className="text-neutral-700">/</span>
-        <h1 className="font-semibold truncate">{state.meta.title}</h1>
-        <span className="text-[11px] text-neutral-600 font-mono truncate">{id}</span>
-        <label className="ml-auto flex items-center gap-2 text-[12px] text-neutral-400 shrink-0">
-          IA
-          <select
-            value={state.settings.aiProvider}
-            onChange={(e) => void changeAi(e.target.value as "anthropic" | "openai")}
-            disabled={busy}
-            className="rounded-md border border-line bg-panel-2 px-2 py-1 text-neutral-100 outline-none focus:border-accent/60 disabled:opacity-50"
-          >
-            <option value="anthropic">Claude</option>
-            <option value="openai">OpenAI</option>
-          </select>
-        </label>
-        <Button variant="ghost" className="ml-auto shrink-0 hover:text-red-300" onClick={() => setConfirmDelete(true)}>
-          <TrashIcon />
-          Eliminar proyecto
-        </Button>
-      </div>
       {confirmDelete ? (
         <ConfirmDialog
           title={`¿Eliminar “${state.meta.title}”?`}
@@ -98,9 +74,48 @@ export default function ProjectPage() {
           ) : null}
         </ConfirmDialog>
       ) : null}
-      <StatusBar id={id} state={state} onRetry={retry} />
+      {/* Una sola barra: proyecto, estado y acciones (antes eran tres) */}
+      <StatusBar
+        id={id}
+        state={state}
+        onRetry={retry}
+        left={
+          <div className="flex min-w-0 shrink items-center gap-2 text-[13px]">
+            <Link href="/" className="shrink-0 text-neutral-500 hover:text-white">
+              Proyectos
+            </Link>
+            <span className="text-neutral-700">/</span>
+            <h1 className="truncate font-semibold max-w-[260px]" title={id}>
+              {state.meta.title}
+            </h1>
+          </div>
+        }
+        right={
+          <>
+            <RenderBar id={id} state={state} busy={busy} />
+            <select
+              value={state.settings.aiProvider}
+              onChange={(e) => void changeAi(e.target.value as "anthropic" | "openai")}
+              disabled={busy}
+              title="Qué IA arma el plan y responde el chat"
+              className="rounded-md border border-line bg-panel-2 px-2 py-1 text-[12px] text-neutral-100 outline-none focus:border-accent/60 disabled:opacity-50"
+            >
+              <option value="anthropic">IA: Claude</option>
+              <option value="openai">IA: OpenAI</option>
+            </select>
+            <Button
+              variant="ghost"
+              className="shrink-0 hover:text-red-300"
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Eliminar proyecto"
+              title="Eliminar proyecto"
+            >
+              <TrashIcon />
+            </Button>
+          </>
+        }
+      />
       {retryError ? <div className="px-4 py-2 text-red-300 text-[13px]">{retryError}</div> : null}
-      <RenderBar id={id} state={state} busy={busy} />
 
       {/* Tres columnas: configuración angosta | video + línea de tiempo + plan | chat.
           En pantallas chicas va todo en una columna, con el video primero. */}
