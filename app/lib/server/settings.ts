@@ -10,6 +10,7 @@ const cleanStyle = (st: EditStyle, prev: EditStyle): EditStyle => ({
   pace: pick(st.pace, PACE_LABELS, prev.pace),
   graphicsCount: Math.max(0, Math.min(30, Math.round(Number(st.graphicsCount) || 0))),
   graphics: pick(st.graphics, GRAPHICS_LABELS, prev.graphics),
+  noGraphics: st.noGraphics === true,
   layoutUse: pick(st.layoutUse, LAYOUT_USE_LABELS, prev.layoutUse),
   fixedLayout: st.fixedLayout === true,
   cut: pick(st.cut, CUT_LABELS, prev.cut),

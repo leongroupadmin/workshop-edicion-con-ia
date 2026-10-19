@@ -113,6 +113,11 @@ export const EDITING_PRESETS: Record<string, { label: string; description: strin
     description: "Ritmo pausado, composiciones amplias y transiciones suaves.",
     style: { pace: "calm", graphicsCount: 0, graphics: "minimal", layoutUse: "fullscreen", split: { position: "top", share: 0.5 }, cut: "soft", autoZoom: false },
   },
+  monologo: {
+    label: "Monólogo",
+    description: "Sin gráficos: zoom en cada corte, transiciones, subtítulos y sonidos.",
+    style: { pace: "normal", graphicsCount: 0, graphics: "minimal", noGraphics: true, layoutUse: "overlay", split: { position: "top", share: 0.5 }, cut: "normal", autoZoom: true },
+  },
   testimonio: {
     label: "Testimonio",
     description: "La persona es protagonista, con apoyos visuales puntuales.",

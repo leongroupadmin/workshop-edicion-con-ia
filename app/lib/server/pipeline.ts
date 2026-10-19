@@ -17,7 +17,8 @@ plan.json en borrador con títulos, motion graphics, overlays, transiciones,
 zooms y efectos (con timestamp y por qué). Respetá el estilo de edición de
 settings.json (style.graphicsCount = cantidad EXACTA de gráficos repartidos
 parejos si es mayor a 0, style.pace = cuántos elementos, style.graphics = estilo visual,
-style.autoZoom, style.layoutUse, style.fixedLayout; ver CLAUDE.md). Si settings.music.enabled es
+style.autoZoom, style.layoutUse, style.fixedLayout; con style.noGraphics = true
+el plan va SIN gráficos, solo zooms, transiciones y sonidos; ver CLAUDE.md). Si settings.music.enabled es
 true y settings.music.track está vacío, elegí la música de fondo según el tono
 del video con: npx tsx scripts/music.ts pick <id> "<estilo en inglés>" (y
 contame cuál elegiste). Después resumime el plan en
@@ -39,7 +40,11 @@ const instructionsBlock = (id: string) => {
 };
 
 /** El pedido del plan, con las imágenes y las indicaciones del usuario (si hay). */
-export const planPrompt = (id: string) => PLAN_BASE.replace("<id>", id) + imagesPromptBlock(id) + brollPromptBlock(id) + instructionsBlock(id);
+export const planPrompt = (id: string) =>
+  PLAN_BASE.replace("<id>", id) +
+  // Sin motion graphics no hay dónde usar imágenes ni b-roll: no se piden.
+  (readSettings(id).style.noGraphics ? "" : imagesPromptBlock(id) + brollPromptBlock(id)) +
+  instructionsBlock(id);
 
 /** Pasos 1 y 2 (sin Claude) y, si salen bien, Claude propone el plan (paso 3). */
 export const startPrepare = (id: string, autoPlan = true) => {
@@ -152,7 +157,7 @@ export const replanWithStyle = (id: string) => {
     : "";
   return requestPlanChanges(
     id,
-    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.layoutUse y style.fixedLayout, y mantené los ítems que sigan sirviendo.${instructionsBlock(id)}`,
+    `rehacé el plan con el ritmo "${pace}"${count} según settings.json (ver CLAUDE.md). Respetá style.noGraphics, style.layoutUse y style.fixedLayout, y mantené los ítems que sigan sirviendo.${instructionsBlock(id)}`,
     `🎨 Rehacé el plan con ritmo ${PACE_LABELS[pace].toLowerCase()}${graphicsCount ? ` y ${graphicsCount} gráficos` : ""}.`,
   );
 };

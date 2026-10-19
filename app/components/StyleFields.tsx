@@ -179,66 +179,86 @@ export const StyleFields = ({
   return (
     <div className={`grid grid-cols-1 gap-3 ${stacked ? "" : "lg:grid-cols-2"}`}>
       <Group title="Gráficos" when={graphicsWhen}>
-        <Row label="Cómo se ven los gráficos">
-          <Seg value={st.layoutUse} onChange={(layoutUse) => set({ layoutUse })} options={options(LAYOUT_USE_LABELS)} cols={4} />
+        <Row label="Motion graphics">
+          <Seg
+            value={st.noGraphics ? "off" : "on"}
+            onChange={(v) => set({ noGraphics: v === "off" })}
+            options={[
+              { value: "on", label: "Sí" },
+              { value: "off", label: "No" },
+            ]}
+          />
           <Hint>
-            {LAYOUT_USE_HINT[st.layoutUse]}
-            {notes.layoutUse ? ` ${notes.layoutUse}` : ""}
+            {st.noGraphics
+              ? "Sin gráficos: solo tu video con zooms, transiciones, subtítulos y efectos de sonido. Ideal para monólogos."
+              : "Claude diseña gráficos animados con tu marca para acompañar lo que decís."}
           </Hint>
-          {FIXABLE.has(st.layoutUse) ? (
-            <>
-              <Switch on={!!st.fixedLayout} onChange={(fixedLayout) => set({ fixedLayout })} label="Fijo" />
+        </Row>
+
+        {st.noGraphics ? null : (
+          <>
+            <Row label="Cómo se ven los gráficos">
+              <Seg value={st.layoutUse} onChange={(layoutUse) => set({ layoutUse })} options={options(LAYOUT_USE_LABELS)} cols={4} />
               <Hint>
-                {st.fixedLayout
-                  ? `${FIXED_HINT[st.layoutUse]} Entre gráfico y gráfico se ve un fondo con tu marca; las transiciones y los zooms siguen.`
-                  : "Activalo para que este armado quede todo el video, sin volver a tu cara en pantalla completa entre gráficos."}
+                {LAYOUT_USE_HINT[st.layoutUse]}
+                {notes.layoutUse ? ` ${notes.layoutUse}` : ""}
               </Hint>
-            </>
-          ) : null}
-        </Row>
+              {FIXABLE.has(st.layoutUse) ? (
+                <>
+                  <Switch on={!!st.fixedLayout} onChange={(fixedLayout) => set({ fixedLayout })} label="Fijo" />
+                  <Hint>
+                    {st.fixedLayout
+                      ? `${FIXED_HINT[st.layoutUse]} Entre gráfico y gráfico se ve un fondo con tu marca; las transiciones y los zooms siguen.`
+                      : "Activalo para que este armado quede todo el video, sin volver a tu cara en pantalla completa entre gráficos."}
+                  </Hint>
+                </>
+              ) : null}
+            </Row>
 
-        {st.layoutUse === "auto" || st.layoutUse === "split" ? (
-          <Row label="Cómo se ve la pantalla dividida">
-            <div className="flex flex-wrap gap-1.5">
-              {(["top", "bottom"] as const).flatMap((position) =>
-                SPLIT_SHARES.map((o) => {
-                  const on = st.split.position === position && st.split.share === o.value;
-                  return (
-                    <button
-                      key={`${position}-${o.value}`}
-                      type="button"
-                      onClick={() => set({ split: { position, share: o.value } })}
-                      title={o.label}
-                      className={`flex flex-col items-center gap-1 rounded-md border px-2 py-1.5 transition ${
-                        on ? "border-accent bg-accent-soft text-white" : "border-line text-neutral-500 hover:text-white hover:border-neutral-500"
-                      }`}
-                    >
-                      <LayoutIcon
-                        layout="split"
-                        split={{ position, share: o.value }}
-                        horizontal={horizontal}
-                        className={horizontal ? "w-10 h-6" : "w-6 h-10"}
-                      />
-                      <span className="text-[10px] tabular-nums">{Math.round(o.value * 100)}% gráfico</span>
-                    </button>
-                  );
-                }),
-              )}
-            </div>
-            <Hint>{splitText}</Hint>
-          </Row>
-        ) : null}
+            {st.layoutUse === "auto" || st.layoutUse === "split" ? (
+              <Row label="Cómo se ve la pantalla dividida">
+                <div className="flex flex-wrap gap-1.5">
+                  {(["top", "bottom"] as const).flatMap((position) =>
+                    SPLIT_SHARES.map((o) => {
+                      const on = st.split.position === position && st.split.share === o.value;
+                      return (
+                        <button
+                          key={`${position}-${o.value}`}
+                          type="button"
+                          onClick={() => set({ split: { position, share: o.value } })}
+                          title={o.label}
+                          className={`flex flex-col items-center gap-1 rounded-md border px-2 py-1.5 transition ${
+                            on ? "border-accent bg-accent-soft text-white" : "border-line text-neutral-500 hover:text-white hover:border-neutral-500"
+                          }`}
+                        >
+                          <LayoutIcon
+                            layout="split"
+                            split={{ position, share: o.value }}
+                            horizontal={horizontal}
+                            className={horizontal ? "w-10 h-6" : "w-6 h-10"}
+                          />
+                          <span className="text-[10px] tabular-nums">{Math.round(o.value * 100)}% gráfico</span>
+                        </button>
+                      );
+                    }),
+                  )}
+                </div>
+                <Hint>{splitText}</Hint>
+              </Row>
+            ) : null}
 
-        <Row label="Estilo de los gráficos">
-          <Seg value={st.graphics} onChange={(graphics) => set({ graphics })} options={options(GRAPHICS_LABELS)} />
-          <Hint>{GRAPHICS_HINT[st.graphics]}</Hint>
-        </Row>
+            <Row label="Estilo de los gráficos">
+              <Seg value={st.graphics} onChange={(graphics) => set({ graphics })} options={options(GRAPHICS_LABELS)} />
+              <Hint>{GRAPHICS_HINT[st.graphics]}</Hint>
+            </Row>
 
-        {showPace ? (
-          <Row label="Cantidad de gráficos">
-            <GraphicsCountField value={st.graphicsCount} onChange={(graphicsCount) => set({ graphicsCount })} />
-          </Row>
-        ) : null}
+            {showPace ? (
+              <Row label="Cantidad de gráficos">
+                <GraphicsCountField value={st.graphicsCount} onChange={(graphicsCount) => set({ graphicsCount })} />
+              </Row>
+            ) : null}
+          </>
+        )}
 
         {showPace ? (
           <Row label="Ritmo">

@@ -3,6 +3,19 @@
 import { EDITING_PRESETS } from "@/lib/defaults";
 import type { EditStyle } from "@/lib/types";
 
+/** Mismo estilo campo por campo (el orden de las claves y los opcionales sin poner no cuentan). */
+const sameStyle = (a: EditStyle, b: EditStyle) =>
+  a.pace === b.pace &&
+  a.graphicsCount === b.graphicsCount &&
+  a.graphics === b.graphics &&
+  !!a.noGraphics === !!b.noGraphics &&
+  a.layoutUse === b.layoutUse &&
+  !!a.fixedLayout === !!b.fixedLayout &&
+  a.cut === b.cut &&
+  a.autoZoom === b.autoZoom &&
+  a.split.position === b.split.position &&
+  a.split.share === b.split.share;
+
 export const EditingPresets = ({ value, onChange }: { value: EditStyle; onChange: (style: EditStyle) => void }) => (
   <div className="flex flex-col gap-2">
     <div>
@@ -13,7 +26,7 @@ export const EditingPresets = ({ value, onChange }: { value: EditStyle; onChange
     </div>
     <div className="grid grid-cols-2 gap-2">
       {Object.entries(EDITING_PRESETS).map(([key, preset]) => {
-        const selected = JSON.stringify(value) === JSON.stringify(preset.style);
+        const selected = sameStyle(value, preset.style);
         return (
           <button
             key={key}

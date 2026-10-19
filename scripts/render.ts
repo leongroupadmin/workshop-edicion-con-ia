@@ -15,7 +15,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { hasMinimumSceneDuration, MIN_SCENE_DURATION_MS } from "../src/pipeline/types";
+import { hasMinimumSceneDuration, itemsForStyle, MIN_SCENE_DURATION_MS } from "../src/pipeline/types";
 import type { CutsFile, EditProps, Plan, Transcript } from "../src/pipeline/types";
 import { ROOT, projectPaths } from "./lib/config";
 import { startFileServer } from "./lib/fileserver";
@@ -91,7 +91,9 @@ export const buildProps = async (id: string, baseUrl: string): Promise<EditProps
   if (!t) throw new Error("Falta cut.transcript.json (paso 2).");
   const info = await probeVideo(p.cut);
   const settings = loadSettings(id);
-  const rawPlan = readJson<Plan | null>(p.plan, null);
+  const savedPlan = readJson<Plan | null>(p.plan, null);
+  // Sin motion graphics: las escenas que haya en el plan no van al video.
+  const rawPlan = savedPlan && { ...savedPlan, items: itemsForStyle(savedPlan.items, settings.style) };
   const invalidScenes = (rawPlan?.items ?? []).filter((item) => item.status !== "removed" && !hasMinimumSceneDuration(item));
   if (invalidScenes.length) {
     throw new Error(`El plan contiene escenas visuales de menos de ${MIN_SCENE_DURATION_MS / 1000} segundos. Rehacé el plan antes de renderizar.`);

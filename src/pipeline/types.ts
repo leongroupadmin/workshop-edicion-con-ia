@@ -80,6 +80,10 @@ export const INSET_LAYOUTS = new Set<SceneLayout>(["pip", "frame"]);
 
 /** Tipos de ítem que llevan una escena de HyperFrames. */
 export const SCENE_TYPES = new Set(["title", "motion_graphic", "overlay", "lower_third", "broll"]);
+
+/** Ítems del plan que van al video: sin escenas cuando el estilo es "sin motion graphics". */
+export const itemsForStyle = <T extends { type: string }>(items: T[], style: { noGraphics?: boolean }): T[] =>
+  style.noGraphics ? items.filter((i) => !SCENE_TYPES.has(i.type)) : items;
 /**
  * Regla de edición: una escena visual necesita tiempo suficiente para leerse.
  * Aplica a motion, b-rolls, overlays, títulos y lower thirds; no a subtítulos,
@@ -224,6 +228,11 @@ export type EditStyle = {
   graphicsCount: number;
   /** Estilo visual con el que Claude diseña los motion graphics. */
   graphics: "minimal" | "bold" | "corporate";
+  /**
+   * Sin motion graphics (p.ej. monólogos): el plan no lleva ítems con escena,
+   * solo zooms, transiciones y sonidos. Si el plan tiene escenas, no se usan.
+   */
+  noGraphics?: boolean;
   /**
    * Cómo se muestran los gráficos sobre el video:
    * - auto: lo decide Claude según el contenido (mezcla los tres).

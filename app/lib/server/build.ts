@@ -2,7 +2,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { LAYOUT_LABELS, SCENE_TYPES, TYPE_LABELS, sceneLayout, sceneSpecFor } from "../defaults";
-import { hasMinimumSceneDuration, MIN_SCENE_DURATION_MS } from "../types";
+import { hasMinimumSceneDuration, itemsForStyle, MIN_SCENE_DURATION_MS } from "../types";
 import type { BuildInfo, CutsFile, Plan, PlanItem, ProjectState, SceneSpec, Settings } from "../types";
 import { isBusy, runAgent } from "./agent";
 import { describeChanges } from "./describe";
@@ -40,7 +40,7 @@ const sameSpec = (a: SceneSpec, b: SceneSpec) =>
 
 /** Gráficos que hay que generar (o regenerar) para que el video quede como está configurado. */
 export const scenesToGenerate = (id: string, plan: Plan | null, settings: Settings): PlanItem[] =>
-  (plan?.items ?? []).filter((it) => {
+  itemsForStyle(plan?.items ?? [], settings.style).filter((it) => {
     if (!SCENE_TYPES.has(it.type) || it.status === "removed") return false;
     if (!it.file || !fs.existsSync(path.join(paths(id).dir, it.file))) return true;
     const want = sceneSpecFor(it, settings);
@@ -136,7 +136,7 @@ NO corras scripts/render.ts: el panel arma el video cuando termines. Al final co
 
 export const build = (id: string) => {
   if (isBusy(id)) throw new Error("Ya hay algo trabajando en este proyecto. Esperá a que termine.");
-  const invalidScenes = (readPlan(id)?.items ?? []).filter((item) => item.status !== "removed" && !hasMinimumSceneDuration(item));
+  const invalidScenes = itemsForStyle(readPlan(id)?.items ?? [], readSettings(id).style).filter((item) => item.status !== "removed" && !hasMinimumSceneDuration(item));
   if (invalidScenes.length) {
     throw new Error(
       `El plan tiene ${invalidScenes.length === 1 ? "una escena" : `${invalidScenes.length} escenas`} de menos de ${MIN_SCENE_DURATION_MS / 1000} segundos. Pedile a la IA que rehaga el plan antes de renderizar.`,

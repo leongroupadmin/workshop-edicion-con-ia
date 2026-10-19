@@ -29,6 +29,9 @@ export const MIN_SCENE_READ_MS = 2_000;
 export const SCENE_ANIMATION_BUDGET_MS = 1_800;
 export const MIN_SCENE_DURATION_MS = MIN_SCENE_READ_MS + SCENE_ANIMATION_BUDGET_MS;
 export const SCENE_TYPES = new Set<PlanItem["type"]>(["title", "motion_graphic", "overlay", "lower_third", "broll"]);
+/** Ítems del plan que van al video: sin escenas cuando el estilo es "sin motion graphics". */
+export const itemsForStyle = <T extends { type: PlanItem["type"] }>(items: T[], style: { noGraphics?: boolean }): T[] =>
+  style.noGraphics ? items.filter((i) => !SCENE_TYPES.has(i.type)) : items;
 export const hasMinimumSceneDuration = (item: Pick<PlanItem, "type" | "startMs" | "endMs">) =>
   !SCENE_TYPES.has(item.type) || item.endMs - item.startMs >= MIN_SCENE_DURATION_MS;
 

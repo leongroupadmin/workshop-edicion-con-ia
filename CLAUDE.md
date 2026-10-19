@@ -241,6 +241,16 @@ mirá qué archivos ya existen para retomar donde quedó.
 - **Estilo de edición (`settings.style`)** — el usuario lo elige al subir el video
   (pantalla "Nuevo video"), así que cuando armás el plan ya está en
   `settings.json`; lo puede ajustar después en el proyecto. Respetalo:
+  - `noGraphics` ("Motion graphics: No", preset **Monólogo**): el video va
+    **sin motion graphics**. El plan NO lleva ítems `title`,
+    `motion_graphic`, `overlay`, `lower_third` ni `broll` (se ignoran
+    `graphicsCount`, `graphics`, `layoutUse` y las imágenes subidas). Solo
+    `zoom`, `transition` y `sfx`, más `keywords` para los subtítulos. El
+    ritmo (`pace`) dice cuántos: zooms en frases fuertes (menos si
+    `autoZoom` está activo), transiciones en cambios de tema o de idea
+    (centradas en un corte de cut.mp4) y sonidos que acompañen esas
+    transiciones o remates. Si igual queda alguna escena en el plan, el
+    panel no la genera y el montaje no la usa.
   - `graphicsCount` (cantidad de gráficos): si es mayor a 0, el plan lleva
     **EXACTAMENTE** esa cantidad de ítems con escena (`title`,
     `motion_graphic`, `overlay`, `lower_third`, `broll`) repartidos parejos:

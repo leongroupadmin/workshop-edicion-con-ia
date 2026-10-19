@@ -37,6 +37,7 @@ export const describeChanges = (
   const sb = b.style;
   if (sa.cut !== sb.cut) out.push(`cortes ${CUT_LABELS[sb.cut].toLowerCase()}`);
   if (sa.autoZoom !== sb.autoZoom) out.push(sb.autoZoom ? "zoom en cada corte" : "sin zoom en los cortes");
+  if (!!sa.noGraphics !== !!sb.noGraphics) out.push(sb.noGraphics ? "sin motion graphics" : "con motion graphics");
   if (!!sa.fixedLayout !== !!sb.fixedLayout) out.push(sb.fixedLayout ? "gráficos fijos todo el video" : "gráficos no fijos");
   if (hasSplit && sa.split.position !== sb.split.position) out.push(`gráfico ${sb.split.position === "top" ? "arriba" : "abajo"} en pantalla dividida`);
   if (hasSplit && sa.split.share !== sb.split.share) out.push(`pantalla dividida ${Math.round(sb.split.share * 100)}/${Math.round((1 - sb.split.share) * 100)}`);
