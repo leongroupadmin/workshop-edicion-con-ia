@@ -1,6 +1,7 @@
 import "./index.css";
 import { CalculateMetadataFunction, Composition, Folder } from "remotion";
 import { Edit } from "./edit/Edit";
+import { DEMO_DURATION_MS, TransitionDemo } from "./edit/TransitionDemo";
 import { HelloWorld } from "./HelloWorld";
 import { Logo } from "./HelloWorld/Logo";
 import { Title } from "./HelloWorld/Title";
@@ -50,6 +51,18 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={editDefaults}
         calculateMetadata={calculateEditMetadata}
       />
+      {/* Muestras de la pestaña "Transiciones" del panel (scripts/transition-demos.ts) */}
+      <Folder name="Transiciones">
+        <Composition
+          id="TransitionDemo"
+          component={TransitionDemo}
+          durationInFrames={Math.round((DEMO_DURATION_MS / 1000) * 30)}
+          fps={30}
+          width={720}
+          height={1280}
+          defaultProps={{ kind: "flash" }}
+        />
+      </Folder>
       <Folder name="Ejemplos">
         <Composition
           id="HelloWorld"

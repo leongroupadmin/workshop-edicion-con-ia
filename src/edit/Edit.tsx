@@ -348,8 +348,9 @@ export const Edit: React.FC<EditProps> = (props) => {
     return music.volume * duck * fadeIn * fadeOut;
   };
 
-  // Barrido, desenfoque y glitch mueven la imagen (no los subtítulos).
-  const fx = transitionFx(items, (frame / fps) * 1000, frame);
+  // Barrido, desenfoque, glitch, sacudón, estela y giro mueven la imagen (no los subtítulos).
+  const fxAspect = fixed === "split" ? regions.scene.width / regions.scene.height : width / height;
+  const fx = transitionFx(items, (frame / fps) * 1000, frame, fxAspect);
   const fxStyle: React.CSSProperties | undefined = fx ? { transform: fx.transform, filter: fx.filter } : undefined;
 
   const base = props.cutVideo ? <BaseVideo props={props} items={items} splits={splitRanges} /> : null;

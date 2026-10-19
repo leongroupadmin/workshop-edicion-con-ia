@@ -14,6 +14,7 @@ import type { ChatEntry, ChatTool, Plan, PlanItem } from "../types";
 import { emit, setRunning, store } from "./bus";
 import { ROOT } from "./fsutil";
 import { BROLL_EXTS, listImages } from "./images";
+import { transitionsRule } from "./transitions";
 import {
   appendChat,
   appendLog,
@@ -68,7 +69,7 @@ Estás atendiendo el chat del panel de edición para el proyecto \`${id}\`
 - Escribí SIEMPRE en español, también los comentarios cortos entre pasos.
 - Antes de contar qué tiene una versión, verificalo (p.ej. \`music\` en
   versions/vN.json); no afirmes nada que no hayas comprobado.
-`;
+${transitionsRule() ? `- ${transitionsRule()}\n` : ""}`;
 
 /** Hook de seguridad: bloquea comandos que podrían borrar videos o salir del repo. */
 const guard: HookCallback = async (input) => {
@@ -436,7 +437,7 @@ const runOpenAiAgent = (id: string, text: string, opts: RunOptions = {}) => {
   void (async () => {
     try {
       const wantsPlan = kind === "plan" || kind === "changes";
-      const instructions = `Sos la IA de una app de edición de video. Respondé SIEMPRE con JSON válido, sin Markdown: {"reply":"respuesta breve en español","plan":null}. Si el pedido es armar o cambiar el plan de edición, reemplazá null con el plan completo. El plan debe tener version:1, summary, keywords y items. Cada item requiere id, type, startMs, endMs, description y reason. Usá solo title, motion_graphic, overlay, lower_third, broll, transition, sfx o zoom. Si usás un clip B-roll adicional, agregá file con la ruta broll/<archivo> que figura en el contexto; no inventes nombres ni reemplaces cut.mp4. REGLA INVIOLABLE: title, motion_graphic, overlay, lower_third y broll deben durar al menos ${MIN_SCENE_DURATION_MS} ms totales, reservando al menos 2000 ms de lectura continua después de la entrada y antes de la salida. Es un mínimo, pueden durar más según el contenido; no superpongas escenas que se tapen ni excedas el video; no aplica a subtítulos, transiciones, zooms ni efectos de sonido. El plan queda en borrador; no generes escenas ni renderices.${wantsPlan ? " Este pedido exige que plan no sea null." : ""}`;
+      const instructions = `Sos la IA de una app de edición de video. Respondé SIEMPRE con JSON válido, sin Markdown: {"reply":"respuesta breve en español","plan":null}. Si el pedido es armar o cambiar el plan de edición, reemplazá null con el plan completo. El plan debe tener version:1, summary, keywords y items. Cada item requiere id, type, startMs, endMs, description y reason. Usá solo title, motion_graphic, overlay, lower_third, broll, transition, sfx o zoom. Si usás un clip B-roll adicional, agregá file con la ruta broll/<archivo> que figura en el contexto; no inventes nombres ni reemplaces cut.mp4. REGLA INVIOLABLE: title, motion_graphic, overlay, lower_third y broll deben durar al menos ${MIN_SCENE_DURATION_MS} ms totales, reservando al menos 2000 ms de lectura continua después de la entrada y antes de la salida. Es un mínimo, pueden durar más según el contenido; no superpongas escenas que se tapen ni excedas el video; no aplica a subtítulos, transiciones, zooms ni efectos de sonido. El plan queda en borrador; no generes escenas ni renderices.${transitionsRule() ? ` ${transitionsRule()}` : ""}${wantsPlan ? " Este pedido exige que plan no sea null." : ""}`;
       const request = wantsPlan
         ? "Armá o actualizá el plan de edición usando la transcripción, los ajustes y el plan actual incluidos en el contexto."
         : text;

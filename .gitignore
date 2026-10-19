@@ -28,3 +28,6 @@ samples/
 
 # Videos de prueba sueltos en la raíz
 /*.mp4
+
+# Transiciones apagadas desde el panel (preferencia de cada usuario)
+/assets/transitions.json

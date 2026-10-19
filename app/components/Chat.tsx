@@ -1,10 +1,44 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import { api, uploadFile } from "@/lib/client";
 import type { ChatEntry, ProjectImage, ProjectState } from "@/lib/types";
 import { Button, Panel, Spinner } from "./ui";
+
+/** Lo mínimo del dictado del navegador (Chrome/Safari lo traen como webkitSpeechRecognition). */
+type Recognition = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+const recognitionClass = () => {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as Record<string, (new () => Recognition) | undefined>;
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+};
+
+const MIC_ERRORS: Record<string, string> = {
+  "not-allowed": "El navegador no tiene permiso para usar el micrófono. Permitilo desde el candado de la barra de direcciones.",
+  "service-not-allowed": "Este navegador no deja dictar. Probá con Chrome o Safari.",
+  "audio-capture": "No encontré un micrófono conectado.",
+  network: "No se pudo convertir la voz a texto (el navegador necesita internet para dictar).",
+};
+
+const noSubscribe = () => () => {};
+
+const MicIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+  </svg>
+);
 
 const TOOL_ICON: Record<string, string> = {
   Bash: "⌘",
@@ -86,6 +120,54 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
   const imageInput = useRef<HTMLInputElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const busy = Boolean(state.running);
+  // El dictado existe solo en el navegador (en el servidor el botón no se dibuja).
+  const canDictate = useSyncExternalStore(noSubscribe, () => Boolean(recognitionClass()), () => false);
+  const [listening, setListening] = useState(false);
+  const recognition = useRef<Recognition | null>(null);
+  useEffect(() => () => recognition.current?.stop(), []);
+
+  const stopDictation = () => {
+    recognition.current?.stop();
+    recognition.current = null;
+    setListening(false);
+  };
+
+  /** Dictar: lo que decís se va escribiendo en la caja; lo revisás y tocás Enviar. */
+  const toggleDictation = () => {
+    if (listening) return stopDictation();
+    const Rec = recognitionClass();
+    if (!Rec) return;
+    const rec = new Rec();
+    rec.lang = "es-AR";
+    rec.continuous = true;
+    rec.interimResults = true;
+    const before = text.trim();
+    let finals = "";
+    rec.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finals += `${r[0].transcript.trim()} `;
+        else interim += r[0].transcript;
+      }
+      setText([before, `${finals}${interim}`.trim()].filter(Boolean).join(" "));
+    };
+    rec.onerror = (e) => {
+      if (e.error !== "no-speech" && e.error !== "aborted") setError(MIC_ERRORS[e.error] ?? `No se pudo dictar (${e.error}).`);
+    };
+    rec.onend = () => {
+      if (recognition.current === rec) recognition.current = null;
+      setListening(false);
+    };
+    setError(null);
+    try {
+      rec.start();
+      recognition.current = rec;
+      setListening(true);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
 
   useEffect(() => {
     // Scrollear solo la lista del chat (no la página entera)
@@ -95,6 +177,7 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
 
   const send = async () => {
     if (!text.trim()) return;
+    stopDictation();
     setSending(true);
     setError(null);
     try {
@@ -217,12 +300,27 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
             placeholder={
               busy
                 ? "Esperá a que termine el proceso actual…"
-                : images.length
+                : listening
+                  ? "Te escucho… hablá y después tocá Enviar"
+                  : images.length
                   ? `¿Cómo querés usar ${images.length === 1 ? "este archivo" : "estos archivos"} en el video?`
                   : `Pedile un cambio a ${assistantName}…`
             }
             className="flex-1 resize-none bg-panel-2 border border-line rounded-lg px-3 py-2 outline-none focus:border-accent/60"
           />
+          {canDictate ? (
+            <Button
+              variant="ghost"
+              aria-label={listening ? "Dejar de dictar" : "Dictar con el micrófono"}
+              aria-pressed={listening}
+              title={listening ? "Dejar de dictar" : "Hablá y se escribe solo (después lo revisás y tocás Enviar)"}
+              onClick={toggleDictation}
+              disabled={busy || sending}
+              className={`h-[42px] px-3 ${listening ? "animate-pulse border-red-500/60 text-red-400" : ""}`}
+            >
+              <MicIcon />
+            </Button>
+          ) : null}
           <Button variant="primary" onClick={send} disabled={busy || sending || !text.trim()} className="h-[42px] px-4">
             Enviar
           </Button>

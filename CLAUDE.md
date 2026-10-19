@@ -130,7 +130,7 @@ mirá qué archivos ya existen para retomar donde quedó.
       "description": "Qué se ve / qué hace",
       "reason": "Por qué va acá",
       "sound": "music/sfx/whoosh.mp3",
-      "transition": "flash | fade | wipe | zoom | whip | blur | glitch | lightleak",
+      "transition": "flash | fade | wipe | zoom | whip | blur | glitch | lightleak | shake | zoomblur | spin | iris | blinds | filmburn",
       "scale": 1.15,
       "zoom": "in | out",
       "hideCaptions": false,
@@ -174,7 +174,7 @@ mirá qué archivos ya existen para retomar donde quedó.
   tramos de cara con `fullscreen` (el gráfico tapa la pantalla unos segundos,
   como un b-roll) y `split`.
 - `transition` va en ítems `type: "transition"`, centrados en el cambio
-  (un corte de cut.mp4). Hay 8 (están en `src/edit/transitions.tsx`):
+  (un corte de cut.mp4). Hay 14 (están en `src/edit/transitions.tsx`):
   `flash` destello blanco (300-400 ms, cambio rápido de idea); `fade`
   fundido a negro (400-600 ms, cierre o pausa); `wipe` barra del color de
   la marca cruzando (350-500 ms, pasar de tema); `zoom` acercamiento de
@@ -183,11 +183,23 @@ mirá qué archivos ya existen para retomar donde quedó.
   (400-600 ms, salto de tiempo o de lugar, más suave); `glitch` tirones y
   colores corridos (250-400 ms, solo tono tech o "algo sale mal");
   `lightleak` destello de luz cálida (600-900 ms, momento emotivo,
-  inspirador o CTA). Variá según lo que pasa, no repitas siempre la misma;
-  en un video corto 2-3 tipos alcanzan. Sonido sugerido: `whip`/`wipe` →
+  inspirador o CTA); `shake` sacudón de cámara (300-450 ms, golpe,
+  sorpresa, frase fuerte); `zoomblur` zoom hacia el centro con rayas de
+  velocidad (350-500 ms, "mirá esto", dato clave); `spin` una vuelta entera
+  desenfocada (450-650 ms, giro de la historia, "pero…"; usarla poco);
+  `iris` círculo que se cierra a negro y se abre (500-700 ms, cerrar un tema
+  y abrir otro, tono retro o divertido); `blinds` persianas del color de la
+  marca (450-650 ms, pasar de sección, "paso 1, paso 2"); `filmburn`
+  película quemada, manchas naranjas que titilan (600-900 ms, recuerdo,
+  historia personal, cierre emotivo). Variá según lo que pasa, no repitas siempre la misma;
+  en un video corto 2-3 tipos alcanzan. Si existe `assets/transitions.json`,
+  `off` lista las que el usuario apagó en la pestaña "Transiciones" del panel:
+  no las uses (solo si te pide una con su nombre en el chat). Sonido sugerido: `whip`/`wipe` →
   `whoosh-short` o `whoosh`; `glitch` → `glitch-*`; `lightleak` →
   `sparkle` o `whoosh-cinematic`; `flash`/`zoom` → `impact-bass-*` si
-  remata una frase fuerte. **Con pantalla dividida no hay transiciones:** la división entra y
+  remata una frase fuerte; `shake` → `impact-bass-*`; `zoomblur` →
+  `whoosh`; `spin`/`filmburn` → `whoosh-cinematic`; `iris` → `pop` o
+  `click-soft`; `blinds` → `whoosh-short`. **Con pantalla dividida no hay transiciones:** la división entra y
   sale con corte directo y no pongas ítems `transition` dentro de un tramo
   `split` ni pegados a sus bordes (el montaje igual los ignora, con su sonido).
   Excepción: con `settings.style.fixedLayout` (ver abajo) sí van. `zoom` usa `scale` (1.1-1.3), mínimo 1 s; `zoom: "out"` arranca

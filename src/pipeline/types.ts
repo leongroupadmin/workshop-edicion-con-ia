@@ -146,7 +146,7 @@ export type PlanItem = {
   file?: string;
   /** Para sfx: archivo de /assets/music (relativo a /assets). */
   sound?: string;
-  /** Para transition: flash, fade, wipe/slide, zoom, whip, blur, glitch o lightleak (ver src/edit/transitions.tsx). */
+  /** Para transition: flash, fade, wipe/slide, zoom, whip, blur, glitch, lightleak, shake, zoomblur, spin, iris, blinds o filmburn (ver src/edit/transitions.tsx). */
   transition?: string;
   /** Para zoom: escala (1.0-1.5). */
   scale?: number;

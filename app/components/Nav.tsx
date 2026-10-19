@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/clips", label: "Clips" },
   { href: "/marca", label: "Marca" },
   { href: "/musica", label: "Música" },
+  { href: "/transiciones", label: "Transiciones" },
   { href: "/cuenta", label: "Cuenta" },
 ] as const;
 
