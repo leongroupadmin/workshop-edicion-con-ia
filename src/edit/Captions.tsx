@@ -173,7 +173,7 @@ const CaptionPage: React.FC<{
                   display: "inline-block",
                   transform: `translateY(${(1 - appear) * fontSize * 0.3}px)`,
                   opacity: appear,
-                  color: isKeyword ? brand.colors.highlight : brand.colors.text,
+                  color: isKeyword ? brand.colors.highlight : settings.color || brand.colors.text,
                   // Contorno fino: la mitad que el karaoke, pero suficiente para
                   // que se lea sobre fondos claros (ropa, pared, cielo).
                   fontWeight: cursive ? 600 : isKeyword ? 800 : undefined,
@@ -208,7 +208,7 @@ const CaptionPage: React.FC<{
             ? brand.colors.background
             : isActive
               ? brand.colors.highlight
-              : brand.colors.text;
+              : settings.color || brand.colors.text;
           return (
             <span
               key={i}

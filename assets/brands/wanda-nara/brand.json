@@ -1,0 +1,37 @@
+{
+  "name": "Wanda Nara",
+  "colors": {
+    "primary": "#C76B87",
+    "secondary": "#F3CAD7",
+    "background": "#FCF9F8",
+    "text": "#191719",
+    "highlight": "#A64262",
+    "ink": "#111111",
+    "textOnDark": "#FFF9FB",
+    "muted": "#776B70",
+    "card": "#F7E9ED"
+  },
+  "fonts": {
+    "heading": "Montserrat",
+    "headingWeight": 700,
+    "body": "Manrope",
+    "bodyWeight": 500,
+    "subtitleAccent": "DM Serif Display",
+    "files": [
+      {
+        "family": "Manrope",
+        "file": "library-Manrope[wght].ttf"
+      },
+      {
+        "family": "Montserrat",
+        "file": "library-Montserrat[wght].ttf"
+      },
+      {
+        "family": "DM Serif Display",
+        "file": "library-DMSerifDisplay-Regular.ttf",
+        "weight": 400
+      }
+    ]
+  },
+  "logo": ""
+}

@@ -18,7 +18,8 @@ import path from "node:path";
 import type { Brand, EditStyle, Plan, PlanItem, ProjectImage } from "../src/pipeline/types";
 import { FORMAT_SIZE, hasMinimumSceneDuration, MIN_SCENE_DURATION_MS, MIN_SCENE_READ_MS, SCENE_TYPES, sceneLayout, sceneSpecFor, splitSceneSize } from "../src/pipeline/types";
 import { videoInset } from "../src/edit/layout";
-import { projectPaths } from "./lib/config";
+import { projectPaths, ROOT } from "./lib/config";
+import { dimensionParts, DIMENSION_BRIEF, type GraphicsDimension } from "./lib/scene-dimension";
 import { readJson, run, writeJson } from "./lib/media";
 import { loadBrand, loadSettings, projectBrandDir } from "./lib/project";
 import { log, setStatus } from "./lib/status";
@@ -195,7 +196,7 @@ la cambies por escena.
 };
 
 /** Plantilla inicial: título de marca animado. Claude la reemplaza/mejora. */
-const template = (
+export const template = (
   item: PlanItem,
   brand: Brand,
   w: number,
@@ -203,7 +204,9 @@ const template = (
   durS: number,
   overlay: boolean,
   graphics: EditStyle["graphics"],
+  dimension: GraphicsDimension = "2d",
 ) => {
+  const depth = dimensionParts(dimension, w, h, durS);
   const look = TEMPLATE_STYLE[graphics];
   const m = MOTION_STYLE[graphics];
   const text = esc(item.text || item.description.slice(0, 60));
@@ -218,6 +221,7 @@ const template = (
     <meta name="viewport" content="width=${w}, height=${h}" />
     <title>${esc(item.id)} — ${esc(item.type)}</title>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    ${depth.head}
     ${brandCss(brand, overlay)}
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -252,11 +256,13 @@ const template = (
         width: ${Math.round(Math.min(w, h) * 0.22)}px; height: 6px; border-radius: 3px;
         background: var(--brand-primary); transform-origin: left center;
       }
+      ${depth.css}
     </style>
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="${durS}" data-width="${w}" data-height="${h}">
       <section id="scene" class="clip" data-start="0" data-duration="${durS}" data-track-index="0">
+        ${depth.markup}
         <div id="stage">
           ${overlay ? "" : '<div id="ambient"></div>'}
           ${logo}
@@ -280,8 +286,10 @@ const template = (
       tl.to("#card", { ${m.exitTo}, duration: ${m.exitS}, ease: "${m.exitEase}" }, ${exitAt.toFixed(2)});
       ${logo ? `tl.to("#logo", { opacity: 0, y: -24, duration: ${m.exitS}, ease: "${m.exitEase}" }, ${exitAt.toFixed(2)});` : ""}
       ${overlay ? "" : `tl.to("#ambient", { opacity: 0, duration: ${m.exitS}, ease: "${m.exitEase}" }, ${exitAt.toFixed(2)});`}
+      ${depth.timeline}
       window.__timelines["main"] = tl;
     </script>
+    ${depth.script}
   </body>
 </html>
 `;
@@ -333,6 +341,9 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   const brandDir = projectBrandDir(id);
   const assets = path.join(dir, "assets");
   fs.mkdirSync(path.join(assets, "fonts"), { recursive: true });
+  if (settings.style.graphicsDimension === "3d") {
+    fs.cpSync(path.join(ROOT, "assets", "vendor", "three"), path.join(assets, "three"), { recursive: true });
+  }
   if (brand.logo && fs.existsSync(path.join(brandDir, brand.logo))) {
     fs.copyFileSync(path.join(brandDir, brand.logo), path.join(assets, brand.logo));
   } else brand.logo = "";
@@ -400,11 +411,11 @@ export const initScene = async (id: string, itemId: string, force = false) => {
   }[layout];
   fs.writeFileSync(
     path.join(dir, "index.html"),
-    template(item, brand, width, height, durS, overlay, settings.style.graphics),
+    template(item, brand, width, height, durS, overlay, settings.style.graphics, settings.style.graphicsDimension ?? "2d"),
   );
   fs.writeFileSync(
     path.join(dir, "BRIEF.md"),
-    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}${motionBrief(settings.style.graphics, durS)}${imagesBrief}${instructionsBrief}`,
+    `# Escena ${item.id}\n\n- Tipo: ${item.type}\n- Layout: ${layoutText}\n- Duración: ${durS}s (data-duration del root; no cambiarla)\n- Lienzo: ${width}x${height}\n- Texto: ${item.text ?? "-"}\n- Descripción: ${item.description}\n- Por qué: ${item.reason}\n- Dimensión: ${DIMENSION_BRIEF[settings.style.graphicsDimension ?? "2d"]}\n- Estilo de gráficos: ${GRAPHICS_BRIEF[settings.style.graphics]}\n\nUsar las variables CSS de marca (--brand-*, --font-heading, --font-body) del <style id="brand">.\n${layoutNotes}${motionBrief(settings.style.graphics, durS)}${imagesBrief}${instructionsBrief}`,
   );
   log(id, `[scene] init ${itemId} (${item.type}, ${durS}s, ${layout}, ${width}x${height})`);
   console.log(`Escena lista para editar: ${path.relative(process.cwd(), path.join(dir, "index.html"))}`);

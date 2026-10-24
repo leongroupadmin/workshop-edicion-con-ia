@@ -1,5 +1,5 @@
 import "server-only";
-import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS, mergeSettings } from "../defaults";
+import { CUT_LABELS, GRAPHICS_DIMENSION_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS, mergeSettings } from "../defaults";
 import type { EditStyle, Settings } from "../types";
 
 const pick = <T extends string>(v: unknown, options: Record<T, unknown>, fallback: T): T =>
@@ -10,6 +10,7 @@ const cleanStyle = (st: EditStyle, prev: EditStyle): EditStyle => ({
   pace: pick(st.pace, PACE_LABELS, prev.pace),
   graphicsCount: Math.max(0, Math.min(30, Math.round(Number(st.graphicsCount) || 0))),
   graphics: pick(st.graphics, GRAPHICS_LABELS, prev.graphics),
+  graphicsDimension: pick(st.graphicsDimension, GRAPHICS_DIMENSION_LABELS, prev.graphicsDimension ?? "2d"),
   noGraphics: st.noGraphics === true,
   layoutUse: pick(st.layoutUse, LAYOUT_USE_LABELS, prev.layoutUse),
   fixedLayout: st.fixedLayout === true,
@@ -30,6 +31,7 @@ export const normalizeSettings = (patch: Partial<Settings>, base: Settings): Set
   next.subtitles.mixFonts = next.subtitles.mixFonts === true;
   next.subtitles.primaryFont = next.subtitles.primaryFont === "body" ? "body" : "heading";
   if (!["brand", "lora", "heading", "body"].includes(next.subtitles.accentFont ?? "")) next.subtitles.accentFont = "brand";
+  if (next.subtitles.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(next.subtitles.color)) delete next.subtitles.color;
   next.style = cleanStyle(next.style, base.style);
   next.subtitles.size = Math.max(32, Math.min(140, Math.round(next.subtitles.size)));
   next.subtitles.maxWords = Math.max(1, Math.min(4, Math.round(next.subtitles.maxWords)));

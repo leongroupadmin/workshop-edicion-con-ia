@@ -1,6 +1,6 @@
 "use client";
 
-import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS, SPLIT_SHARES } from "@/lib/defaults";
+import { CUT_LABELS, GRAPHICS_DIMENSION_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS, SPLIT_SHARES } from "@/lib/defaults";
 import type { EditStyle, Format } from "@/lib/types";
 import { LayoutIcon, Row, Seg } from "./ui";
 
@@ -246,6 +246,15 @@ export const StyleFields = ({
                 <Hint>{splitText}</Hint>
               </Row>
             ) : null}
+
+            <Row label="Dimensión de los gráficos">
+              <Seg value={st.graphicsDimension ?? "2d"} onChange={(graphicsDimension) => set({ graphicsDimension })} options={options(GRAPHICS_DIMENSION_LABELS)} />
+              <Hint>{st.graphicsDimension === "3d"
+                ? "Objetos con volumen, luces y cámara. Puede tardar más en renderizar."
+                : st.graphicsDimension === "2.5d"
+                  ? "Capas con perspectiva y profundidad aparente; render liviano."
+                  : "Gráficos planos y animaciones como hasta ahora."}</Hint>
+            </Row>
 
             <Row label="Estilo de los gráficos">
               <Seg value={st.graphics} onChange={(graphics) => set({ graphics })} options={options(GRAPHICS_LABELS)} />

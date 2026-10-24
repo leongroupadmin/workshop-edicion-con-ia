@@ -3,12 +3,12 @@
   "format": "vertical",
   "fps": 30,
   "subtitles": {
-    "style": "minimal",
+    "style": "karaoke",
     "size": 72,
     "position": "bottom",
     "maxWords": 3,
     "uppercase": false,
-    "mixFonts": false,
+    "mixFonts": true,
     "primaryFont": "heading",
     "accentFont": "brand"
   },
@@ -16,7 +16,7 @@
     "enabled": true,
     "volume": 0.25,
     "duckTo": 0.3,
-    "track": ""
+    "track": "upbeat-modern-tech-cf82e3.wav"
   },
   "sfx": {
     "enabled": true,
@@ -27,7 +27,10 @@
     "pace": "dynamic",
     "graphicsCount": 0,
     "graphics": "bold",
+    "graphicsDimension": "2.5d",
+    "noGraphics": false,
     "layoutUse": "mixed",
+    "fixedLayout": false,
     "cut": "aggressive",
     "autoZoom": true,
     "split": {

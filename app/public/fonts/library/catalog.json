@@ -80,5 +80,13 @@
     "family": "Bebas Neue",
     "file": "BebasNeue-Regular.ttf",
     "weight": 400
+  },
+  {
+    "family": "Bricolage Grotesque",
+    "file": "BricolageGrotesque[opsz,wdth,wght].ttf"
+  },
+  {
+    "family": "Geist Mono",
+    "file": "GeistMono[wght].ttf"
   }
 ]

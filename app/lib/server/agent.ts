@@ -15,6 +15,10 @@ import { emit, setRunning, store } from "./bus";
 import { ROOT } from "./fsutil";
 import { BROLL_EXTS, listImages } from "./images";
 import { transitionsRule } from "./transitions";
+import { readJson, writeJson } from "./fsutil";
+import { runScript } from "./jobs";
+import { corregirPalabras, correccionesValidas, type CorreccionSubtitulo } from "../subtitulos";
+import type { Transcript } from "../types";
 import {
   appendChat,
   appendLog,
@@ -359,11 +363,11 @@ const validPlan = (value: unknown): Plan | null => {
 };
 
 /** Codex puede envolver la salida estructurada en un bloque Markdown. */
-const parseOpenAiReply = (raw: string): { reply?: unknown; plan?: unknown } => {
+const parseOpenAiReply = (raw: string): { reply?: unknown; plan?: unknown; subtitles?: unknown } => {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
   const candidate = (fenced ?? raw).trim();
   try {
-    return JSON.parse(candidate) as { reply?: unknown; plan?: unknown };
+    return JSON.parse(candidate) as { reply?: unknown; plan?: unknown; subtitles?: unknown };
   } catch {
     const start = candidate.indexOf("{");
     if (start >= 0) {
@@ -381,7 +385,7 @@ const parseOpenAiReply = (raw: string): { reply?: unknown; plan?: unknown } => {
         if (char === '"') quoted = true;
         else if (char === "{") depth++;
         else if (char === "}" && --depth === 0) {
-          return JSON.parse(candidate.slice(start, i + 1)) as { reply?: unknown; plan?: unknown };
+          return JSON.parse(candidate.slice(start, i + 1)) as { reply?: unknown; plan?: unknown; subtitles?: unknown };
         }
       }
     }
@@ -434,15 +438,17 @@ const runOpenAiAgent = (id: string, text: string, opts: RunOptions = {}) => {
   if (kind === "plan") writeStatus(id, "planning", "OpenAI está armando el plan de edición…");
   if (kind === "changes") writeStatus(id, "planning", "OpenAI está ajustando el plan…");
   const versionsBefore = listVersions(id).at(-1)?.version ?? 0;
+  let subtitlesChanged: CorreccionSubtitulo[] = [];
   void (async () => {
     try {
       const wantsPlan = kind === "plan" || kind === "changes";
-      const instructions = `Sos la IA de una app de edición de video. Respondé SIEMPRE con JSON válido, sin Markdown: {"reply":"respuesta breve en español","plan":null}. Si el pedido es armar o cambiar el plan de edición, reemplazá null con el plan completo. El plan debe tener version:1, summary, keywords y items. Cada item requiere id, type, startMs, endMs, description y reason. Usá solo title, motion_graphic, overlay, lower_third, broll, transition, sfx o zoom. Si usás un clip B-roll adicional, agregá file con la ruta broll/<archivo> que figura en el contexto; no inventes nombres ni reemplaces cut.mp4. REGLA INVIOLABLE: title, motion_graphic, overlay, lower_third y broll deben durar al menos ${MIN_SCENE_DURATION_MS} ms totales, reservando al menos 2000 ms de lectura continua después de la entrada y antes de la salida. Es un mínimo, pueden durar más según el contenido; no superpongas escenas que se tapen ni excedas el video; no aplica a subtítulos, transiciones, zooms ni efectos de sonido. El plan queda en borrador; no generes escenas ni renderices.${transitionsRule() ? ` ${transitionsRule()}` : ""}${wantsPlan ? " Este pedido exige que plan no sea null." : ""}`;
+      const instructions = `Sos la IA de una app de edición de video. Respondé SIEMPRE con JSON válido, sin Markdown: {"reply":"respuesta breve en español","plan":null,"subtitles":[]}. Si el pedido es armar o cambiar el plan de edición, reemplazá null con el plan completo. Si el pedido es corregir palabras de los subtítulos (salen de la transcripción, que puede tener errores de Whisper), poné en subtitles una lista de {"find":"palabras tal cual figuran en la transcripción","replace":"cómo tienen que decir"}, con unas pocas palabras de contexto en find si la palabra se repite; el panel las aplica y arma una versión nueva. Solo podés cambiar el plan y corregir palabras de los subtítulos: si piden otra cosa (rediseñar una escena ya generada, cambiar el video, etc.), no digas que lo hiciste; explicá en reply que con OpenAI no se puede y que cambien a Claude en la configuración del proyecto o usen los botones del panel. Nunca digas que algo quedó corregido si no va en plan o en subtitles. El plan debe tener version:1, summary, keywords y items. Cada item requiere id, type, startMs, endMs, description y reason. Usá solo title, motion_graphic, overlay, lower_third, broll, transition, sfx o zoom. Si usás un clip B-roll adicional, agregá file con la ruta broll/<archivo> que figura en el contexto; no inventes nombres ni reemplaces cut.mp4. REGLA INVIOLABLE: title, motion_graphic, overlay, lower_third y broll deben durar al menos ${MIN_SCENE_DURATION_MS} ms totales, reservando al menos 2000 ms de lectura continua después de la entrada y antes de la salida. Es un mínimo, pueden durar más según el contenido; no superpongas escenas que se tapen ni excedas el video; no aplica a subtítulos, transiciones, zooms ni efectos de sonido. El plan queda en borrador; no generes escenas ni renderices.${transitionsRule() ? ` ${transitionsRule()}` : ""}${wantsPlan ? " Este pedido exige que plan no sea null." : ""}`;
       const request = wantsPlan
         ? "Armá o actualizá el plan de edición usando la transcripción, los ajustes y el plan actual incluidos en el contexto."
         : text;
       const context = `${projectContext(id)}\n\nPedido: ${request}`;
       let parsed = parseOpenAiReply(await openAiRequest(instructions, context, abort.signal));
+      const fixes = correccionesValidas(parsed.subtitles);
       // Algunos turnos de Codex responden el envoltorio de chat con plan:null,
       // aun cuando el pedido inicial es explícitamente de planificación. En ese
       // caso hacemos un único repreguntado acotado, con el contrato sin
@@ -461,6 +467,20 @@ const runOpenAiAgent = (id: string, text: string, opts: RunOptions = {}) => {
         if (wantsPlan) throw new Error("OpenAI no devolvió un plan. Reintentá.");
         entry.text = typeof parsed.reply === "string" ? parsed.reply : "OpenAI no devolvió una respuesta.";
       }
+      if (fixes.length) {
+        const r = applySubtitleFixes(id, fixes);
+        if (r.aplicadas.length) {
+          entry.tools!.push({ name: "Edit", summary: "cut.transcript.json" });
+          subtitlesChanged = r.aplicadas;
+          const planNow = readPlan(id);
+          entry.text +=
+            !listVersions(id).length || (planNow && planNow.status === "draft")
+              ? "\n\nCorregí los subtítulos: se van a ver cuando toques Renderizar."
+              : "\n\nCorregí los subtítulos y estoy armando una versión nueva.";
+        }
+        if (r.sinEncontrar.length)
+          entry.text += `\n\nNo encontré en los subtítulos: ${r.sinEncontrar.map((f) => `“${f.find}”`).join(", ")}. Decime cómo figura exactamente.`;
+      }
       emit(id, { type: "delta", entryId: entry.id, text: entry.text });
     } catch (err) {
       entry.error = abort.signal.aborted ? "Detenido por el usuario." : (err as Error).message;
@@ -470,10 +490,52 @@ const runOpenAiAgent = (id: string, text: string, opts: RunOptions = {}) => {
       setRunning(id, null);
       if (opts.onDone) opts.onDone(entry.error ?? null);
       else reconcile(id, kind, versionsBefore, entry);
+      if (subtitlesChanged.length && !entry.error) renderSubtitleFix(id, subtitlesChanged);
       emit(id, { type: "refresh" });
     }
   })();
   return entry.id;
+};
+
+/**
+ * Corrige palabras en las dos transcripciones (la del original y la de
+ * cut.mp4) para que el arreglo sobreviva a un re-corte. Los tiempos no cambian.
+ */
+const applySubtitleFixes = (id: string, fixes: CorreccionSubtitulo[]) => {
+  const p = paths(id);
+  const aplicadas: CorreccionSubtitulo[] = [];
+  const sinEncontrar: CorreccionSubtitulo[] = [];
+  const files = [p.cutTranscript, p.transcript].filter((f) => fs.existsSync(f));
+  const docs = files.map((f) => readJson<Transcript | null>(f, null));
+  for (const fix of fixes) {
+    let encontrada = false;
+    docs.forEach((doc, i) => {
+      if (!doc) return;
+      const r = corregirPalabras(doc.words, fix);
+      if (!r.cambios) return;
+      doc.words = r.words;
+      if (i === 0) encontrada = true;
+    });
+    (encontrada ? aplicadas : sinEncontrar).push(fix);
+  }
+  docs.forEach((doc, i) => {
+    if (doc && aplicadas.length) writeJson(files[i], { ...doc, text: doc.words.map((w) => w.text).join(" ") });
+  });
+  if (aplicadas.length)
+    appendLog(id, "agent.log", `Subtítulos corregidos: ${aplicadas.map((f) => `"${f.find}" → "${f.replace}"`).join(", ")}`);
+  return { aplicadas, sinEncontrar };
+};
+
+/** Con el plan aprobado (o sin plan) y ya hay versiones: arma una versión nueva con los subtítulos corregidos. */
+const renderSubtitleFix = (id: string, fixes: CorreccionSubtitulo[]) => {
+  const plan = readPlan(id);
+  if (!listVersions(id).length || (plan && plan.status === "draft") || isBusy(id)) return;
+  try {
+    writeStatus(id, "assembling", "Armando el video con los subtítulos corregidos…");
+    runScript(id, "Renderizar", "render.ts", ["--note", `Subtítulos: ${fixes.map((f) => `${f.find} → ${f.replace}`).join(", ")}`.slice(0, 300)]);
+  } catch (err) {
+    writeStatus(id, "error", "No se pudo renderizar", { error: (err as Error).message });
+  }
 };
 
 /** Deja status.json coherente con lo que pasó en el turno de la IA elegida. */

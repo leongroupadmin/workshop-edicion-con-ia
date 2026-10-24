@@ -195,6 +195,8 @@ export type Settings = {
     mixFonts?: boolean;
     primaryFont?: "heading" | "body";
     accentFont?: "brand" | "lora" | "heading" | "body";
+    /** Color del texto de los subtítulos (hex). Vacío = el color de texto de la marca. */
+    color?: string;
   };
   music: {
     enabled: boolean;
@@ -230,6 +232,8 @@ export type EditStyle = {
   graphicsCount: number;
   /** Estilo visual con el que Claude diseña los motion graphics. */
   graphics: "minimal" | "bold" | "corporate";
+  /** Ausente en proyectos anteriores: equivale a 2D. */
+  graphicsDimension?: "2d" | "2.5d" | "3d";
   /**
    * Sin motion graphics (p.ej. monólogos): el plan no lleva ítems con escena,
    * solo zooms, transiciones y sonidos. Si el plan tiene escenas, no se usan.
@@ -299,6 +303,7 @@ export const DEFAULT_SETTINGS: Settings = {
     pace: "normal",
     graphicsCount: 0,
     graphics: "bold",
+    graphicsDimension: "2d",
     layoutUse: "auto",
     split: { position: "top", share: 0.5 },
     cut: "normal",
@@ -342,14 +347,14 @@ export const FORMAT_SIZE: Record<Format, { width: number; height: number }> = {
   square: { width: 1080, height: 1080 },
 };
 
-export type SceneSpec = { layout: SceneLayout; width: number; height: number; graphics: string };
+export type SceneSpec = { layout: SceneLayout; width: number; height: number; graphics: string; graphicsDimension?: EditStyle["graphicsDimension"] };
 
 /** Formato, tamaño y estilo que tiene que tener la escena de un ítem con los ajustes actuales. */
 export const sceneSpecFor = (item: Pick<PlanItem, "type" | "layout">, settings: Settings): SceneSpec => {
   const layout = sceneLayout(item);
   const { width, height } =
     layout === "split" ? splitSceneSize(settings.format, settings.style.split.share) : FORMAT_SIZE[settings.format];
-  return { layout, width, height, graphics: settings.style.graphics };
+  return { layout, width, height, graphics: settings.style.graphics, graphicsDimension: settings.style.graphicsDimension ?? "2d" };
 };
 
 /** Tamaño de la escena de pantalla dividida (`share` = parte de la pantalla que ocupa el gráfico). */

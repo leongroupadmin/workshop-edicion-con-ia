@@ -16,7 +16,7 @@ usá assets/brand como compatibilidad para proyectos anteriores), y escribí
 plan.json en borrador con títulos, motion graphics, overlays, transiciones,
 zooms y efectos (con timestamp y por qué). Respetá el estilo de edición de
 settings.json (style.graphicsCount = cantidad EXACTA de gráficos repartidos
-parejos si es mayor a 0, style.pace = cuántos elementos, style.graphics = estilo visual,
+parejos si es mayor a 0, style.pace = cuántos elementos, style.graphics = estilo visual, style.graphicsDimension = 2d / 2.5d (perspectiva CSS) / 3d (Three.js con geometría, luces y cámara),
 style.autoZoom, style.layoutUse, style.fixedLayout; con style.noGraphics = true
 el plan va SIN gráficos, solo zooms, transiciones y sonidos; ver CLAUDE.md). Si settings.music.enabled es
 true y settings.music.track está vacío, elegí la música de fondo según el tono

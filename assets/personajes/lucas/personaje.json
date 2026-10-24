@@ -1,0 +1,22 @@
+{
+  "slug": "lucas",
+  "nombre": "Lucas",
+  "descripcion": "Mantiene postura, leves movimientos reales mientras habla",
+  "encuadre": "Plano medio de la persona de la foto, mirando a cámara, cámara fija, misma luz y mismo fondo",
+  "vozId": "8f150dee-73b5-47db-9904-3da87426007a",
+  "acento": "cordobes",
+  "restricciones": [
+    "musica",
+    "sonidos",
+    "subtitulos",
+    "textos",
+    "graficos",
+    "cortes",
+    "postura",
+    "personas"
+  ],
+  "createdAt": "2026-10-23T13:21:45.486Z",
+  "updatedAt": "2026-10-24T17:46:49.002Z",
+  "foto": "foto.png",
+  "energia": "natural"
+}

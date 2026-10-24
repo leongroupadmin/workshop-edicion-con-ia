@@ -8,6 +8,7 @@ const sameStyle = (a: EditStyle, b: EditStyle) =>
   a.pace === b.pace &&
   a.graphicsCount === b.graphicsCount &&
   a.graphics === b.graphics &&
+  (a.graphicsDimension ?? "2d") === (b.graphicsDimension ?? "2d") &&
   !!a.noGraphics === !!b.noGraphics &&
   a.layoutUse === b.layoutUse &&
   !!a.fixedLayout === !!b.fixedLayout &&

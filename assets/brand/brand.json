@@ -1,46 +1,37 @@
 {
-  "name": "Lucas IA",
+  "name": "León Group Nueva",
   "colors": {
-    "primary": "#FFFFFF",
-    "secondary": "#878787",
-    "background": "#000000",
-    "text": "#A1A1A1",
-    "highlight": "#FFFFFF"
+    "primary": "#F59E0B",
+    "secondary": "#FCD34D",
+    "background": "#EAE5D6",
+    "text": "#554A2A",
+    "highlight": "#B45309",
+    "ink": "#11100C",
+    "textOnDark": "#F2F0E6",
+    "muted": "#6F6B61",
+    "card": "#F4F0E4"
   },
   "fonts": {
-    "heading": "Inter",
-    "body": "Inter",
-    "subtitleAccent": "Manrope",
+    "heading": "Bricolage Grotesque",
+    "body": "Geist",
+    "subtitleAccent": "Geist Mono",
     "files": [
       {
-        "family": "Hauora Sans",
-        "file": "hauora-sans-latin-400-normal.woff2",
-        "weight": 400
+        "family": "Bricolage Grotesque",
+        "file": "library-BricolageGrotesque[opsz,wdth,wght].ttf"
       },
       {
-        "family": "Hauora Sans",
-        "file": "hauora-sans-latin-600-normal.woff2",
-        "weight": 600
+        "family": "Geist",
+        "file": "library-Geist[wght].ttf"
       },
       {
-        "family": "Hauora Sans",
-        "file": "hauora-sans-latin-700-normal.woff2",
-        "weight": 700
-      },
-      {
-        "family": "Hauora Sans",
-        "file": "hauora-sans-latin-800-normal.woff2",
-        "weight": 800
-      },
-      {
-        "family": "Inter",
-        "file": "library-Inter[opsz,wght].ttf"
-      },
-      {
-        "family": "Manrope",
-        "file": "library-Manrope[wght].ttf"
+        "family": "Geist Mono",
+        "file": "library-GeistMono[wght].ttf"
       }
-    ]
+    ],
+    "headingWeight": 800,
+    "bodyWeight": 500,
+    "mono": "Geist Mono"
   },
-  "logo": ""
+  "logo": "logo.png"
 }

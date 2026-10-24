@@ -1,5 +1,5 @@
 import "server-only";
-import { CUT_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS } from "../defaults";
+import { CUT_LABELS, GRAPHICS_DIMENSION_LABELS, GRAPHICS_LABELS, LAYOUT_USE_LABELS, PACE_LABELS } from "../defaults";
 import type { Settings } from "../types";
 
 const FORMAT = { vertical: "vertical", horizontal: "horizontal", square: "cuadrado" } as const;
@@ -47,6 +47,7 @@ export const describeChanges = (
   if (sa.graphicsCount !== sb.graphicsCount) {
     out.push(sb.graphicsCount ? `${sb.graphicsCount} gráficos` : "cantidad de gráficos automática");
   }
+  if ((sa.graphicsDimension ?? "2d") !== (sb.graphicsDimension ?? "2d")) out.push(`gráficos ${GRAPHICS_DIMENSION_LABELS[sb.graphicsDimension ?? "2d"]}`);
   if (sa.graphics !== sb.graphics) out.push(`gráficos ${GRAPHICS_LABELS[sb.graphics].toLowerCase()}`);
   return out;
 };

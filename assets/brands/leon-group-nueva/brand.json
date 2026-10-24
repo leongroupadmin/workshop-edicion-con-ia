@@ -1,0 +1,37 @@
+{
+  "name": "León Group Nueva",
+  "colors": {
+    "primary": "#F59E0B",
+    "secondary": "#FCD34D",
+    "background": "#EAE5D6",
+    "text": "#17140C",
+    "highlight": "#B45309",
+    "ink": "#11100C",
+    "textOnDark": "#F2F0E6",
+    "muted": "#6F6B61",
+    "card": "#F4F0E4"
+  },
+  "fonts": {
+    "heading": "Bricolage Grotesque",
+    "headingWeight": 800,
+    "body": "Geist",
+    "bodyWeight": 500,
+    "mono": "Geist Mono",
+    "subtitleAccent": "Geist Mono",
+    "files": [
+      {
+        "family": "Bricolage Grotesque",
+        "file": "library-BricolageGrotesque[opsz,wdth,wght].ttf"
+      },
+      {
+        "family": "Geist",
+        "file": "library-Geist[wght].ttf"
+      },
+      {
+        "family": "Geist Mono",
+        "file": "library-GeistMono[wght].ttf"
+      }
+    ]
+  },
+  "logo": "logo.png"
+}

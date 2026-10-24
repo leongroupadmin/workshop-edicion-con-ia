@@ -36,7 +36,8 @@ const appliedCutStyle = (id: string) => {
 };
 
 const sameSpec = (a: SceneSpec, b: SceneSpec) =>
-  a.layout === b.layout && a.width === b.width && a.height === b.height && a.graphics === b.graphics;
+  a.layout === b.layout && a.width === b.width && a.height === b.height && a.graphics === b.graphics &&
+  (a.graphicsDimension ?? "2d") === (b.graphicsDimension ?? "2d");
 
 /** Gráficos que hay que generar (o regenerar) para que el video quede como está configurado. */
 export const scenesToGenerate = (id: string, plan: Plan | null, settings: Settings): PlanItem[] =>
@@ -46,7 +47,7 @@ export const scenesToGenerate = (id: string, plan: Plan | null, settings: Settin
     const want = sceneSpecFor(it, settings);
     if (it.sceneSpec) return !sameSpec(it.sceneSpec, want);
     // Escenas viejas sin datos: solo si el tipo de archivo no corresponde (overlay = .webm con transparencia)
-    return (want.layout === "overlay") !== it.file.endsWith(".webm");
+    return want.graphicsDimension !== "2d" || (want.layout === "overlay") !== it.file.endsWith(".webm");
   });
 
 /** Lo que importa del plan para el video, para saber si cambió desde el último render. */
@@ -130,7 +131,7 @@ const scenesPrompt = (id: string, items: PlanItem[]) => `Tocaron "Renderizar" en
 Generá SOLO las escenas de estos ítems, con los ajustes actuales de settings.json:
 ${items.map((i) => `- ${i.id} · ${i.type} · ${LAYOUT_LABELS[sceneLayout(i)].toLowerCase()} · ${i.text ? `"${i.text}"` : i.description}`).join("\n")}
 Para cada uno: npx tsx scripts/scene.ts init ${id} <itemId> --force (crea la plantilla con el formato, tamaño y
-estilo actuales), diseñala según su BRIEF.md y el estilo de gráficos con las skills de HyperFrames,
+estilo actuales), diseñala según su BRIEF.md, respetando graphicsDimension (2d / 2.5d / 3d) y el estilo de gráficos con las skills de HyperFrames,
 npx hyperframes lint projects/${id}/scenes-src/<itemId> y npx tsx scripts/scene.ts render ${id} <itemId>.
 NO corras scripts/render.ts: el panel arma el video cuando termines. Al final contame en 1-2 líneas qué hiciste.`;
 

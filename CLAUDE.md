@@ -16,6 +16,8 @@ assets/brand/         brand.json (colores, tipografías, logo) + fonts/ + logo  
 assets/brand/clipo/   logos de Clipo (horizontal, ícono, completo) — los usa el panel
 assets/brands/<slug>/ marcas guardadas (copia de brand.json + fonts/ + logo)
 assets/music/         música de fondo (.mp3/.wav/.m4a) + sfx/ efectos           (compartido)
+assets/personajes/    personajes del clon (<slug>/foto.<ext> + personaje.json) + claves.json
+clones/<id>/          un video del pipeline de clon (ver "Pipeline de clon")
 projects/<id>/        un proyecto de edición por video
   raw/                video original (no tocar)
   transcript.json     transcripción del original (tiempos del original)
@@ -232,6 +234,204 @@ mirá qué archivos ya existen para retomar donde quedó.
   2 s (gancho). No tapar la cara: overlays arriba o al centro,
   fuera de la zona de subtítulos.
 
+## Pipeline de clon
+
+Pipeline aparte, al lado del de edición: crea un video de un **personaje
+hablando** (Kie genera los clips, Cartesia le pone la voz) y después lo
+entrega al pipeline de edición como si el usuario lo hubiera subido. **No
+edita nada**: subtítulos, motion graphics, música y marca se hacen en edición.
+No toca `projects/` (salvo al crear el proyecto en el paso 5), `clips/`,
+`src/edit/` ni `assets/brand/`. En el panel son las pestañas **Clon**
+(`/clon`, `/clon/<id>`) y **Personajes** (`/personajes`). Es la única
+excepción a "Todo local": la foto del personaje va a Kie y el audio del clon a
+Cartesia, y nada más (nunca videos de `projects/` ni `clips/`).
+
+**Personajes** (`assets/personajes/<slug>/`): `personaje.json` (nombre,
+descripción = cómo es y cómo habla, encuadre = frase de cámara que se repite
+en todos los bloques para que no salte, `vozId` de Cartesia, `acento` —
+rioplatense, cordobés, norteño, cuyano, uruguayo, chileno, mexicano,
+colombiano, neutro, España u `otro` con `acentoOtro` libre— y
+`restricciones`: lo que el video NO tiene que traer, tildable: música,
+efectos de sonido, subtítulos, textos/carteles, motion graphics, cortes,
+cambiar la postura de la foto (`postura`: el cuerpo queda como en la foto,
+solo se mueven cara y manos), otras personas; sin el campo = todas) y
+`energia` (`tranquilo | natural | entusiasta | energico`; sin el campo =
+entusiasta) y `registro` (`profesional | cercano | informal`; sin el campo =
+cercano: natural pero sin jerga como "posta", "loco" o "re"; solo informal la
+permite). El registro lo usa solo la IA al escribir el guion. + `foto.<ext>`. Encuadre, descripción, acento, energía y
+restricciones van en el pedido de cada clip (`promptBloque`). La energía se
+usa en dos lugares: es la emoción con la que Cartesia lee el guion (la
+voz final) y va en el pedido de cada clip a Kie para que la cara acompañe
+(con el cuerpo sereno, sin gestos exagerados). El acento, la energía y el registro también le dicen a la IA cómo escribir
+el guion (voseo o tuteo, exclamaciones, qué tan formal).
+Se crean, editan y eliminan (Papelera) desde la pestaña Personajes.
+**Claves:** las de Kie y Cartesia se cargan en esa pestaña ("Probar conexión"
+la prueba y, si funciona, la guarda) en `assets/personajes/claves.json`
+(fuera de git, permisos 600). `KIE_API_KEY` / `CARTESIA_API_KEY` del entorno
+tienen prioridad. Nunca leas, muestres ni copies las claves: ni al chat, ni al
+job, ni al navegador.
+
+1. **Setear personaje** — se elige un personaje (con foto y voz), el
+   **modelo de video** de Kie, formato (`vertical` 9:16 | `horizontal` 16:9),
+   resolución y duración objetivo (solo se pide si el guion lo escribe la IA;
+   con un guion pegado la duración sale del texto). Modelos (`MODELOS` en
+   `app/lib/clon/types.ts`, verificados en docs.kie.ai/market; todos usan
+   `POST /api/v1/jobs/createTask` + `GET /api/v1/jobs/recordInfo`):
+   - `grok-imagine/image-to-video` (**por defecto**): `duration` en texto de
+     "6" a "30" (el guion se parte en clips de 6 a 15 s, que mantienen mejor
+     el labial), `resolution` 480p/720p/1080p, `mode: "normal"` (el "spicy" no
+     anda con fotos propias). Con una sola foto el formato del video sale de la
+     foto: por eso el worker la recorta a 9:16 o 16:9 (`foto-9x16.jpg`) antes
+     de subirla. Prompt en inglés (la frase que dice, en español).
+   - `grok-imagine-video-1-5-preview`: `duration` como **número** de 1 a 15,
+     480p/720p/1080p, `aspect_ratio` sí cuenta, una sola foto,
+     `enable_audio: true`. Prompt en inglés.
+   - `gemini-omni-video`: `duration` "4", "6", "8" o "10" (el guion usa 8 o
+     10), 720p/1080p/4k, prompt en español.
+   El modelo queda fijo en el clon; para cambiarlo, crear otro. El personaje se **congela** en `clones/<id>/personaje/`
+   (datos + foto): editarlo después no cambia los clones ya creados.
+
+2. **Guion** — el usuario lo pega, o escribe un brief y lo redacta Claude
+   (`worker.ts <id> guion`); con IA se elige quién lo escribe:
+   `settings.aiProvider` `anthropic` (Claude, por defecto) u `openai` (Codex,
+   igual que en Clips). Con IA puede sumar un **gancho** y un **CTA**
+   opcionales (`guion.hook`, `guion.cta`, hasta 300 caracteres): van palabra
+   por palabra al principio y al final y la IA escribe el medio (con alguno de
+   los dos, el brief puede quedar vacío). `faltanGanchoOCta` lo verifica; si la
+   IA los cambió, se le pide una vez más y si sigue mal el mensaje lo avisa. En los dos casos queda partido en **bloques que
+   el modelo acepta** (uno por clip): Gemini 8 o 10 s (hasta 25 palabras);
+   Grok de 6 a 15 s con 1 s de aire (hasta 35 palabras). Ritmo de 2.5
+   palabras/s, cortando en oraciones y repartiendo parejo
+   (`app/lib/clon/guion.ts`). Nunca pidas duraciones fuera de las del modelo:
+   `crearTarea` las rechaza. Se edita en el panel hasta aprobarlo; un
+   bloque que queda largo se parte solo. **Aprobar es el único gate antes de
+   gastar plata**: nunca generes clips sin `guion.aprobadoAt`.
+
+3. **Crear el video** — `worker.ts <id> generar`: sube la foto a Kie
+   (`https://kieai.redpandaai.co/api/file-stream-upload`: la subida NO está en
+   api.kie.ai; la URL vive 24 h, se sube en cada corrida), pide un clip por bloque (con el
+   modelo del clon, de a 3 en paralelo; el prompt lleva el encuadre, la
+   descripción, el acento, el texto exacto entre comillas y las restricciones), guarda `job.json` después de cada bloque, baja
+   cada clip a `clips/cN.mp4` (los de Kie viven 14 días), lo verifica con
+   ffprobe (imagen, sonido y duración) y los pega con el demuxer `concat`
+   (`-c copy`; si sale mal, re-encodea) → `pegado.mp4`.
+   **Si un bloque falla**, el job queda en `error` con el bloque señalado y
+   "Reintentar" pide **solo ese**: los listos no se tocan, un `taskId` pagado
+   se vuelve a consultar y una bajada fallida se vuelve a bajar de la URL.
+   Solo el bloque que falló se puede corregir antes de reintentar.
+
+4. **Voz** — sigue sola después del paso 3 (o `worker.ts <id> voz` para
+   reintentar solo esto, sin volver a pagar los clips). Ya NO se usa el cambio
+   de voz de Cartesia (copiaba la entonación floja de Kie):
+   1. **Cartesia lee el guion** entero con la voz del personaje
+      (`leerTexto` en `app/lib/clon/cartesia.ts`: `POST /tts/bytes`,
+      `Cartesia-Version: 2026-08-14`, `model_id: "sonic-3.6"`, `voice: <id>`,
+      `locale: "es"`, `generation_config` speed 1, volume 1 y `emotion` según
+      la energía del personaje: tranquilo→calm, natural→content,
+      entusiasta→enthusiastic, energico→excited; Cartesia acepta cualquier
+      nombre sin dar error) → `voz-cartesia.wav`. Si el texto, la voz y la
+      emoción no cambiaron, se reusa (`sincro/lectura.json`).
+   2. **Whisper** marca cada palabra en la voz de Kie (`pegado.mp4`, la que
+      mueve los labios) y en la de Cartesia (`sincro/kie.json`,
+      `sincro/cartesia.json`).
+   3. **Se ajusta el video a la voz** (`scripts/clon/sincro.ts`, sin otra IA):
+      se emparejan las palabras (subsecuencia común, tolera alguna cambiada),
+      las pausas de Kie que sobran (sobre todo en las uniones entre clips) se
+      cortan y cada tramo con voz se acelera o frena entre 0,6x y 1,6x para que
+      cada palabra caiga donde suena en Cartesia.
+   4. Volumen: Cartesia devuelve la voz baja (unos -22 LUFS) y se lleva a
+      **-16 LUFS** (voz en redes), NO al volumen del audio de Kie (viene muy
+      fuerte, ~-10 LUFS): subirla tanto obligaba al limitador a aplastar los
+      picos y se oían bajones de calidad. La subida se limita para que el
+      limitador (-1 dB) nunca baje un pico más de 3 dB. Después se arma
+      `final.mp4`. `job.voz` guarda `metodo: "lectura"`, la emoción, cuántas
+      palabras se emparejaron y la sincronización (desfase mediano, del 90 %
+      y cuántas palabras pasan de 150 ms).
+   Los clones viejos (sin `metodo`) se hicieron con el cambio de voz.
+   **"Mejorar la sincronización"** (clon listo, método lectura): rehace solo
+   el ajuste con otro nivel (`job.nivelSincro`, `NIVELES` en sincro.ts):
+   1 Suave (tramos de 0,6 s, 0,6x-1,6x; es el de cada clon nuevo), 2 Precisa
+   (0,35 s, 0,5x-2x) y 3 Máxima (0,25 s, 0,5x-2x); 2 y 3 además corrigen los
+   bordes de palabra con el silencio real del audio (`detectSilences`). Es
+   gratis: reusa la lectura de Cartesia y las palabras de Whisper (`sincro/`).
+   Se puede volver al nivel anterior. Lo que queda corrido en Máxima son
+   vocales que Cartesia estira donde la boca de Kie ya cerró. Si el clon ya
+   pasó a edición, ese proyecto no cambia: hay que crear otro.
+
+5. **Pasar a edición** — con `paso: "listo"`, el botón del clon lleva a
+   **"Nuevo video"** (`/nuevo?clon=<id>`): la misma pantalla de siempre para
+   elegir marca, preset, formato, subtítulos, estilo e indicaciones, pero en
+   vez de subir un archivo usa el video del clon. Propone el formato del clon
+   y **`style.cut: "soft"`** (no tiene silencios ni muletillas), y no ofrece
+   "Recordar estas opciones". Recién al confirmar crea un proyecto normal
+   (`final.mp4` en `raw/`, snapshot de la marca, esos ajustes) y arranca el
+   pipeline de edición (`startPrepare`). Se puede repetir para probar otra
+   marca o estilo: cada vez es un proyecto nuevo y `proyectoId` guarda el
+   último. Desde ahí todo sigue igual que con un video subido.
+
+### Clon + B-roll (`job.modo: "broll"`)
+
+Modo del mismo pipeline (selector "Clon / Clon + B-roll" en la pestaña Clon):
+el usuario sube un B-roll y cuenta de qué trata; sale un video vertical
+**partido 50/50: B-roll arriba (sin su audio) y el personaje abajo**, que pasa
+a edición **solo para los subtítulos**. Reusa todo lo anterior; cambia:
+- **Entrada:** `POST /api/clon/broll` (cuerpo = el video, `x-datos` = los
+  datos del clon). Se guarda en `broll/original.<ext>`, se mide y debe durar
+  **de 8 s a 3 min** (`BROLL_MIN_S`/`BROLL_MAX_S`). `job.broll` = archivo,
+  duración, ancho y alto. El formato queda vertical y **la duración la pone el
+  B-roll** (`duracionObjetivoS`). **El guion lo escribe siempre la IA** (no
+  hay "Lo pego yo"; `crearClon` lo rechaza): el usuario cuenta de qué trata
+  el B-roll y la IA escribe para durar lo mismo (2.5 palabras/s, sin el margen
+  de aire del clon normal), sabiendo que arriba se ve el B-roll. Si el guion
+  queda muy largo o corto, el mensaje lo avisa (`avisoDuracion`); se puede
+  corregir antes de aprobar.
+- **Personaje en media pantalla:** los bloques usan `ENCUADRE_MEDIA_PANTALLA`
+  (pecho para arriba, la cara bien visible; `encuadreDe(job)`), la foto se
+  recorta **cuadrada** dejando la cara (`foto-1x1.jpg`) y se pide `1:1`
+  (Gemini no tiene cuadrado: `16:9`).
+- **Voz:** igual (Cartesia lee, Whisper, ajuste, niveles de sincronización).
+  Al final, en vez de mux simple, `armarPartido` (`scripts/clon/partido.ts`):
+  B-roll a 1080×960 (recorte que llena, sin deformar) arriba, el personaje
+  ajustado (`sincro/video.mp4`) a 1080×960 abajo (recorte que cuida la cara),
+  la voz de Cartesia. **La voz manda el largo:** B-roll más largo → se corta;
+  un poco más corto → se estira hasta 15 %; si aún falta, el último cuadro
+  queda quieto.
+- **Pasar a edición:** "Nuevo video" muestra solo marca y subtítulos. El
+  servidor (`soloSubtitulos` en `app/lib/clon/server.ts`) apaga todo lo demás
+  (sin motion graphics, zooms, transiciones, efectos ni música, sin
+  indicaciones, corte suave) y pone los subtítulos **al medio**. Se transcribe
+  y corta como siempre y se **renderiza directo, sin plan** (no se le pide nada
+  a Claude): son los mismos scripts del pipeline de edición, sin cambios. Sin
+  plan no hay palabras resaltadas.
+
+### Archivos de `clones/<id>/`
+
+```
+job.json            estado (schema "clon-v1"): personaje congelado, settings,
+                    guion.bloques {id, texto, encuadre, segundos, taskId, url,
+                    file, creditos, estado}, paso (guion | esperando_aprobacion
+                    | generando | voz | listo | error), mensaje, error, fallo
+                    (qué acción reintentar), voz (método, emoción, sincro,
+                    volumen), proyectoId
+personaje/          copia de personaje.json + foto
+clips/cN.mp4        un clip por bloque, en orden
+lista.txt           lista para el concat de ffmpeg
+pegado.mp4          clips pegados (voz original del modelo; sus labios mandan)
+voz-cartesia.wav    el guion leído por Cartesia con la voz del personaje
+sincro/             kie.json y cartesia.json (palabras de Whisper),
+                    lectura.json (qué se le pidió a Cartesia), video.mp4
+                    (video ajustado, sin audio), voz.wav (voz con volumen)
+final.mp4           video ajustado + voz de Cartesia (con B-roll: partido, B-roll arriba)
+broll/original.*    (modo B-roll) el video de B-roll que subió el usuario
+(clones viejos: voz-original.wav, voz-nueva.mp3, voz-ajustada.wav del cambio de voz)
+worker.log, .lock   salida del worker y candado por PID (no tocar)
+```
+
+El panel lanza el worker afuera de Next (`app/lib/clon/server.ts`, detached);
+la lógica de Kie y Cartesia está en `app/lib/clon/kie.ts` y `cartesia.ts`
+(re-exportadas en `scripts/clon/`). Si algo falla, leé `worker.log` y el
+`error` del job; no borres clips ya bajados (están pagos).
+
 ## Reglas
 
 - **Roles:** HyperFrames = escenas de motion graphics (`scenes/`). Remotion =
@@ -295,6 +495,16 @@ mirá qué archivos ya existen para retomar donde quedó.
     `bold` = tipografía enorme 800, kinetic typography, alto contraste,
     animaciones con energía; `corporate` = tarjetas prolijas, íconos, grilla,
     deslizamientos suaves.
+  - `graphicsDimension` (independiente del estilo): `2d` = gráficos planos
+    como hasta ahora (predeterminado y compatible con proyectos viejos);
+    `2.5d` = capas CSS con perspectiva y rotaciones X/Y moderadas;
+    `3d` = geometría real con Three.js, cámara y luces. La plantilla copia
+    Three.js 0.181.2 local a `assets/three/` y define el contrato en `BRIEF.md`.
+    En 3D usar tiempo absoluto (`hf-seek` y la timeline pausada), alfa en
+    overlays y geometría liviana pertinente al contenido. Mantener el texto
+    legible y respetar las zonas reservadas del layout. No reemplazar el 3D
+    elegido por 2D; verificar WebGL y exportación. Cambiar esta opción invalida
+    las escenas anteriores para el siguiente render.
   - `layoutUse` (cómo se ven los gráficos): `overlay` = todos encima del
     video; `split` = todos en pantalla dividida; `fullscreen` = todos tapan la
     pantalla unos segundos, como un b-roll, y después vuelve la cara (la voz
@@ -362,4 +572,7 @@ npx tsx scripts/setup-whisper.ts              # reinstalar whisper.cpp + modelo
 npm run cuenta                                # ver/cambiar la cuenta de Claude (o panel → "Cuenta")
 npm run dev                                   # Remotion Studio (puerto 3001)
 cd app && npm run dev                         # panel en http://localhost:3000
+npx tsx scripts/clon/worker.ts <id> guion|generar|voz   # pipeline de clon (lo lanza el panel)
+npx tsx scripts/clon/prueba.ts voces|clip --voz <id>    # prueba suelta de Kie + Cartesia
+node --import tsx --test scripts/clon/guion.test.ts scripts/clon/sincro.test.ts scripts/clon/partido.test.ts   # tests del clon
 ```

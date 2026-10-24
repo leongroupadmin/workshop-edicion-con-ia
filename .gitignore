@@ -31,3 +31,9 @@ samples/
 
 # Transiciones apagadas desde el panel (preferencia de cada usuario)
 /assets/transitions.json
+
+# Pruebas y videos del pipeline de clon
+/clones/*
+
+# Claves de API de Kie y Cartesia (pestaña Personajes): nunca al repo
+/assets/personajes/claves.json
