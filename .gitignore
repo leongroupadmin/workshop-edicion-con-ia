@@ -23,17 +23,5 @@ samples/
 # Skills de HyperFrames: se reinstalan solas desde skills-lock.json
 /.claude/skills/
 
-# Nuevos proyectos del flujo Clips (originales y exportaciones locales)
-/clips/*
-
 # Videos de prueba sueltos en la raíz
 /*.mp4
-
-# Transiciones apagadas desde el panel (preferencia de cada usuario)
-/assets/transitions.json
-
-# Pruebas y videos del pipeline de clon
-/clones/*
-
-# Claves de API de Kie y Cartesia (pestaña Personajes): nunca al repo
-/assets/personajes/claves.json

@@ -33,7 +33,7 @@ const hashDir = (dir: string, h = crypto.createHash("sha1")) => {
 };
 
 /** Bundle de Remotion cacheado por contenido de src/ (evita re-empaquetar en cada versión). */
-export const getBundle = async (onProgress: (p: number) => void) => {
+const getBundle = async (onProgress: (p: number) => void) => {
   const h = hashDir(path.join(ROOT, "src"));
   h.update(fs.readFileSync(path.join(ROOT, "package.json")));
   if (fs.existsSync(path.join(ROOT, "public"))) hashDir(path.join(ROOT, "public"), h);

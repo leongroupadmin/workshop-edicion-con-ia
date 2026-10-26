@@ -6,7 +6,7 @@ import { BRAND_DIR, ROOT, projectDir, moveToTrash, readJson, safeFilename, write
 import { readBrand } from "./brand";
 
 /** Marcas guardadas: cada una con su brand.json, sus tipografías y su logo. */
-export const BRANDS_DIR = path.join(ROOT, "assets", "brands");
+const BRANDS_DIR = path.join(ROOT, "assets", "brands");
 
 export type SavedBrand = Brand & { slug: string };
 

@@ -285,7 +285,7 @@ export const remapPlan = (plan: Plan, oldCuts: CutsFile, newCuts: CutsFile): Pla
   return { ...plan, items: items.sort((a, b) => a.startMs - b.startMs) };
 };
 
-export const remapTranscript = (t: Transcript, cuts: CutsFile): Transcript => {
+const remapTranscript = (t: Transcript, cuts: CutsFile): Transcript => {
   const words: Word[] = [];
   for (const w of t.words) {
     // Whisper suele estirar la última palabra de una frase dentro del silencio
@@ -317,7 +317,7 @@ export const remapTranscript = (t: Transcript, cuts: CutsFile): Transcript => {
 };
 
 /** Renderiza cut.mp4 concatenando los tramos con trim/atrim (preciso al cuadro). */
-export const renderCut = async (input: string, cuts: CutsFile, output: string) => {
+const renderCut = async (input: string, cuts: CutsFile, output: string) => {
   const info = await probeVideo(input);
   const fps = Math.round(info.fps) || 30;
   const parts: string[] = [];

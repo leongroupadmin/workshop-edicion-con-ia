@@ -6,13 +6,8 @@ import { Recomendaciones } from "@/components/Recomendaciones";
 
 const LINKS = [
   { href: "/", label: "Edición" },
-  { href: "/clips", label: "Clips" },
-  { href: "/clon", label: "Clon" },
-  { href: "/personajes", label: "Personajes" },
   { href: "/marca", label: "Marca" },
   { href: "/musica", label: "Música" },
-  { href: "/transiciones", label: "Transiciones" },
-  { href: "/cuenta", label: "Cuenta" },
 ] as const;
 
 /** Menú de la barra superior, con la sección actual marcada en rojo. */
