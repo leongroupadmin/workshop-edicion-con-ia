@@ -79,7 +79,7 @@ const Tools = ({ tools, live }: { tools: ChatEntry["tools"]; live?: boolean }) =
 const Message = ({ e, live }: { e: ChatEntry; live?: boolean }) => {
   if (e.role === "user") {
     return (
-      <div className="self-end max-w-[88%] rounded-xl rounded-br-sm bg-accent text-white px-3 py-2 whitespace-pre-wrap">
+      <div className="self-end max-w-[88%] rounded-xl rounded-br-sm bg-accent text-on-accent px-3 py-2 whitespace-pre-wrap">
         {e.text}
       </div>
     );

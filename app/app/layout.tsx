@@ -9,8 +9,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Clipo",
+  title: "Editor LG",
   description: "Edición automática de video con Remotion, HyperFrames y Claude",
+  icons: { icon: "/editor-lg-icono.svg" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -18,17 +19,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="es" className={`h-full antialiased ${inter.variable} ${manrope.variable}`}>
       <body className="h-screen flex flex-col font-sans text-[14px] overflow-hidden">
         <header className="h-12 shrink-0 border-b border-line bg-panel/80 backdrop-blur-md flex items-center px-4 gap-6">
-          <Link href="/" aria-label="Clipo" className="flex items-center shrink-0">
-            {/* El logo trae margen negro alrededor: se recorta con esta caja y se funde con el fondo. */}
-            <span className="relative block h-8 w-[108px] overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element -- logo local, sin optimizar */}
-              <img
-                src="/clipo-horizontal.png"
-                alt="Clipo"
-                className="absolute left-1/2 top-1/2 h-[155%] max-w-none -translate-x-1/2 -translate-y-1/2 mix-blend-screen select-none"
-                draggable={false}
-              />
-            </span>
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element -- ícono local, sin optimizar */}
+            <img src="/editor-lg-icono.svg" alt="" className="h-7 w-7 select-none" draggable={false} />
+            <span className="font-heading text-[15px] font-bold tracking-tight text-white">Editor LG</span>
           </Link>
           <Nav />
         </header>

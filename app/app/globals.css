@@ -6,15 +6,16 @@
   --font-heading: var(--font-manrope), var(--font-sans);
   --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
 
-  /* Acento rojo (red noir) */
-  --color-accent: #ef233c;
-  --color-accent-hover: #d31630;
-  --color-accent-soft: #ef233c1f;
+  /* Acento ámbar de León Group; el texto encima va oscuro para que se lea */
+  --color-accent: #f59e0b;
+  --color-accent-hover: #fcd34d;
+  --color-accent-soft: #f59e0b1f;
+  --color-on-accent: #11100c;
 
-  /* Superficies: del fondo casi negro hacia las tarjetas */
-  --color-panel: #0d0d0d;
-  --color-panel-2: #121212;
-  --color-line: #ffffff1a;
+  /* Superficies cálidas de León Group: del fondo casi negro hacia las tarjetas */
+  --color-panel: #11100c;
+  --color-panel-2: #17140c;
+  --color-line: #f2f0e61a;
 }
 
 :root {
@@ -23,12 +24,12 @@
 
 html,
 body {
-  background-color: #060606;
-  color: #f4f4f5;
+  background-color: #0a0907;
+  color: #f2f0e6;
 }
 
 /*
- * Fondo de la app: tres resplandores muy tenues en el rojo de la marca, todos
+ * Fondo de la app: tres resplandores muy tenues en el ámbar de la marca, todos
  * abajo (izquierda, derecha y centro), y un grano finísimo encima. Va fijo,
  * así no se mueve al hacer scroll, y queda detrás de las tarjetas, que son
  * opacas.

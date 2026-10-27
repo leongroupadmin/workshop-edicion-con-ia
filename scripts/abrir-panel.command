@@ -1,16 +1,16 @@
 #!/bin/bash
-# Abre Clipo (el panel de edición de video) en el navegador.
+# Abre Editor LG (el panel de edición de video) en el navegador.
 # Doble clic en este archivo (o en el acceso directo del Escritorio).
 # Para apagar el panel: cerrá esta ventana de Terminal o apretá Control+C.
 
 cd "$(dirname "$0")/.." || exit 1
 URL="http://localhost:3000"
 
-printf '\n  Clipo · edición automática de video\n  %s\n\n' "$(pwd)"
+printf '\n  Editor LG · edición automática de video\n  %s\n\n' "$(pwd)"
 
 # ¿Ya está prendido? Entonces solo abro el navegador.
 if lsof -nP -iTCP:3000 -sTCP:LISTEN >/dev/null 2>&1; then
-  echo "  Clipo ya estaba abierto. Abriendo el navegador..."
+  echo "  Editor LG ya estaba abierto. Abriendo el navegador..."
   open "$URL"
   echo
   read -r -p "  Listo. Apretá Enter para cerrar esta ventana. " _
@@ -25,26 +25,26 @@ if [ ! -d node_modules ] || [ ! -d app/node_modules ]; then
   echo
 fi
 
-echo "  Arrancando Clipo... (no cierres esta ventana mientras lo uses)"
+echo "  Arrancando Editor LG... (no cierres esta ventana mientras lo uses)"
 npm run panel &
 PANEL_PID=$!
 
 # Al cerrar la ventana o con Control+C, apago el panel.
-trap 'echo; echo "  Apagando Clipo..."; kill 0 2>/dev/null; exit 0' INT TERM HUP
+trap 'echo; echo "  Apagando Editor LG..."; kill 0 2>/dev/null; exit 0' INT TERM HUP
 
 # Espero a que el servidor esté listo (hasta 90 segundos) y abro el navegador.
 for _ in $(seq 1 90); do
   if lsof -nP -iTCP:3000 -sTCP:LISTEN >/dev/null 2>&1; then
     sleep 1
     echo
-    echo "  Clipo listo: $URL"
+    echo "  Editor LG listo: $URL"
     echo
     open "$URL"
     break
   fi
   if ! kill -0 "$PANEL_PID" 2>/dev/null; then
     echo
-    echo "  No se pudo arrancar Clipo. Mirá el error de arriba."
+    echo "  No se pudo arrancar Editor LG. Mirá el error de arriba."
     read -r -p "  Apretá Enter para cerrar. " _
     exit 1
   fi

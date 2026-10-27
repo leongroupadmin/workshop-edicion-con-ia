@@ -11,7 +11,7 @@ export const Button = ({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "primary" | "ghost" | "danger" }) => {
   const styles = {
     default: "bg-white/[0.04] hover:bg-white/[0.08] border border-line text-neutral-100 hover:border-white/20",
-    primary: "bg-accent text-white font-medium hover:bg-accent-hover shadow-[0_6px_18px_-10px_var(--color-accent)]",
+    primary: "bg-accent text-on-accent font-medium hover:bg-accent-hover shadow-[0_6px_18px_-10px_var(--color-accent)]",
     ghost: "text-neutral-400 hover:text-white hover:bg-white/[0.06]",
     danger: "bg-red-500/10 hover:bg-red-500/15 text-red-300 border border-red-500/25",
   }[variant];

@@ -1,9 +1,9 @@
-# Clipo — sistema de edición automática de video
+# Editor LG — sistema de edición automática de video
 
 Este repo edita videos hablados (talking head) de forma automática: transcribe,
 corta, propone un plan de edición, genera motion graphics con **HyperFrames**,
 monta todo con **Remotion** y renderiza versiones. Se usa desde la terminal
-(Claude Code) y desde el panel web local (**Clipo**: `/app`, Claude Agent SDK con cwd
+(Claude Code) y desde el panel web local (**Editor LG**: `/app`, Claude Agent SDK con cwd
 en esta raíz). Las dos vías siguen este mismo archivo.
 
 Respondé siempre en **español**, corto y claro. El usuario no es programador:
@@ -13,7 +13,6 @@ explicá qué hiciste en lenguaje simple, no muestres código salvo que lo pida.
 
 ```
 assets/brand/         brand.json (colores, tipografías, logo) + fonts/ + logo  (compartido)
-assets/brand/clipo/   logos de Clipo (horizontal, ícono, completo) — los usa el panel
 assets/brands/<slug>/ marcas guardadas (copia de brand.json + fonts/ + logo)
 assets/music/         música de fondo (.mp3/.wav/.m4a) + sfx/ efectos           (compartido)
 projects/<id>/        un proyecto de edición por video

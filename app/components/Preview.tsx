@@ -88,7 +88,7 @@ export const Preview = ({ id, state }: { id: string; state: ProjectState }) => {
           onClick={() => setSelected(v.version)}
           className={`px-2.5 py-1 rounded-md text-[12px] border ${
             v.version === current?.version
-              ? "bg-accent text-white border-accent font-medium"
+              ? "bg-accent text-on-accent border-accent font-medium"
               : "border-line text-neutral-300 hover:bg-white/5"
           }`}
           title={v.note}
@@ -146,7 +146,7 @@ export const Preview = ({ id, state }: { id: string; state: ProjectState }) => {
         current ? (
           <a
             href={`/api/projects/${id}/file/${current.file}?download=1`}
-            className="text-[12px] px-2.5 py-1 rounded-md bg-accent text-white font-medium hover:bg-accent-hover"
+            className="text-[12px] px-2.5 py-1 rounded-md bg-accent text-on-accent font-medium hover:bg-accent-hover"
           >
             ⬇ Descargar v{current.version}
           </a>

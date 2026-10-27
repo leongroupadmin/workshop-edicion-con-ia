@@ -366,7 +366,7 @@ export const splitSceneSize = (format: Format, share = 0.5) => {
 
 export type Brand = {
   name: string;
-  /** Marca predefinida que viene con Clipo (assets/brands/preset-*). */
+  /** Marca predefinida que viene con Editor LG (assets/brands/preset-*). */
   preset?: boolean;
   colors: {
     primary: string;

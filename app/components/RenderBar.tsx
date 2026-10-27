@@ -87,7 +87,7 @@ export const RenderBar = ({ id, state, busy }: { id: string; state: ProjectState
         disabled={!actionable || busy || pending}
         className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-[13px] font-semibold transition ${
           actionable && !busy
-            ? "bg-accent text-white hover:bg-accent-hover shadow-[0_10px_28px_-14px_var(--color-accent)]"
+            ? "bg-accent text-on-accent hover:bg-accent-hover shadow-[0_10px_28px_-14px_var(--color-accent)]"
             : "bg-white/[0.06] text-neutral-400 border border-line cursor-default"
         }`}
       >

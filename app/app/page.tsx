@@ -32,7 +32,7 @@ export default function Home() {
           <h1 className="text-2xl font-semibold tracking-tight">Proyectos de edición</h1>
           <p className="text-neutral-400 mt-1">Cada video que subís se transcribe, se corta y Claude te propone un plan de edición.</p>
         </div>
-        <Link href="/nuevo" className="px-4 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover shadow-[0_8px_24px_-12px_var(--color-accent)]">
+        <Link href="/nuevo" className="px-4 py-2 rounded-lg bg-accent text-on-accent font-medium hover:bg-accent-hover shadow-[0_8px_24px_-12px_var(--color-accent)]">
           + Nuevo video
         </Link>
       </div>
@@ -46,14 +46,8 @@ export default function Home() {
           href="/nuevo"
           className="block border border-dashed border-line rounded-xl p-16 text-center text-neutral-400 transition hover:border-accent/60 hover:text-white"
         >
-          <span className="relative mx-auto mb-6 block h-28 w-28 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element -- logo local, sin optimizar */}
-            <img
-              src="/clipo-completo.png"
-              alt=""
-              className="absolute left-1/2 top-1/2 h-[135%] max-w-none -translate-x-1/2 -translate-y-1/2 mix-blend-screen"
-            />
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- ícono local, sin optimizar */}
+          <img src="/editor-lg-icono.svg" alt="" className="mx-auto mb-6 block h-20 w-20" />
           Todavía no hay proyectos. <span className="text-accent">Subí tu primer video →</span>
         </Link>
       ) : (

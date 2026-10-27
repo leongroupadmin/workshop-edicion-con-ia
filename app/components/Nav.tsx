@@ -10,7 +10,7 @@ const LINKS = [
   { href: "/musica", label: "Música" },
 ] as const;
 
-/** Menú de la barra superior, con la sección actual marcada en rojo. */
+/** Menú de la barra superior, con la sección actual marcada en ámbar. */
 export const Nav = () => {
   const pathname = usePathname() ?? "/";
   const activa = (href: string) => (href === "/" ? pathname === "/" || pathname.startsWith("/p/") : pathname.startsWith(href));
