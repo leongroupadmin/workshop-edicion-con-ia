@@ -120,32 +120,32 @@ export const ColorsFromImage = ({
           className="rounded-lg border border-dashed border-line hover:border-accent/60 px-3 py-3 cursor-pointer flex items-center gap-3"
         >
           <span className="text-2xl">🎨</span>
-          <span className="flex-1 text-[12px] text-neutral-300">
-            <b className="text-neutral-100">Sacar los colores de una imagen</b>
-            <span className="block text-neutral-500">Logo, una placa de tu Instagram o una captura de tu web. No se sube a ningún lado.</span>
+          <span className="flex-1 text-[12px] text-fg-2">
+            <b className="text-fg">Sacar los colores de una imagen</b>
+            <span className="block text-muted">Logo, una placa de tu Instagram o una captura de tu web. No se sube a ningún lado.</span>
           </span>
-          {working ? <Spinner className="text-accent" /> : null}
+          {working ? <Spinner className="text-accent-strong" /> : null}
         </div>
       ) : (
         <div className="rounded-lg border border-accent/40 bg-accent-soft p-3 flex flex-col gap-3">
           <div className="flex items-start gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {img ? <img src={img} alt="" className="w-20 h-20 object-contain rounded-md bg-black/40 border border-line" /> : null}
+            {img ? <img src={img} alt="" className="w-20 h-20 object-contain rounded-md bg-panel-2 border border-line" /> : null}
             <div className="flex-1 flex flex-col gap-1.5">
-              <span className="text-[12px] text-neutral-200">Colores que encontré (de más a menos presentes):</span>
+              <span className="text-[12px] text-fg">Colores que encontré (de más a menos presentes):</span>
               <div className="flex rounded-md overflow-hidden h-6 border border-line">
                 {palette.map((s) => (
                   <span key={s.hex} title={`${s.hex} · ${Math.round(s.share * 100)}%`} style={{ background: s.hex, flex: Math.max(s.share, 0.04) }} />
                 ))}
               </div>
-              <span className="text-[11px] text-neutral-400">Te propongo esto; tocá otro color para cambiar cualquiera. La página ya muestra cómo queda.</span>
+              <span className="text-[11px] text-muted">Te propongo esto; tocá otro color para cambiar cualquiera. La página ya muestra cómo queda.</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
             {ROLES.map((r) => (
               <div key={r.key} className="flex flex-wrap items-center gap-2">
-                <span className="w-24 text-[12px] text-neutral-200" title={r.hint}>
+                <span className="w-24 text-[12px] text-fg" title={r.hint}>
                   {r.label}
                 </span>
                 <div className="flex flex-wrap gap-1">
@@ -155,20 +155,20 @@ export const ColorsFromImage = ({
                       type="button"
                       title={hex}
                       onClick={() => pick(r.key, hex)}
-                      className={`w-6 h-6 rounded-md border ${colors[r.key] === hex ? "ring-2 ring-white border-white" : "border-line"}`}
+                      className={`w-6 h-6 rounded-md border ${colors[r.key] === hex ? "ring-2 ring-fg border-fg" : "border-line"}`}
                       style={{ background: hex }}
                     />
                   ))}
                 </div>
-                <span className="font-mono text-[11px] text-neutral-400">{colors[r.key]}</span>
+                <span className="font-mono text-[11px] text-muted">{colors[r.key]}</span>
                 {r.key === "text" && contrast(colors.text, colors.background) < 4.5 ? (
-                  <span className="text-[11px] text-amber-300">se lee poco sobre el fondo</span>
+                  <span className="text-[11px] text-amber-700">se lee poco sobre el fondo</span>
                 ) : null}
               </div>
             ))}
           </div>
 
-          <label className="flex items-center gap-2 text-[12px] text-neutral-300">
+          <label className="flex items-center gap-2 text-[12px] text-fg-2">
             <input type="checkbox" checked={asLogo} onChange={(e) => setAsLogo(e.target.checked)} />
             Usar esta imagen también como logo
           </label>
@@ -187,7 +187,7 @@ export const ColorsFromImage = ({
           </div>
         </div>
       )}
-      {error ? <p className="text-[12px] text-red-300">{error}</p> : null}
+      {error ? <p className="text-[12px] text-red-700">{error}</p> : null}
     </div>
   );
 };

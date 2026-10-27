@@ -8,14 +8,14 @@ const options = <T extends string>(labels: Record<T, string>) =>
   (Object.keys(labels) as T[]).map((value) => ({ value, label: labels[value] }));
 
 export const Hint = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[11px] text-neutral-500 leading-snug">{children}</p>
+  <p className="text-[11px] text-muted leading-snug">{children}</p>
 );
 
 const Group = ({ title, when, children }: { title: string; when: string; children: React.ReactNode }) => (
-  <div className="rounded-lg border border-line bg-black/20 p-3 flex flex-col gap-4">
+  <div className="rounded-lg border border-line bg-panel-2 p-3 flex flex-col gap-4">
     <div className="flex flex-wrap items-baseline justify-between gap-2">
-      <h3 className="text-[13px] font-semibold text-neutral-100">{title}</h3>
-      <span className="text-[11px] text-neutral-500">{when}</span>
+      <h3 className="text-[13px] font-semibold text-fg">{title}</h3>
+      <span className="text-[11px] text-muted">{when}</span>
     </div>
     {children}
   </div>
@@ -36,11 +36,11 @@ const Switch = ({ on, onChange, label }: { on: boolean; onChange: (on: boolean) 
     role="switch"
     aria-checked={on}
     onClick={() => onChange(!on)}
-    className="flex items-center gap-2 self-start text-[13px] text-neutral-200"
+    className="flex items-center gap-2 self-start text-[13px] text-fg"
   >
     <span
       className={`relative h-5 w-9 shrink-0 rounded-full border transition ${
-        on ? "border-accent bg-accent" : "border-line bg-black/40"
+        on ? "border-accent bg-accent" : "border-line bg-panel-2"
       }`}
     >
       <span
@@ -109,13 +109,13 @@ export const GraphicsCountField = ({
           ]}
         />
         {fixed ? (
-          <div className="inline-flex items-center rounded-lg border border-line bg-black/30">
+          <div className="inline-flex items-center rounded-lg border border-line bg-panel-2">
             <button
               type="button"
               aria-label="Menos gráficos"
               disabled={value <= 1}
               onClick={() => onChange(value - 1)}
-              className="px-3 py-1.5 text-[15px] text-neutral-300 hover:text-white disabled:opacity-30"
+              className="px-3 py-1.5 text-[15px] text-fg-2 hover:text-fg disabled:opacity-30"
             >
               −
             </button>
@@ -125,7 +125,7 @@ export const GraphicsCountField = ({
               aria-label="Más gráficos"
               disabled={value >= 30}
               onClick={() => onChange(value + 1)}
-              className="px-3 py-1.5 text-[15px] text-neutral-300 hover:text-white disabled:opacity-30"
+              className="px-3 py-1.5 text-[15px] text-fg-2 hover:text-fg disabled:opacity-30"
             >
               +
             </button>
@@ -228,7 +228,7 @@ export const StyleFields = ({
                           onClick={() => set({ split: { position, share: o.value } })}
                           title={o.label}
                           className={`flex flex-col items-center gap-1 rounded-md border px-2 py-1.5 transition ${
-                            on ? "border-accent bg-accent-soft text-white" : "border-line text-neutral-500 hover:text-white hover:border-neutral-500"
+                            on ? "border-accent bg-accent-soft text-fg" : "border-line text-muted hover:text-fg hover:border-muted"
                           }`}
                         >
                           <LayoutIcon

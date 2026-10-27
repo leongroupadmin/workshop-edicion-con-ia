@@ -62,12 +62,12 @@ export const StatusBar = ({
         {/* Estado: pasa el cursor para ver los pasos */}
         <div className="group relative min-w-0 flex-1" tabIndex={0}>
           <div
-            className={`flex min-w-0 items-center gap-2 rounded-md px-2 py-1 text-[13px] hover:bg-white/[0.04] ${
-              isError ? "text-red-300" : "text-neutral-300"
+            className={`flex min-w-0 items-center gap-2 rounded-md px-2 py-1 text-[13px] hover:bg-fg/[0.04] ${
+              isError ? "text-red-700" : "text-fg-2"
             }`}
           >
-            {running ? <Spinner className="text-accent" /> : null}
-            <span className="shrink-0 rounded border border-line px-1.5 text-[11px] tabular-nums text-neutral-500">
+            {running ? <Spinner className="text-accent-strong" /> : null}
+            <span className="shrink-0 rounded border border-line px-1.5 text-[11px] tabular-nums text-muted">
               {isError ? "⚠️" : status.step === "done" ? "✓" : `${doneCount}/${PIPELINE_ORDER.length}`}
             </span>
             <span className="truncate">
@@ -85,7 +85,7 @@ export const StatusBar = ({
                 <li
                   key={s}
                   className={`rounded-md px-2 py-1 ${
-                    active ? "bg-amber-400/10 text-amber-300" : done ? "text-neutral-300" : "text-neutral-600"
+                    active ? "bg-amber-400/10 text-amber-700" : done ? "text-fg-2" : "text-faint"
                   }`}
                 >
                   {done ? "✓ " : active ? "● " : "○ "}
@@ -112,24 +112,24 @@ export const StatusBar = ({
         </Button>
       </div>
       {isError && status.error ? (
-        <div className="mx-4 mb-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-red-200 text-[13px] whitespace-pre-wrap">
+        <div className="mx-4 mb-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-red-800 text-[13px] whitespace-pre-wrap">
           {status.error}
         </div>
       ) : null}
       {open ? (
-        <div className="mx-4 mb-3 rounded-lg border border-line bg-black/50">
+        <div className="mx-4 mb-3 rounded-lg border border-line bg-panel-2">
           <div className="flex gap-1 p-1 border-b border-line">
             {(["pipeline", "jobs", "agent"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-2.5 py-1 rounded text-xs ${tab === t ? "bg-white/10 text-white" : "text-neutral-400"}`}
+                className={`px-2.5 py-1 rounded text-xs ${tab === t ? "bg-fg/10 text-fg" : "text-muted"}`}
               >
                 {t === "pipeline" ? "Pipeline" : t === "jobs" ? "Procesos" : "Claude"}
               </button>
             ))}
           </div>
-          <pre className="max-h-64 overflow-auto p-3 text-[11px] leading-relaxed text-neutral-300 font-mono whitespace-pre-wrap">
+          <pre className="max-h-64 overflow-auto p-3 text-[11px] leading-relaxed text-fg-2 font-mono whitespace-pre-wrap">
             {logs?.[tab] || "Sin registros todavía."}
           </pre>
         </div>

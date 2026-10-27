@@ -55,7 +55,7 @@ export const RenderBar = ({ id, state, busy }: { id: string; state: ProjectState
     text = (
       <>
         {b.mode === "rerender" && b.pending.length ? (
-          <span className="block text-neutral-200">
+          <span className="block text-fg">
             Cambios sin renderizar: <b>{b.pending.join(", ")}</b>.
           </span>
         ) : null}
@@ -64,7 +64,7 @@ export const RenderBar = ({ id, state, busy }: { id: string; state: ProjectState
           {b.scenes.length ? " (usa Claude)" : ""}.
         </span>
         {b.scenes.length ? (
-          <span className="block text-neutral-500">Gráficos: {b.scenes.map((s) => s.label).join(" · ")}</span>
+          <span className="block text-muted">Gráficos: {b.scenes.map((s) => s.label).join(" · ")}</span>
         ) : null}
       </>
     );
@@ -81,23 +81,23 @@ export const RenderBar = ({ id, state, busy }: { id: string; state: ProjectState
 
   return (
     <div className="group relative flex shrink-0 items-center gap-2" tabIndex={-1}>
-      {short ? <span className="hidden text-[12px] text-neutral-400 lg:inline">{short}</span> : null}
+      {short ? <span className="hidden text-[12px] text-muted lg:inline">{short}</span> : null}
       <button
         onClick={run}
         disabled={!actionable || busy || pending}
         className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-[13px] font-semibold transition ${
           actionable && !busy
             ? "bg-accent text-on-accent hover:bg-accent-hover shadow-[0_10px_28px_-14px_var(--color-accent)]"
-            : "bg-white/[0.06] text-neutral-400 border border-line cursor-default"
+            : "bg-fg/[0.06] text-muted border border-line cursor-default"
         }`}
       >
         {busy || pending ? <Spinner /> : null}
         {label}
       </button>
-      <div className="absolute right-0 top-full z-30 mt-1 hidden w-[360px] rounded-lg border border-line bg-panel-2 p-3 text-[12px] leading-relaxed text-neutral-400 shadow-xl group-hover:block group-focus-within:block">
+      <div className="absolute right-0 top-full z-30 mt-1 hidden w-[360px] rounded-lg border border-line bg-panel-2 p-3 text-[12px] leading-relaxed text-muted shadow-xl group-hover:block group-focus-within:block">
         {text}
       </div>
-      {error ? <span className="max-w-[260px] truncate text-[12px] text-red-300" title={error}>{error}</span> : null}
+      {error ? <span className="max-w-[260px] truncate text-[12px] text-red-700" title={error}>{error}</span> : null}
     </div>
   );
 };

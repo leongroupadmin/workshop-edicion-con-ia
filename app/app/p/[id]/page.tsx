@@ -22,12 +22,12 @@ export default function ProjectPage() {
 
   if (error && !state) {
     return (
-      <div className="p-10 text-center text-neutral-400">
-        {error} · <Link href="/" className="text-accent underline">Volver</Link>
+      <div className="p-10 text-center text-muted">
+        {error} · <Link href="/" className="text-accent-strong underline">Volver</Link>
       </div>
     );
   }
-  if (!state) return <div className="p-10 text-neutral-500">Cargando proyecto…</div>;
+  if (!state) return <div className="p-10 text-muted">Cargando proyecto…</div>;
 
   const busy = Boolean(state.running);
   const retry = async () => {
@@ -66,9 +66,9 @@ export default function ProjectPage() {
         >
           Se borra el proyecto completo: {projectContentsText(state.versions.length)}.
           <br />
-          Va a la <b className="text-neutral-200">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
           {busy ? (
-            <span className="block mt-2 text-amber-300">
+            <span className="block mt-2 text-amber-700">
               Ahora hay un proceso trabajando en este proyecto: detenelo primero desde la barra de estado.
             </span>
           ) : null}
@@ -81,10 +81,10 @@ export default function ProjectPage() {
         onRetry={retry}
         left={
           <div className="flex min-w-0 shrink items-center gap-2 text-[13px]">
-            <Link href="/" className="shrink-0 text-neutral-500 hover:text-white">
+            <Link href="/" className="shrink-0 text-muted hover:text-fg">
               Proyectos
             </Link>
-            <span className="text-neutral-700">/</span>
+            <span className="text-faint">/</span>
             <h1 className="truncate font-semibold max-w-[260px]" title={id}>
               {state.meta.title}
             </h1>
@@ -98,14 +98,14 @@ export default function ProjectPage() {
               onChange={(e) => void changeAi(e.target.value as "anthropic" | "openai")}
               disabled={busy}
               title="Qué IA arma el plan y responde el chat"
-              className="rounded-md border border-line bg-panel-2 px-2 py-1 text-[12px] text-neutral-100 outline-none focus:border-accent/60 disabled:opacity-50"
+              className="rounded-md border border-line bg-panel-2 px-2 py-1 text-[12px] text-fg outline-none focus:border-accent/60 disabled:opacity-50"
             >
               <option value="anthropic">IA: Claude</option>
               <option value="openai">IA: OpenAI</option>
             </select>
             <Button
               variant="ghost"
-              className="shrink-0 hover:text-red-300"
+              className="shrink-0 hover:text-red-700"
               onClick={() => setConfirmDelete(true)}
               aria-label="Eliminar proyecto"
               title="Eliminar proyecto"
@@ -115,7 +115,7 @@ export default function ProjectPage() {
           </>
         }
       />
-      {retryError ? <div className="px-4 py-2 text-red-300 text-[13px]">{retryError}</div> : null}
+      {retryError ? <div className="px-4 py-2 text-red-700 text-[13px]">{retryError}</div> : null}
 
       {/* Tres columnas: configuración angosta | video + línea de tiempo + plan | chat.
           En pantallas chicas va todo en una columna, con el video primero. */}
@@ -129,10 +129,10 @@ export default function ProjectPage() {
           <PlanTimeline id={id} state={state} busy={busy} />
           {state.transcriptText ? (
             <details className="bg-panel border border-line rounded-xl">
-              <summary className="px-4 py-3 cursor-pointer text-[13px] font-semibold text-neutral-200">
+              <summary className="px-4 py-3 cursor-pointer text-[13px] font-semibold text-fg">
                 Transcripción (después del corte)
               </summary>
-              <p className="px-4 pb-4 text-neutral-400 leading-relaxed text-[13px]">{state.transcriptText}</p>
+              <p className="px-4 pb-4 text-muted leading-relaxed text-[13px]">{state.transcriptText}</p>
             </details>
           ) : null}
         </div>

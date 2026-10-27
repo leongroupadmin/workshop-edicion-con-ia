@@ -10,7 +10,7 @@ import { Button, LayoutIcon, Panel, Seg } from "./ui";
 
 const LANES: { key: string; label: string; types: string[]; color: string }[] = [
   { key: "scenes", label: "Escenas", types: ["motion_graphic", "broll"], color: "bg-violet-500/70 border-violet-300/60" },
-  { key: "overlays", label: "Títulos / overlays", types: ["title", "overlay", "lower_third"], color: "bg-accent/80 border-accent/60 text-white" },
+  { key: "overlays", label: "Títulos / overlays", types: ["title", "overlay", "lower_third"], color: "bg-accent/80 border-accent/60 text-fg" },
   { key: "fx", label: "Transiciones / zoom", types: ["transition", "zoom"], color: "bg-sky-500/70 border-sky-300/60" },
   { key: "sfx", label: "Sonido", types: ["sfx"], color: "bg-emerald-500/70 border-emerald-300/60" },
 ];
@@ -72,7 +72,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
   if (!plan) {
     return (
       <Panel title="Plan de edición">
-        <p className="text-neutral-500 text-[13px]">
+        <p className="text-muted text-[13px]">
           {state.status.step === "planning"
             ? "Claude está armando el plan…"
             : state.cut
@@ -96,7 +96,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
           Plan de edición
           <span
             className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${
-              draft ? "bg-accent-soft text-accent border-accent/40" : "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+              draft ? "bg-accent-soft text-accent-strong border-accent/40" : "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
             }`}
           >
             {draft ? "Borrador · se aprueba al renderizar" : "Aprobado"}
@@ -113,22 +113,22 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
       bodyClassName="p-4 flex flex-col gap-4"
     >
       {/* Línea de tiempo */}
-      <div className="relative rounded-lg border border-line bg-black/30 p-3">
+      <div className="relative rounded-lg border border-line bg-panel-2 p-3">
         {/* Marcador: sigue al video del Preview mientras se reproduce */}
         {playhead !== null ? (
           <div className="pointer-events-none absolute inset-y-3 left-[calc(8rem+0.75rem)] right-3 z-10">
             <div
-              className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-white shadow-[0_0_6px_rgba(255,255,255,0.6)]"
+              className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-fg"
               style={{ left: `${Math.min(100, (playhead / duration) * 100)}%` }}
             >
-              <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded bg-white px-1 font-mono text-[9px] font-semibold text-black">
+              <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded bg-fg px-1 font-mono text-[9px] font-semibold text-panel">
                 {fmtTime(playhead)}
               </span>
             </div>
           </div>
         ) : null}
         <div
-          className={`relative h-5 ml-32 text-[10px] text-neutral-500 ${playhead !== null ? "cursor-pointer" : ""}`}
+          className={`relative h-5 ml-32 text-[10px] text-muted ${playhead !== null ? "cursor-pointer" : ""}`}
           title={playhead !== null ? "Tocá para saltar a ese momento del video" : undefined}
           onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
@@ -142,8 +142,8 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
           ))}
         </div>
         {LANES.map((lane) => (
-          <div key={lane.key} className="flex items-center h-8 border-t border-white/[0.04]">
-            <div className="w-32 shrink-0 text-[11px] text-neutral-400 pr-2">{lane.label}</div>
+          <div key={lane.key} className="flex items-center h-8 border-t border-fg/[0.04]">
+            <div className="w-32 shrink-0 text-[11px] text-muted pr-2">{lane.label}</div>
             <div className="relative flex-1 h-6">
               {items
                 .filter((it) => laneOf(it) === lane)
@@ -159,7 +159,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
                       onClick={() => document.getElementById(`item-${it.id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" })}
                       className={`absolute top-0 h-6 rounded border text-[10px] font-medium px-1 truncate text-left ${lane.color} ${
                         removed ? "opacity-20 line-through" : ""
-                      } ${hover === it.id ? "ring-2 ring-white" : ""}`}
+                      } ${hover === it.id ? "ring-2 ring-fg" : ""}`}
                       style={{ left: `${left}%`, width: `${width}%` }}
                       title={`${it.id} · ${fmtTime(it.startMs)}–${fmtTime(it.endMs)} · ${it.description}`}
                     >
@@ -172,30 +172,30 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
         ))}
       </div>
 
-      {plan.summary ? <p className="text-neutral-300 text-[13px]">{plan.summary}</p> : null}
+      {plan.summary ? <p className="text-fg-2 text-[13px]">{plan.summary}</p> : null}
 
-      <div className="rounded-lg border border-line bg-black/20 p-3 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="rounded-lg border border-line bg-panel-2 p-3 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-neutral-500">Cantidad de gráficos</span>
+          <span className="text-[11px] uppercase tracking-wide text-muted">Cantidad de gráficos</span>
           <GraphicsCountField
             value={style.graphicsCount}
             onChange={(graphicsCount) => void saveStyle({ graphicsCount })}
             durationMs={state.durationMs}
           />
           {style.graphicsCount && sceneCount !== style.graphicsCount ? (
-            <span className="text-[11px] text-amber-300">
+            <span className="text-[11px] text-amber-700">
               El plan actual tiene {sceneCount} {sceneCount === 1 ? "gráfico" : "gráficos"}: rehacelo para que tenga {style.graphicsCount}.
             </span>
           ) : null}
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-neutral-500">Ritmo</span>
+          <span className="text-[11px] uppercase tracking-wide text-muted">Ritmo</span>
           <Seg
             value={style.pace}
             onChange={(v) => void saveStyle({ pace: v })}
             options={(Object.keys(PACE_LABELS) as EditStyle["pace"][]).map((v) => ({ value: v, label: PACE_LABELS[v] }))}
           />
-          <span className="text-[11px] text-neutral-500">
+          <span className="text-[11px] text-muted">
             {style.graphicsCount ? "Con cantidad fija, el ritmo cambia zooms, transiciones y sonidos." : PACE_HINT[style.pace]}
           </span>
         </div>
@@ -204,7 +204,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
             <Button variant="primary" disabled={busy || pending} onClick={replan}>
               Rehacer el plan con estos ajustes
             </Button>
-            <span className="ml-3 text-[11px] text-neutral-500">Claude arma un plan nuevo; después lo revisás y tocás Renderizar.</span>
+            <span className="ml-3 text-[11px] text-muted">Claude arma un plan nuevo; después lo revisás y tocás Renderizar.</span>
           </div>
         ) : null}
       </div>
@@ -232,7 +232,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
           </Button>
         </form>
       ) : null}
-      {error ? <p className="text-red-300 text-[13px]">{error}</p> : null}
+      {error ? <p className="text-red-700 text-[13px]">{error}</p> : null}
 
       {/* Lista de elementos */}
       <ul className="flex flex-col divide-y divide-line border border-line rounded-lg overflow-hidden">
@@ -244,9 +244,9 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
               id={`item-${it.id}`}
               onMouseEnter={() => setHover(it.id)}
               onMouseLeave={() => setHover(null)}
-              className={`flex items-start gap-3 px-3 py-2.5 ${hover === it.id ? "bg-white/[0.04]" : ""} ${removed ? "opacity-45" : ""}`}
+              className={`flex items-start gap-3 px-3 py-2.5 ${hover === it.id ? "bg-fg/[0.04]" : ""} ${removed ? "opacity-45" : ""}`}
             >
-              <span className="font-mono text-[12px] text-neutral-400 w-24 shrink-0 pt-0.5">
+              <span className="font-mono text-[12px] text-muted w-24 shrink-0 pt-0.5">
                 {fmtTime(it.startMs)}–{fmtTime(it.endMs)}
               </span>
               <span className={`text-[11px] px-1.5 py-0.5 rounded border shrink-0 ${laneOf(it).color}`}>
@@ -254,14 +254,14 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
               </span>
               <div className="flex-1 min-w-0">
                 <div className={`text-[13px] ${removed ? "line-through" : ""}`}>
-                  {it.text ? <span className="text-white font-medium">“{it.text}” — </span> : null}
+                  {it.text ? <span className="text-fg font-medium">“{it.text}” — </span> : null}
                   {it.description}
                 </div>
-                <div className="text-[12px] text-neutral-500 mt-0.5">Por qué: {it.reason}</div>
-                {it.sound ? <div className="text-[11px] text-emerald-300/80 mt-0.5">🔊 {it.sound}</div> : null}
+                <div className="text-[12px] text-muted mt-0.5">Por qué: {it.reason}</div>
+                {it.sound ? <div className="text-[11px] text-emerald-700/80 mt-0.5">🔊 {it.sound}</div> : null}
                 {SCENE_TYPES.has(it.type) && !removed ? (
                   <div className="flex items-center gap-1.5 mt-2">
-                    <span className="text-[11px] text-neutral-500 mr-1">Cómo aparece:</span>
+                    <span className="text-[11px] text-muted mr-1">Cómo aparece:</span>
                     {(Object.keys(LAYOUT_LABELS) as SceneLayout[]).map((layout) => {
                       const on = sceneLayout(it) === layout;
                       return (
@@ -271,8 +271,8 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
                           onClick={() => act({ action: "layout", itemId: it.id, layout })}
                           className={`flex items-center gap-1.5 rounded-md border px-1.5 py-1 text-[11px] transition ${
                             on
-                              ? "border-accent bg-accent-soft text-white"
-                              : "border-line text-neutral-400 hover:text-white hover:border-neutral-500 disabled:opacity-40"
+                              ? "border-accent bg-accent-soft text-fg"
+                              : "border-line text-muted hover:text-fg hover:border-muted disabled:opacity-40"
                           }`}
                         >
                           <LayoutIcon
@@ -288,7 +288,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
                   </div>
                 ) : null}
               </div>
-              <span className="text-[11px] text-neutral-500 shrink-0 pt-0.5">
+              <span className="text-[11px] text-muted shrink-0 pt-0.5">
                 {it.status === "rendered" ? "✓ generado" : it.status === "error" ? "⚠ error" : ""}
               </span>
               <Button
@@ -304,7 +304,7 @@ export const PlanTimeline = ({ id, state, busy }: { id: string; state: ProjectSt
         })}
       </ul>
       {!draft ? (
-        <p className="text-[12px] text-neutral-500">
+        <p className="text-[12px] text-muted">
           Los cambios que hagas acá (quitar, restaurar, cómo aparece cada gráfico) se aplican con el botón “Re-renderizar” de
           arriba.
         </p>

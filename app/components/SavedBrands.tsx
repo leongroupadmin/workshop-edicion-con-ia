@@ -102,7 +102,7 @@ export const SavedBrands = ({
   return (
     <Panel title="Marcas guardadas">
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] uppercase tracking-wide text-neutral-500">
+        <label className="text-[11px] uppercase tracking-wide text-muted">
           Guardar lo que estás usando ahora como:
         </label>
         <div className="flex flex-wrap items-center gap-2">
@@ -115,50 +115,50 @@ export const SavedBrands = ({
             onKeyDown={(e) => e.key === "Enter" && limpio && !busy && !pendiente && void guardar()}
             maxLength={60}
             placeholder="nombre de la marca"
-            className="min-w-[200px] flex-1 rounded-lg border border-line bg-black/30 px-3 py-1.5 text-[13px] outline-none"
+            className="min-w-[200px] flex-1 rounded-lg border border-line bg-panel-2 px-3 py-1.5 text-[13px] outline-none"
           />
           <Button variant="primary" onClick={() => void guardar()} disabled={busy || pendiente || !limpio}>
             {busy ? <Spinner /> : null}
             Guardar marca
           </Button>
         </div>
-        <p className="text-[11px] text-neutral-500">
+        <p className="text-[11px] text-muted">
           {existente
             ? `Ya tenés una marca con ese nombre: se va a reemplazar por la que estás usando.`
             : "Es una copia: la marca que estás usando ahora no se toca."}
         </p>
 
-        {pendiente ? <p className="text-[12px] text-neutral-500">Esperá a que termine de guardarse la marca…</p> : null}
+        {pendiente ? <p className="text-[12px] text-muted">Esperá a que termine de guardarse la marca…</p> : null}
 
         {brands === null ? (
-          <p className="flex items-center gap-2 text-[13px] text-neutral-500">
+          <p className="flex items-center gap-2 text-[13px] text-muted">
             <Spinner /> Cargando…
           </p>
         ) : brands.length === 0 ? (
-          <p className="text-[13px] text-neutral-500">
+          <p className="text-[13px] text-muted">
             Todavía no guardaste ninguna. Poné un nombre arriba y guardala: después vas a poder cambiar entre una y otra
             con un toque, con sus colores, tipografías y logo.
           </p>
         ) : (
           <ul className="flex flex-col gap-1.5">
             {brands.map((b) => (
-              <li key={b.slug} className="flex items-center gap-2 rounded-lg border border-line bg-black/20 px-2 py-1.5">
+              <li key={b.slug} className="flex items-center gap-2 rounded-lg border border-line bg-panel-2 px-2 py-1.5">
                 <Muestra colors={b.colors} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5">
                     <span
-                      className="truncate text-[14px] text-neutral-200"
+                      className="truncate text-[14px] text-fg"
                       style={{ fontFamily: `"${b.fonts.heading}", system-ui` }}
                     >
                       {b.name}
                     </span>
                     {b.preset ? (
-                      <span className="shrink-0 rounded-full border border-line px-1.5 text-[10px] uppercase tracking-wide text-neutral-500">
+                      <span className="shrink-0 rounded-full border border-line px-1.5 text-[10px] uppercase tracking-wide text-muted">
                         Predefinida
                       </span>
                     ) : null}
                   </span>
-                  <span className="block truncate text-[11px] text-neutral-500">
+                  <span className="block truncate text-[11px] text-muted">
                     {b.fonts.heading}
                     {b.fonts.body !== b.fonts.heading ? ` · ${b.fonts.body}` : ""}
                     {b.logo ? " · con logo" : ""}
@@ -174,7 +174,7 @@ export const SavedBrands = ({
                   type="button"
                   aria-label={`Eliminar ${b.name}`}
                   onClick={() => setBorrar(b)}
-                  className="shrink-0 text-neutral-500 hover:text-red-300"
+                  className="shrink-0 text-muted hover:text-red-700"
                 >
                   <TrashIcon />
                 </button>
@@ -183,12 +183,12 @@ export const SavedBrands = ({
           </ul>
         )}
 
-        <p className="text-[11px] text-neutral-500">
+        <p className="text-[11px] text-muted">
           “Usar” reemplaza la marca en uso por la guardada. Los videos ya renderizados no cambian; los que armes después
           salen con la marca nueva.
         </p>
-        {msg ? <p className="text-[12px] text-emerald-300">{msg}</p> : null}
-        {error ? <p className="text-[12px] text-red-300">{error}</p> : null}
+        {msg ? <p className="text-[12px] text-emerald-700">{msg}</p> : null}
+        {error ? <p className="text-[12px] text-red-700">{error}</p> : null}
       </div>
 
       {borrar ? (
@@ -207,7 +207,7 @@ export const SavedBrands = ({
         >
           Se borra la copia guardada (colores, tipografías y logo). La marca que estás usando ahora no se toca.
           <br />
-          Va a la <b className="text-neutral-200">Papelera de tu Mac</b>: si te arrepentís, la recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, la recuperás desde ahí.
         </ConfirmDialog>
       ) : null}
     </Panel>

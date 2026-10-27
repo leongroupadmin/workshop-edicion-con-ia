@@ -87,7 +87,7 @@ export default function BrandPage() {
     return () => clearTimeout(t);
   }, [brand, saved]);
 
-  if (!brand) return <div className="p-10 text-neutral-500">Cargando…</div>;
+  if (!brand) return <div className="p-10 text-muted">Cargando…</div>;
   const dirty = JSON.stringify(brand) !== saved;
   const families = Array.from(new Set([...library.map((f) => f.family), ...(brand.fonts.files ?? []).map((f) => f.family), brand.fonts.heading, brand.fonts.body, brand.fonts.subtitleAccent ?? "Lora cursiva", "Lora cursiva", "Futura", "Helvetica", "Helvetica Neue"]));
 
@@ -107,21 +107,21 @@ export default function BrandPage() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Marca</h1>
-          <p className="text-neutral-400 mt-1">
-            Se guarda en <code className="text-neutral-300">/assets/brand</code> y se usa en todos los proyectos
+          <p className="text-muted mt-1">
+            Se guarda en <code className="text-fg-2">/assets/brand</code> y se usa en todos los proyectos
             (subtítulos, escenas de HyperFrames y montaje).
           </p>
         </div>
-        <span className={`text-[11px] ${saving === "error" ? "text-red-300" : "text-neutral-500"}`}>
+        <span className={`text-[11px] ${saving === "error" ? "text-red-700" : "text-muted"}`}>
           {saving === "saving" || dirty ? "Guardando…" : saving === "error" ? "No se pudo guardar" : "Se guarda solo"}
         </span>
       </div>
-      {msg ? <p className="text-[13px] text-neutral-300">{msg}</p> : null}
+      {msg ? <p className="text-[13px] text-fg-2">{msg}</p> : null}
 
       <div className="grid grid-cols-2 gap-5">
         <Panel title="Identidad" bodyClassName="p-4 flex flex-col gap-4">
           <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] uppercase tracking-wide text-neutral-500">Nombre</span>
+            <span className="text-[11px] uppercase tracking-wide text-muted">Nombre</span>
             <input
               value={brand.name}
               onChange={(e) => setBrand({ ...brand, name: e.target.value })}
@@ -129,14 +129,14 @@ export default function BrandPage() {
             />
           </label>
           <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] uppercase tracking-wide text-neutral-500">Logo</span>
+            <span className="text-[11px] uppercase tracking-wide text-muted">Logo</span>
             <div className="flex items-center gap-3">
               <div className="w-24 h-24 rounded-lg border border-line grid place-items-center overflow-hidden" style={{ background: brand.colors.background }}>
                 {brand.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={`/api/brand/file/${brand.logo}?t=${stamp}`} alt="logo" className="max-w-[80%] max-h-[80%] object-contain" />
                 ) : (
-                  <span className="text-[11px] text-neutral-500">sin logo</span>
+                  <span className="text-[11px] text-muted">sin logo</span>
                 )}
               </div>
               <div className="flex flex-col items-start gap-2">
@@ -144,7 +144,7 @@ export default function BrandPage() {
                 {brand.logo ? (
                   <button
                     type="button"
-                    className="text-[12px] text-neutral-500 hover:text-red-300"
+                    className="text-[12px] text-muted hover:text-red-700"
                     onClick={async () => {
                       await api("/api/brand/upload?kind=logo", { method: "DELETE" });
                       await load();
@@ -158,7 +158,7 @@ export default function BrandPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <span className="text-[11px] uppercase tracking-wide text-neutral-500">Colores</span>
+            <span className="text-[11px] uppercase tracking-wide text-muted">Colores</span>
             <ColorsFromImage
               current={brand.colors}
               onPreview={(colors) => setBrand((b) => (b ? { ...b, colors } : b))}
@@ -178,7 +178,7 @@ export default function BrandPage() {
                   className="w-9 h-9 rounded-md border border-line bg-transparent cursor-pointer"
                 />
                 <span className="flex-1">{COLOR_LABELS[k]}</span>
-                <span className="font-mono text-[12px] text-neutral-400">{brand.colors[k].toUpperCase()}</span>
+                <span className="font-mono text-[12px] text-muted">{brand.colors[k].toUpperCase()}</span>
               </label>
             ))}
           </div>
@@ -188,7 +188,7 @@ export default function BrandPage() {
           <Panel title="Tipografías" bodyClassName="p-4 flex flex-col gap-4">
             {(["heading", "body", "subtitleAccent"] as const).map((k) => (
               <label key={k} className="flex items-center gap-3">
-                <span className="w-28 text-[12px] text-neutral-400">{k === "heading" ? "Títulos y subtítulos" : k === "body" ? "Texto" : "Énfasis de subtítulos"}</span>
+                <span className="w-28 text-[12px] text-muted">{k === "heading" ? "Títulos y subtítulos" : k === "body" ? "Texto" : "Énfasis de subtítulos"}</span>
                 <select
                   value={brand.fonts[k] ?? "Lora cursiva"}
                   onChange={(e) => setBrand({ ...brand, fonts: { ...brand.fonts, [k]: e.target.value } })}
@@ -202,16 +202,16 @@ export default function BrandPage() {
               </label>
             ))}
             <style>{`@font-face { font-family: 'Lora cursiva'; src: url('/fonts/Lora-Italic.ttf') format('truetype'); font-style: italic; font-weight: 400 700; font-display: swap; }`}</style>
-            <p className="text-[12px] text-neutral-400">Al activar “Combinar tipografías”, los subtítulos usan la fuente de títulos y las palabras clave usan la de énfasis. Guardá la marca para elegir esta combinación al crear un video.</p>
-            <p className="text-[12px] text-neutral-400">Biblioteca incluida: {new Set(library.map((f) => f.family)).size} familias. Elegí una arriba para verla en la vista previa. Helvetica usa la fuente instalada en este equipo.</p>
-            <ul className="text-[12px] text-neutral-400 flex flex-col gap-1">
+            <p className="text-[12px] text-muted">Al activar “Combinar tipografías”, los subtítulos usan la fuente de títulos y las palabras clave usan la de énfasis. Guardá la marca para elegir esta combinación al crear un video.</p>
+            <p className="text-[12px] text-muted">Biblioteca incluida: {new Set(library.map((f) => f.family)).size} familias. Elegí una arriba para verla en la vista previa. Helvetica usa la fuente instalada en este equipo.</p>
+            <ul className="text-[12px] text-muted flex flex-col gap-1">
               {(brand.fonts.files ?? []).map((f) => (
                 <li key={f.file} className="flex items-center gap-2">
                   <span className="flex-1 truncate" style={{ fontFamily: f.family, fontWeight: f.weight }}>
                     {f.family} {f.weight ?? ""} — Aa Bb 123
                   </span>
                   <button
-                    className="text-neutral-600 hover:text-red-300"
+                    className="text-faint hover:text-red-700"
                     onClick={async () => {
                       await api(`/api/brand/upload?file=${encodeURIComponent(f.file)}`, { method: "DELETE" });
                       await load();
@@ -223,7 +223,7 @@ export default function BrandPage() {
               ))}
             </ul>
             <div className="rounded-lg border border-line p-3 flex flex-col gap-2">
-              <p className="text-[12px] text-neutral-400">Neue Haas Grotesk requiere tu archivo con licencia.</p>
+              <p className="text-[12px] text-muted">Neue Haas Grotesk requiere tu archivo con licencia.</p>
               <FilePick accept=".woff2,.woff,.ttf,.otf" label="Subir Neue Haas Grotesk" onFile={(f) => upload("/api/brand/upload?kind=font&family=Neue%20Haas%20Grotesk", f, "Neue Haas Grotesk agregada.")} />
             </div>
             <FilePick accept=".woff2,.woff,.ttf,.otf" label="Subir tipografía (WOFF2/TTF/OTF)" onFile={(f) => upload("/api/brand/upload?kind=font", f, "Tipografía agregada.")} />

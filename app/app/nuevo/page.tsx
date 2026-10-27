@@ -10,6 +10,8 @@ import { Row, Seg } from "@/components/ui";
 import { api, uploadFile } from "@/lib/client";
 import type { Brand, Settings } from "@/lib/types";
 
+const LEON_GROUP = "leon-group-nueva";
+
 export default function NewVideo() {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -27,7 +29,11 @@ export default function NewVideo() {
 
   useEffect(() => {
     api<{ brands: (Brand & { slug: string })[] }>("/api/brands")
-      .then((result) => setBrands(result.brands))
+      .then((result) => {
+        setBrands(result.brands);
+        // Arranca con la marca de León Group; se puede elegir otra.
+        if (result.brands.some((brand) => brand.slug === LEON_GROUP)) setBrandSlug(LEON_GROUP);
+      })
       .catch((e) => setError((e as Error).message));
     api<Settings>("/api/defaults")
       .then(setSettings)
@@ -59,7 +65,7 @@ export default function NewVideo() {
     <div className="max-w-4xl w-full mx-auto px-6 py-10 flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Nuevo video</h1>
-        <p className="text-neutral-400 mt-1">
+        <p className="text-muted mt-1">
           Elegí cómo querés la edición y después subí el video. Se guarda solo en esta computadora; se transcribe, se corta y Claude arma el plan con este estilo.
         </p>
       </div>
@@ -80,9 +86,9 @@ export default function NewVideo() {
                 <option value="">{brands === null ? "Cargando marcas…" : "Seleccioná una marca"}</option>
                 {brands?.map((brand) => <option key={brand.slug} value={brand.slug}>{brand.name}</option>)}
               </select>
-              <span className="text-neutral-400">
+              <span className="text-muted">
                 {brands?.length === 0 ? "Todavía no tenés marcas guardadas. " : "Elegí la marca que va a usar este proyecto. "}
-                <a href="/marca" className="text-accent underline">Administrar marcas</a>
+                <a href="/marca" className="text-accent-strong underline">Administrar marcas</a>
               </span>
             </label>
             <EditingPresets
@@ -141,16 +147,16 @@ export default function NewVideo() {
               value={settings.instructions}
               onChange={(instructions) => setSettings({ ...settings, instructions })}
             />
-            <label className="flex items-center gap-2 text-[13px] text-neutral-300">
+            <label className="flex items-center gap-2 text-[13px] text-fg-2">
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
               Recordar estas opciones para los próximos videos
             </label>
-            <p className="text-[12px] text-neutral-500">
+            <p className="text-[12px] text-muted">
               La marca queda guardada en este proyecto. Los ajustes de edición los podés cambiar después. Tamaño de subtítulos y música están en “Configuración” dentro del proyecto.
             </p>
           </>
         ) : (
-          <p className="text-neutral-500">Cargando tus ajustes…</p>
+          <p className="text-muted">Cargando tus ajustes…</p>
         )}
       </section>
 
@@ -179,7 +185,7 @@ export default function NewVideo() {
             }
           }}
           className={`rounded-2xl border-2 border-dashed p-14 text-center transition ${!canUpload ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${
-            drag ? "border-accent bg-accent-soft" : "border-line hover:border-neutral-500 bg-panel"
+            drag ? "border-accent bg-accent-soft" : "border-line hover:border-muted bg-panel"
           }`}
         >
           <input
@@ -194,21 +200,21 @@ export default function NewVideo() {
             <>
               <div className="text-4xl mb-3">🎬</div>
               <div className="text-lg font-medium">{brandSlug ? "Soltá el video acá" : "Primero seleccioná una marca"}</div>
-              <div className="text-neutral-500 mt-1">{brandSlug ? "o hacé click para elegirlo · MP4, MOV, WEBM, MKV" : "La marca es obligatoria para crear el proyecto."}</div>
+              <div className="text-muted mt-1">{brandSlug ? "o hacé click para elegirlo · MP4, MOV, WEBM, MKV" : "La marca es obligatoria para crear el proyecto."}</div>
             </>
           ) : (
             <div className="max-w-md mx-auto">
               <div className="font-medium truncate mb-3">{file?.name}</div>
-              <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-2 rounded-full bg-fg/10 overflow-hidden">
                 <div className="h-full bg-accent transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
               </div>
-              <div className="text-neutral-400 mt-2 text-sm">
+              <div className="text-muted mt-2 text-sm">
                 {progress < 1 ? `Subiendo… ${Math.round(progress * 100)}%` : "Creando el proyecto…"}
               </div>
             </div>
           )}
         </div>
-        {error ? <p className="text-red-300">{error}</p> : null}
+        {error ? <p className="text-red-700">{error}</p> : null}
       </section>
     </div>
   );

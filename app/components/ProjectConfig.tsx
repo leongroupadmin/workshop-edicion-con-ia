@@ -13,8 +13,8 @@ import { Button, Panel, Row, Seg } from "./ui";
 type Saved = { layouts?: { changed: number } };
 
 const Section = ({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => (
-  <details open={defaultOpen} className="group rounded-lg border border-line bg-black/15">
-    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-[13px] font-semibold text-neutral-100 [&::-webkit-details-marker]:hidden">
+  <details open={defaultOpen} className="group rounded-lg border border-line bg-panel-2">
+    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-[13px] font-semibold text-fg [&::-webkit-details-marker]:hidden">
       {title}
       <svg
         viewBox="0 0 24 24"
@@ -23,7 +23,7 @@ const Section = ({ title, children, defaultOpen = false }: { title: string; chil
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-open:rotate-180"
+        className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180"
         aria-hidden
       >
         <path d="m6 9 6 6 6-6" />
@@ -106,7 +106,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
     <Panel
       title="Configuración"
       right={
-        <span className={`text-[11px] ${saving === "error" ? "text-red-300" : "text-neutral-500"}`}>
+        <span className={`text-[11px] ${saving === "error" ? "text-red-700" : "text-muted"}`}>
           {saving === "saving" ? "Guardando…" : saving === "error" ? "No se pudo guardar" : "Se guarda solo"}
         </span>
       }
@@ -114,7 +114,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
     >
       {state.meta.brandName ? (
         <Row label="Marca del proyecto">
-          <span className="text-[13px] text-neutral-100">{state.meta.brandName}</span>
+          <span className="text-[13px] text-fg">{state.meta.brandName}</span>
         </Row>
       ) : null}
       <Section title="Inteligencia artificial">
@@ -127,7 +127,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
           ]}
         />
         {s.aiProvider === "openai" ? (
-          <p className="text-[11px] text-neutral-500">Plan y chat usan la cuenta de ChatGPT iniciada en Codex; las escenas de HyperFrames siguen usando Claude.</p>
+          <p className="text-[11px] text-muted">Plan y chat usan la cuenta de ChatGPT iniciada en Codex; las escenas de HyperFrames siguen usando Claude.</p>
         ) : null}
       </Section>
 
@@ -188,7 +188,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
                   options={(["1", "2", "3", "4"] as const).map((v) => ({ value: v, label: v }))}
                 />
               </Row>
-              <label className="flex items-center gap-2 text-[12px] text-neutral-300 pb-2">
+              <label className="flex items-center gap-2 text-[12px] text-fg-2 pb-2">
                 <input type="checkbox" checked={s.subtitles.uppercase} onChange={(e) => sub({ uppercase: e.target.checked })} />
                 MAYÚSCULAS
               </label>
@@ -218,7 +218,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
                 onChange={(e) => music({ volume: Number(e.target.value) }, 600)}
                 className="flex-1"
               />
-              <span className="text-[12px] text-neutral-400 w-9 text-right">{Math.round(s.music.volume * 100)}%</span>
+              <span className="text-[12px] text-muted w-9 text-right">{Math.round(s.music.volume * 100)}%</span>
             </div>
           ) : null}
         </div>
@@ -237,18 +237,18 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
               ))}
             </select>
           ) : (
-            <p className="text-[12px] text-neutral-500">
+            <p className="text-[12px] text-muted">
               Todavía no hay música. Buscala en{" "}
-              <a className="text-accent underline" href="/musica">
+              <a className="text-accent-strong underline" href="/musica">
                 Música
               </a>{" "}
               (más de 10.000 temas) o dejá que Claude elija una al armar el plan.
             </p>
           )
         ) : null}
-        <p className="text-[11px] text-neutral-500">
+        <p className="text-[11px] text-muted">
           La música baja sola cuando hablás.{" "}
-          <a className="text-accent underline" href="/musica">
+          <a className="text-accent-strong underline" href="/musica">
             Buscar más música
           </a>
         </p>
@@ -275,13 +275,13 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
                 onChange={(e) => sfx({ volume: Number(e.target.value) }, 600)}
                 className="flex-1"
               />
-              <span className="text-[12px] text-neutral-400 w-9 text-right">{Math.round(s.sfx.volume * 100)}%</span>
+              <span className="text-[12px] text-muted w-9 text-right">{Math.round(s.sfx.volume * 100)}%</span>
             </div>
           ) : null}
         </div>
-        <p className="text-[11px] text-neutral-500">
+        <p className="text-[11px] text-muted">
           Whoosh, pop, golpes, clicks… los elige Claude en el plan. Podés escucharlos o subir los tuyos en{" "}
-          <a className="text-accent underline" href="/musica">
+          <a className="text-accent-strong underline" href="/musica">
             Música
           </a>
           .
@@ -313,7 +313,7 @@ export const ProjectConfig = ({ id, state }: { id: string; state: ProjectState }
         />
       </Section>
 
-      {msg ? <p className={`text-[12px] ${msg.error ? "text-red-300" : "text-neutral-300"}`}>{msg.text}</p> : null}
+      {msg ? <p className={`text-[12px] ${msg.error ? "text-red-700" : "text-fg-2"}`}>{msg.text}</p> : null}
 
       <div className="flex justify-end">
         <Button variant="ghost" onClick={saveDefaults}>

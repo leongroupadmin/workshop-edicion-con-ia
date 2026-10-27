@@ -1,31 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  /* Inter para la interfaz, Manrope para títulos y números (se cargan en layout.tsx) */
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-  --font-heading: var(--font-manrope), var(--font-sans);
+  /* Tipografías de León Group: Geist para la interfaz, Bricolage Grotesque para títulos (se cargan en layout.tsx) */
+  --font-sans: var(--font-geist), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-bricolage), var(--font-sans);
   --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
 
-  /* Acento ámbar de León Group; el texto encima va oscuro para que se lea */
+  /* Acento ámbar de León Group (rellenos); en texto va el ámbar oscuro, que se lee sobre el crema */
   --color-accent: #f59e0b;
-  --color-accent-hover: #fcd34d;
-  --color-accent-soft: #f59e0b1f;
+  --color-accent-hover: #fbbf24;
+  --color-accent-soft: #f59e0b2e;
+  --color-accent-strong: #b45309;
   --color-on-accent: #11100c;
 
-  /* Superficies cálidas de León Group: del fondo casi negro hacia las tarjetas */
-  --color-panel: #11100c;
-  --color-panel-2: #17140c;
-  --color-line: #f2f0e61a;
+  /* Texto: de lo más importante a lo más tenue */
+  --color-fg: #17140c;
+  --color-fg-2: #3d372a;
+  --color-muted: #6f6b61;
+  --color-faint: #9a9488;
+
+  /* Superficies crema de León Group: fondo, tarjetas y campos */
+  --color-panel: #f4f0e4;
+  --color-panel-2: #fbf9f2;
+  --color-line: #17140c1f;
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
 body {
-  background-color: #0a0907;
-  color: #f2f0e6;
+  background-color: #eae5d6;
+  color: var(--color-fg);
 }
 
 /*
@@ -49,7 +56,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Jerarquía: los títulos van en Manrope, un poco más apretados */
+/* Jerarquía: los títulos van en Bricolage Grotesque, un poco más apretados */
 h1,
 h2,
 h3,
@@ -60,7 +67,7 @@ h4 {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2a2a2a transparent;
+  scrollbar-color: #17140c33 transparent;
 }
 
 /* Transiciones suaves y discretas en lo que se puede tocar */
@@ -117,12 +124,12 @@ textarea:focus {
 .md code {
   font-family: var(--font-mono);
   font-size: 0.85em;
-  background: #ffffff12;
+  background: #17140c0f;
   padding: 0.1em 0.35em;
   border-radius: 4px;
 }
 .md strong {
-  color: #fff;
+  color: var(--color-fg);
 }
 .md h1,
 .md h2,

@@ -103,11 +103,11 @@ export const Images = ({ id }: { id: string }) => {
         className={`rounded-lg border border-dashed transition ${drag ? "border-accent bg-accent-soft/30" : "border-line"}`}
       >
         {images === null ? (
-          <div className="p-4 text-[13px] text-neutral-500 flex items-center gap-2">
+          <div className="p-4 text-[13px] text-muted flex items-center gap-2">
             <Spinner /> Cargando…
           </div>
         ) : images.length === 0 ? (
-          <div className="p-5 text-center text-[13px] text-neutral-500">
+          <div className="p-5 text-center text-[13px] text-muted">
             Arrastrá acá tus fotos, capturas o logos (JPG, PNG, WEBP o SVG).
             <br />
             Claude las reparte solo entre los gráficos, según lo que estés diciendo en cada momento.
@@ -115,23 +115,23 @@ export const Images = ({ id }: { id: string }) => {
         ) : (
           <div className="p-2 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2">
             {images.map((img) => (
-              <div key={img.file} className="flex gap-2 rounded-lg border border-line bg-black/20 p-2">
+              <div key={img.file} className="flex gap-2 rounded-lg border border-line bg-panel-2 p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element -- archivo local del proyecto */}
                 <img
                   src={`/api/projects/${id}/file/images/${encodeURIComponent(img.file)}`}
                   alt={img.file}
-                  className="w-16 h-16 rounded-md object-cover bg-black/40 shrink-0"
+                  className="w-16 h-16 rounded-md object-cover bg-panel-2 shrink-0"
                 />
                 <div className="min-w-0 flex-1 flex flex-col gap-1">
                   <div className="flex items-start gap-1">
-                    <span className="text-[12px] text-neutral-400 truncate flex-1" title={img.file}>
+                    <span className="text-[12px] text-muted truncate flex-1" title={img.file}>
                       {img.file}
                     </span>
                     <button
                       type="button"
                       aria-label={`Borrar ${img.file}`}
                       onClick={() => void borrar(img.file)}
-                      className="text-neutral-500 hover:text-red-300 shrink-0"
+                      className="text-muted hover:text-red-700 shrink-0"
                     >
                       <TrashIcon />
                     </button>
@@ -140,7 +140,7 @@ export const Images = ({ id }: { id: string }) => {
                     defaultValue={img.note ?? ""}
                     placeholder="qué se ve (opcional)"
                     onBlur={(e) => void describir(img.file, e.target.value)}
-                    className="w-full rounded-md border border-line bg-black/30 px-2 py-1 text-[12px] outline-none focus:border-neutral-500"
+                    className="w-full rounded-md border border-line bg-panel-2 px-2 py-1 text-[12px] outline-none focus:border-muted"
                   />
                 </div>
               </div>
@@ -149,9 +149,9 @@ export const Images = ({ id }: { id: string }) => {
         )}
       </div>
 
-      {error ? <p className="mt-2 text-[12px] text-red-300">{error}</p> : null}
+      {error ? <p className="mt-2 text-[12px] text-red-700">{error}</p> : null}
       {images?.length ? (
-        <p className="mt-2 text-[12px] text-neutral-500">
+        <p className="mt-2 text-[12px] text-muted">
           La descripción ayuda a Claude a elegir el momento (“mi oficina”, “captura del panel”, “el producto”). Si el
           plan ya está hecho, pedile por el chat que lo rehaga para que las incluya.
         </p>

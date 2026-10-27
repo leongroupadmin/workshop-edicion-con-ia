@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Recomendaciones } from "@/components/Recomendaciones";
 
 const LINKS = [
   { href: "/", label: "Edición" },
@@ -16,7 +15,7 @@ export const Nav = () => {
   const activa = (href: string) => (href === "/" ? pathname === "/" || pathname.startsWith("/p/") : pathname.startsWith(href));
 
   return (
-    <nav className="flex items-center gap-1 text-neutral-400">
+    <nav className="flex items-center gap-1 text-muted">
       {LINKS.map((l) => (
         <Link
           key={l.href}
@@ -24,15 +23,13 @@ export const Nav = () => {
           aria-current={activa(l.href) ? "page" : undefined}
           className={`px-3 py-1.5 rounded-lg border transition ${
             activa(l.href)
-              ? "border-accent/40 bg-accent-soft text-white"
-              : "border-transparent hover:bg-white/[0.06] hover:text-white"
+              ? "border-accent/40 bg-accent-soft text-fg"
+              : "border-transparent hover:bg-fg/[0.06] hover:text-fg"
           }`}
         >
           {l.label}
         </Link>
       ))}
-      {/* No es otra pantalla: se abre acá mismo como desplegable. */}
-      <Recomendaciones />
     </nav>
   );
 };

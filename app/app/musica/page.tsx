@@ -48,12 +48,12 @@ export default function MusicPage() {
     <div className="max-w-5xl w-full mx-auto px-6 py-8 flex flex-col gap-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Música</h1>
-        <p className="text-neutral-400 mt-1">
-          Se guarda en <code className="text-neutral-300">/assets/music</code> y está disponible para todos los videos.
+        <p className="text-muted mt-1">
+          Se guarda en <code className="text-fg-2">/assets/music</code> y está disponible para todos los videos.
           La música de fondo baja sola cuando hablás; los efectos los elige Claude en el plan.
         </p>
       </div>
-      {msg ? <p className="text-[13px] text-neutral-300">{msg}</p> : null}
+      {msg ? <p className="text-[13px] text-fg-2">{msg}</p> : null}
 
       <MusicSearch
         onAdded={async (file) => {
@@ -66,7 +66,7 @@ export default function MusicPage() {
         {(["tracks", "sfx"] as const).map((k) => (
           <div key={k} className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] text-neutral-300">{k === "tracks" ? "Música de fondo" : "Efectos de sonido (whoosh, pop…)"}</span>
+              <span className="text-[12px] text-fg-2">{k === "tracks" ? "Música de fondo" : "Efectos de sonido (whoosh, pop…)"}</span>
               <FilePick
                 accept=".mp3,.wav,.m4a,.aac,.ogg"
                 label="Subir"
@@ -77,14 +77,14 @@ export default function MusicPage() {
               <ul className="flex flex-col gap-1.5">
                 {music[k].map((t) => (
                   <li key={t} className="flex items-center gap-2 text-[12px]">
-                    <span className="flex-1 truncate text-neutral-300">{t}</span>
+                    <span className="flex-1 truncate text-fg-2">{t}</span>
                     <audio controls preload="none" src={`/api/music?play=${encodeURIComponent(k === "sfx" ? `sfx/${t}` : t)}`} className="h-7 w-48" />
                     <button
                       type="button"
                       aria-label={`Eliminar ${t}`}
                       disabled={busy}
                       onClick={() => setBorrar({ file: t, sfx: k === "sfx" })}
-                      className="shrink-0 text-neutral-500 hover:text-red-300 disabled:opacity-40"
+                      className="shrink-0 text-muted hover:text-red-700 disabled:opacity-40"
                     >
                       <TrashIcon />
                     </button>
@@ -92,7 +92,7 @@ export default function MusicPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-[12px] text-neutral-500">Nada cargado todavía.</p>
+              <p className="text-[12px] text-muted">Nada cargado todavía.</p>
             )}
           </div>
         ))}
@@ -113,7 +113,7 @@ export default function MusicPage() {
             setMsg(`Eliminado: ${borrar.file}.`);
           }}
         >
-          Va a la <b className="text-neutral-200">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
           {borrar.sfx ? (
             <span className="block mt-2">
               Si algún plan ya lo tenía puesto, ese sonido no va a sonar hasta que elijas otro.

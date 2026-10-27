@@ -60,8 +60,8 @@ const Tools = ({ tools, live }: { tools: ChatEntry["tools"]; live?: boolean }) =
   if (!tools?.length) return null;
   const shown = open ? tools : tools.slice(-3);
   return (
-    <div className="mt-2 rounded-md border border-line bg-black/30 text-[11px] text-neutral-400">
-      <button onClick={() => setOpen((o) => !o)} className="w-full text-left px-2 py-1 hover:text-neutral-200">
+    <div className="mt-2 rounded-md border border-line bg-panel-2 text-[11px] text-muted">
+      <button onClick={() => setOpen((o) => !o)} className="w-full text-left px-2 py-1 hover:text-fg">
         {live ? "Trabajando" : "Hizo"} {tools.length} paso{tools.length > 1 ? "s" : ""} {open ? "▾" : "▸"}
       </button>
       <ul className="px-2 pb-1.5 flex flex-col gap-0.5">
@@ -85,7 +85,7 @@ const Message = ({ e, live }: { e: ChatEntry; live?: boolean }) => {
     );
   }
   if (e.role === "system") {
-    return <div className="self-center text-[11px] text-neutral-500 text-center px-4">{e.text}</div>;
+    return <div className="self-center text-[11px] text-muted text-center px-4">{e.text}</div>;
   }
   return (
     <div className="self-start max-w-[95%] rounded-xl rounded-bl-sm bg-panel-2 border border-line px-3 py-2">
@@ -94,16 +94,16 @@ const Message = ({ e, live }: { e: ChatEntry; live?: boolean }) => {
           <ReactMarkdown>{e.text}</ReactMarkdown>
         </div>
       ) : live ? (
-        <div className="flex items-center gap-2 text-neutral-400">
+        <div className="flex items-center gap-2 text-muted">
           <Spinner /> Pensando…
         </div>
       ) : null}
       <Tools tools={e.tools} live={live} />
       {e.error ? (
-        <div className="mt-2 text-[12px] text-red-300 whitespace-pre-wrap border-t border-red-500/20 pt-2">⚠️ {e.error}</div>
+        <div className="mt-2 text-[12px] text-red-700 whitespace-pre-wrap border-t border-red-500/20 pt-2">⚠️ {e.error}</div>
       ) : null}
       {typeof e.costUsd === "number" && e.costUsd > 0 ? (
-        <div className="mt-1 text-[10px] text-neutral-600">US$ {e.costUsd.toFixed(3)}</div>
+        <div className="mt-1 text-[10px] text-faint">US$ {e.costUsd.toFixed(3)}</div>
       ) : null}
     </div>
   );
@@ -222,7 +222,7 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
     <Panel title={`Chat con ${assistantName}`} className="h-full" bodyClassName="flex-1 flex flex-col min-h-0">
       <div ref={scroller} className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3">
         {state.chat.length === 0 && !live ? (
-          <div className="text-neutral-500 text-[13px] p-2">
+          <div className="text-muted text-[13px] p-2">
             Escribile a {assistantName} qué querés cambiar del video en lenguaje normal. Recuerda todo lo que hablaron en este proyecto.
           </div>
         ) : null}
@@ -236,18 +236,18 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
               <button
                 key={s}
                 onClick={() => setText(s)}
-                className="text-[11px] px-2 py-1 rounded-full border border-line text-neutral-400 hover:text-white hover:border-neutral-500"
+                className="text-[11px] px-2 py-1 rounded-full border border-line text-muted hover:text-fg hover:border-muted"
               >
                 {s}
               </button>
             ))}
           </div>
         ) : null}
-        {error ? <div className="text-[12px] text-red-300">{error}</div> : null}
+        {error ? <div className="text-[12px] text-red-700">{error}</div> : null}
         {images.length ? (
           <div className="flex flex-wrap gap-1.5">
             {images.map((image) => (
-              <div key={image.file} className="flex items-center gap-1 rounded-md border border-line bg-panel-2 px-1.5 py-1 text-[11px] text-neutral-300">
+              <div key={image.file} className="flex items-center gap-1 rounded-md border border-line bg-panel-2 px-1.5 py-1 text-[11px] text-fg-2">
                 {/[.]mp4$|[.]mov$|[.]webm$|[.]m4v$/i.test(image.file) ? (
                   <video src={`/api/projects/${id}/file/broll/${encodeURIComponent(image.file)}`} muted className="h-7 w-7 rounded object-cover" />
                 ) : (
@@ -260,11 +260,11 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
           </div>
         ) : null}
         {images.length ? (
-          <div className="rounded-md border border-accent/30 bg-accent/5 px-2 py-1.5 text-[12px] text-neutral-300">
+          <div className="rounded-md border border-accent/30 bg-accent/5 px-2 py-1.5 text-[12px] text-fg-2">
             Escribí qué querés que haga la IA con estos archivos antes de enviar el mensaje.
           </div>
         ) : null}
-        {imageInputError ? <div className="text-[12px] text-red-300">{imageInputError}</div> : null}
+        {imageInputError ? <div className="text-[12px] text-red-700">{imageInputError}</div> : null}
         <div className="flex gap-2 items-end">
           <input
             ref={imageInput}
@@ -316,7 +316,7 @@ export const Chat = ({ id, state, live }: { id: string; state: ProjectState; liv
               title={listening ? "Dejar de dictar" : "Hablá y se escribe solo (después lo revisás y tocás Enviar)"}
               onClick={toggleDictation}
               disabled={busy || sending}
-              className={`h-[42px] px-3 ${listening ? "animate-pulse border-red-500/60 text-red-400" : ""}`}
+              className={`h-[42px] px-3 ${listening ? "animate-pulse border-red-500/60 text-red-600" : ""}`}
             >
               <MicIcon />
             </Button>
