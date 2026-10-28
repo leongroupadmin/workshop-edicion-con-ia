@@ -48,7 +48,8 @@ const readCredential = (): Record<string, string> | "expired" | null => {
 export const heygenHeaders = (): Record<string, string> => {
   let cred = readCredential();
   if (cred === "expired") {
-    spawnSync("npx", ["--yes", "hyperframes", "auth", "refresh"], { stdio: "ignore" });
+    // En Windows npx es un .cmd: necesita la consola (los argumentos son fijos, sin espacios).
+    spawnSync("npx", ["--yes", "hyperframes", "auth", "refresh"], { stdio: "ignore", shell: process.platform === "win32" });
     cred = readCredential();
   }
   if (!cred || cred === "expired") {

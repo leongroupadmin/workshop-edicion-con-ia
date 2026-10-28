@@ -18,10 +18,17 @@ export const runScript = (
   onDone?: (ok: boolean) => void,
 ) => {
   if (store.running.has(id)) throw new Error("Ya hay un proceso corriendo en este proyecto. Esperá a que termine.");
-  const tsx = path.join(ROOT, "node_modules", ".bin", "tsx");
-  const child = spawn(tsx, [path.join("scripts", script), id, ...args], {
+  const scriptArgs = [path.join("scripts", script), id, ...args];
+  // En Windows node_modules/.bin/tsx es un script de shell que no se puede
+  // lanzar directo: ahí corro el CLI de tsx con el mismo Node del panel.
+  const [bin, binArgs] =
+    process.platform === "win32"
+      ? [process.execPath, [path.join(ROOT, "node_modules", "tsx", "dist", "cli.mjs"), ...scriptArgs]]
+      : [path.join(ROOT, "node_modules", ".bin", "tsx"), scriptArgs];
+  const child = spawn(bin, binArgs, {
     cwd: ROOT,
     env: { ...process.env, FORCE_COLOR: "0" },
+    windowsHide: true,
   });
   appendLog(id, "jobs.log", `$ tsx scripts/${script} ${id} ${args.join(" ")}`);
   setRunning(id, { kind: "job", label, abort: () => child.kill("SIGTERM") });

@@ -5,6 +5,18 @@ import path from "node:path";
 export const VIDEO_EXTS = [".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"];
 export const AUDIO_EXTS = [".wav", ".mp3", ".m4a", ".aac", ".aiff", ".flac", ".ogg"];
 
+/**
+ * En Windows `npx` es un .cmd y Node no lo lanza sin shell: ahí corro
+ * npx-cli.js (viene con Node) con el mismo Node. En Mac/Linux, sin cambios.
+ */
+export const comando = (bin: string, args: string[]): [string, string[]] => {
+  if (process.platform === "win32" && bin === "npx") {
+    const cli = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npx-cli.js");
+    if (fs.existsSync(cli)) return [process.execPath, [cli, ...args]];
+  }
+  return [bin, args];
+};
+
 /** Ejecuta un comando y devuelve stdout. Rechaza con stderr si falla. */
 export const run = (
   bin: string,
@@ -12,7 +24,7 @@ export const run = (
   opts: { cwd?: string; quiet?: boolean } = {},
 ): Promise<{ stdout: string; stderr: string }> =>
   new Promise((resolve, reject) => {
-    const child = spawn(bin, args, { cwd: opts.cwd });
+    const child = spawn(...comando(bin, args), { cwd: opts.cwd, windowsHide: true });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (d) => (stdout += d.toString()));
