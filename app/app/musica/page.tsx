@@ -113,7 +113,7 @@ export default function MusicPage() {
             setMsg(`Eliminado: ${borrar.file}.`);
           }}
         >
-          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu computadora</b>: si te arrepentís, lo recuperás desde ahí.
           {borrar.sfx ? (
             <span className="block mt-2">
               Si algún plan ya lo tenía puesto, ese sonido no va a sonar hasta que elijas otro.

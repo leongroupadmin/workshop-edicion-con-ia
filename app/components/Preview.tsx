@@ -211,7 +211,7 @@ export const Preview = ({ id, state }: { id: string; state: ProjectState }) => {
           Se borra solo este video. Las otras versiones y el proyecto quedan igual, y la próxima versión
           no reutiliza el número v{toDelete}.
           <br />
-          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu computadora</b>: si te arrepentís, lo recuperás desde ahí.
         </ConfirmDialog>
       ) : null}
     </Panel>

@@ -109,7 +109,7 @@ export default function Home() {
         >
           Se borra el proyecto completo: {projectContentsText(toDelete.versions)}.
           <br />
-          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu computadora</b>: si te arrepentís, lo recuperás desde ahí.
         </ConfirmDialog>
       ) : null}
     </div>

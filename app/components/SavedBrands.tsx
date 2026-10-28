@@ -207,7 +207,7 @@ export const SavedBrands = ({
         >
           Se borra la copia guardada (colores, tipografías y logo). La marca que estás usando ahora no se toca.
           <br />
-          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, la recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu computadora</b>: si te arrepentís, la recuperás desde ahí.
         </ConfirmDialog>
       ) : null}
     </Panel>

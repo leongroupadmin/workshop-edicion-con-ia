@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 }
 
 /**
- * DELETE ?file=ruta (&sfx=1): manda el audio a la Papelera de la Mac. Si era la
+ * DELETE ?file=ruta (&sfx=1): manda el audio a la Papelera del sistema. Si era la
  * música elegida para los videos nuevos, la deja sin elegir.
  */
 export async function DELETE(req: Request) {

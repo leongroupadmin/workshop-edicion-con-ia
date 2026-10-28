@@ -2,7 +2,7 @@ import { deleteVersion, exists } from "@/lib/server/projects";
 
 export const dynamic = "force-dynamic";
 
-/** Eliminar una versión (vN.mp4 + vN.json van a la Papelera de la Mac). */
+/** Eliminar una versión (vN.mp4 + vN.json van a la Papelera del sistema). */
 export async function DELETE(_req: Request, ctx: RouteContext<"/api/projects/[id]/versions/[n]">) {
   const { id, n } = await ctx.params;
   if (!exists(id)) return Response.json({ error: "No existe el proyecto" }, { status: 404 });

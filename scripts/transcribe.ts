@@ -156,7 +156,9 @@ export const transcribeFile = async ({
   projectId: string | null;
   outName?: string;
 }): Promise<Transcript> => {
-  if (!fs.existsSync(path.join(WHISPER_PATH, "build", "bin", "whisper-cli"))) {
+  // En Windows el binario viene precompilado como whisper-cli.exe.
+  const whisperBin = process.platform === "win32" ? "whisper-cli.exe" : "whisper-cli";
+  if (!fs.existsSync(path.join(WHISPER_PATH, "build", "bin", whisperBin))) {
     throw new Error(
       "whisper.cpp no está instalado. Corré: npx tsx scripts/setup-whisper.ts",
     );

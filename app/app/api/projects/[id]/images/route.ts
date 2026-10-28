@@ -40,7 +40,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/projects/[id]/
   return Response.json({ ok: true, images: listImages(id) });
 }
 
-/** DELETE ?file=…: manda la imagen a la Papelera de la Mac. */
+/** DELETE ?file=…: manda la imagen a la Papelera del sistema. */
 export async function DELETE(req: Request, ctx: RouteContext<"/api/projects/[id]/images">) {
   const { id } = await ctx.params;
   if (!exists(id)) return faltaProyecto();

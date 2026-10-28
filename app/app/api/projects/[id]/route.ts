@@ -18,7 +18,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/projects/[id]"
   return Response.json(fullState(id));
 }
 
-/** Eliminar el proyecto (va a la Papelera de la Mac). */
+/** Eliminar el proyecto (va a la Papelera del sistema). */
 export async function DELETE(_req: Request, ctx: RouteContext<"/api/projects/[id]">) {
   const { id } = await ctx.params;
   if (!exists(id)) return Response.json({ error: "No existe el proyecto" }, { status: 404 });

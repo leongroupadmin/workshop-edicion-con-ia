@@ -132,12 +132,47 @@ export const saveBody = async (req: Request, dest: string) => {
 };
 
 /**
- * Mueve archivos o carpetas a la Papelera de macOS (se pueden recuperar desde
- * el Finder). Nunca borra de forma definitiva.
+ * En Windows mueve a la Papelera de reciclaje con la API de .NET (la misma
+ * que usa el Explorador). Las rutas viajan en una variable de entorno en JSON
+ * para no tener que escaparlas en la línea de comando.
+ */
+const PAPELERA_WINDOWS = `
+$ErrorActionPreference = 'Stop'
+try {
+  Add-Type -AssemblyName Microsoft.VisualBasic
+  foreach ($r in @($env:PAPELERA_RUTAS | ConvertFrom-Json)) {
+    if (Test-Path -LiteralPath $r -PathType Container) {
+      [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($r, 'OnlyErrorDialogs', 'SendToRecycleBin')
+    } else {
+      [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($r, 'OnlyErrorDialogs', 'SendToRecycleBin')
+    }
+  }
+} catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }
+`;
+
+/**
+ * Mueve archivos o carpetas a la Papelera del sistema (macOS o Windows; se
+ * pueden recuperar desde ahí). Nunca borra de forma definitiva.
  */
 export const moveToTrash = async (targets: string[]) => {
   const existing = targets.filter((t) => fs.existsSync(t));
   if (!existing.length) return;
+  if (process.platform === "win32") {
+    await new Promise<void>((resolve, reject) =>
+      execFile(
+        "powershell.exe",
+        ["-NoProfile", "-NonInteractive", "-Command", PAPELERA_WINDOWS],
+        {
+          env: { ...process.env, PAPELERA_RUTAS: JSON.stringify(existing.map((t) => path.resolve(t))) },
+          timeout: 120_000,
+          windowsHide: true,
+        },
+        (err, _stdout, stderr) =>
+          err ? reject(new Error(`No se pudo mover a la Papelera: ${stderr.trim() || err.message}`)) : resolve(),
+      ),
+    );
+    return;
+  }
   const bin = "/usr/bin/trash";
   if (!fs.existsSync(bin)) throw new Error("No encontré la Papelera del sistema (hace falta macOS 15 o más nuevo).");
   await new Promise<void>((resolve, reject) =>

@@ -13,6 +13,13 @@ import { WHISPER_MODEL, WHISPER_PATH, WHISPER_VERSION } from "./lib/config";
 const main = async () => {
   console.log(`Instalando whisper.cpp ${WHISPER_VERSION} en ${WHISPER_PATH}…`);
   await installWhisperCpp({ to: WHISPER_PATH, version: WHISPER_VERSION });
+  // En Windows el zip precompilado trae los binarios en Release/, pero
+  // transcribe() de Remotion los busca en build/bin/ (desde 1.7.4).
+  const release = path.join(WHISPER_PATH, "Release");
+  const bin = path.join(WHISPER_PATH, "build", "bin");
+  if (process.platform === "win32" && fs.existsSync(release)) {
+    fs.cpSync(release, bin, { recursive: true });
+  }
 
   console.log(`Descargando modelo "${WHISPER_MODEL}"…`);
   let last = -1;

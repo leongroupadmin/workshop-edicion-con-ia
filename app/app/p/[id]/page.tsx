@@ -66,7 +66,7 @@ export default function ProjectPage() {
         >
           Se borra el proyecto completo: {projectContentsText(state.versions.length)}.
           <br />
-          Va a la <b className="text-fg">Papelera de tu Mac</b>: si te arrepentís, lo recuperás desde ahí.
+          Va a la <b className="text-fg">Papelera de tu computadora</b>: si te arrepentís, lo recuperás desde ahí.
           {busy ? (
             <span className="block mt-2 text-amber-700">
               Ahora hay un proceso trabajando en este proyecto: detenelo primero desde la barra de estado.
