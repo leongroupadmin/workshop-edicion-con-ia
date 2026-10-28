@@ -13,6 +13,7 @@ import { MIN_SCENE_DURATION_MS, SCENE_TYPES } from "../types";
 import type { ChatEntry, ChatTool, Plan, PlanItem } from "../types";
 import { emit, setRunning, store } from "./bus";
 import { ROOT } from "./fsutil";
+import { codex } from "./cuenta";
 import { BROLL_EXTS, listImages } from "./images";
 import { readJson, writeJson } from "./fsutil";
 import { runScript } from "./jobs";
@@ -290,7 +291,6 @@ const consume = async (
  * Guardamos el contexto del proyecto localmente para que cada llamada pueda
  * entender el video y el plan vigente.
  */
-const CODEX_BIN = process.env.CODEX_CLI_PATH || "/Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex";
 // Terra ofrece buena calidad de planificación con un costo muy inferior a Astra.
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-terra";
 
@@ -393,19 +393,26 @@ const parseOpenAiReply = (raw: string): { reply?: unknown; plan?: unknown; subti
 };
 
 const openAiRequest = async (instructions: string, input: string, signal: AbortSignal) => {
-  if (!fs.existsSync(CODEX_BIN)) throw new Error("No encontré Codex CLI para usar tu cuenta de ChatGPT.");
+  const bin = codex();
+  if (!bin || !fs.existsSync(bin)) throw new Error("No encontré Codex CLI para usar tu cuenta de ChatGPT.");
   const prompt = `${instructions}\n\n${input}`;
-  const args = ["exec", "--json", "--ephemeral", "--sandbox", "read-only", "-C", ROOT];
+  // En Windows la línea de comando no pasa de ~32 mil caracteres y la
+  // transcripción puede ser más larga: ahí la consigna va por stdin ("-").
+  const porStdin = process.platform === "win32";
+  // --skip-git-repo-check: el proyecto puede venir de un zip (sin git); con
+  // sandbox de solo lectura no hay riesgo en saltear ese chequeo de Codex.
+  const args = ["exec", "--json", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "-C", ROOT];
   args.push("--model", OPENAI_MODEL);
-  args.push(prompt);
+  args.push(porStdin ? "-" : prompt);
   return await new Promise<string>((resolve, reject) => {
-    const child = spawn(CODEX_BIN, args, { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(bin, args, { cwd: ROOT, stdio: [porStdin ? "pipe" : "ignore", "pipe", "pipe"], windowsHide: true });
+    if (porStdin) child.stdin?.end(prompt);
     let out = "";
     let err = "";
     const stop = () => child.kill("SIGTERM");
     signal.addEventListener("abort", stop, { once: true });
-    child.stdout.on("data", (chunk: Buffer) => { out += chunk.toString(); });
-    child.stderr.on("data", (chunk: Buffer) => { err += chunk.toString(); });
+    child.stdout?.on("data", (chunk: Buffer) => { out += chunk.toString(); });
+    child.stderr?.on("data", (chunk: Buffer) => { err += chunk.toString(); });
     child.on("error", reject);
     child.on("close", (code) => {
       signal.removeEventListener("abort", stop);
