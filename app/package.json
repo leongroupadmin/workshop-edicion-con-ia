@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "playwright test",
-    "claude:login": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude auth login",
+    "claude:login": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude auth login --claudeai",
     "claude:status": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude auth status",
     "claude:token": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude setup-token",
     "claude:logout": "./node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude auth logout"

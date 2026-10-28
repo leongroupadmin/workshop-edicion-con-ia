@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/", label: "Edición" },
   { href: "/marca", label: "Marca" },
   { href: "/musica", label: "Música" },
+  { href: "/ia", label: "IA" },
 ] as const;
 
 /** Menú de la barra superior, con la sección actual marcada en ámbar. */
