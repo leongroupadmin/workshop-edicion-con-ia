@@ -1,3 +1,9 @@
+# Editor LG — material del workshop de edición de video con IA
+
+> **Uso educativo.** Este repositorio es material del workshop de León Group.
+> Lo usás bajo tu responsabilidad, se entrega "tal cual" y está **prohibida
+> su venta y distribución**. Leé la [licencia](LICENSE.md) antes de usarlo.
+
 # Remotion video
 
 <p align="center">
