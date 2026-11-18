@@ -4,8 +4,8 @@
 > Lo usás bajo tu responsabilidad, se entrega "tal cual" y está **prohibida
 > su venta y distribución**. Leé la [licencia](LICENSE.md) antes de usarlo.
 
-**¿Venís al workshop?** Seguí la [preparación](PREPARACION.md) antes de la
-clase: instalás todo en unos 45 minutos.
+**¿Venís al workshop?** La [instalación](INSTALACION.md) la hacemos juntos
+al empezar, todo desde el chat de Claude Code.
 
 **¿Querés construirlo desde cero?** La [guía del workshop](GUIA-WORKSHOP.md)
 tiene los 14 pasos, con el prompt de Claude Code listo para copiar en cada uno.
