@@ -1,37 +1,31 @@
 {
-  "name": "León Group Nueva",
+  "name": "Corporativo Azul",
+  "preset": true,
   "colors": {
-    "primary": "#F59E0B",
-    "secondary": "#FCD34D",
-    "background": "#EAE5D6",
-    "text": "#554A2A",
-    "highlight": "#B45309",
-    "ink": "#11100C",
-    "textOnDark": "#F2F0E6",
-    "muted": "#6F6B61",
-    "card": "#F4F0E4"
+    "primary": "#3D8BFF",
+    "secondary": "#8FB8FF",
+    "background": "#0B1F3A",
+    "text": "#FFFFFF",
+    "highlight": "#4FD1C5"
   },
   "fonts": {
-    "heading": "Bricolage Grotesque",
-    "body": "Geist",
-    "subtitleAccent": "Geist Mono",
+    "heading": "Montserrat",
+    "body": "Roboto",
+    "subtitleAccent": "Geist",
     "files": [
       {
-        "family": "Bricolage Grotesque",
-        "file": "library-BricolageGrotesque[opsz,wdth,wght].ttf"
+        "family": "Montserrat",
+        "file": "library-Montserrat[wght].ttf"
+      },
+      {
+        "family": "Roboto",
+        "file": "library-Roboto[wdth,wght].ttf"
       },
       {
         "family": "Geist",
         "file": "library-Geist[wght].ttf"
-      },
-      {
-        "family": "Geist Mono",
-        "file": "library-GeistMono[wght].ttf"
       }
-    ],
-    "headingWeight": 800,
-    "bodyWeight": 500,
-    "mono": "Geist Mono"
+    ]
   },
-  "logo": "logo.png"
+  "logo": ""
 }

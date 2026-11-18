@@ -10,8 +10,6 @@ import { Row, Seg } from "@/components/ui";
 import { api, uploadFile } from "@/lib/client";
 import type { Brand, Settings } from "@/lib/types";
 
-const LEON_GROUP = "leon-group-nueva";
-
 export default function NewVideo() {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -28,11 +26,17 @@ export default function NewVideo() {
   const [remember, setRemember] = useState(true);
 
   useEffect(() => {
-    api<{ brands: (Brand & { slug: string })[] }>("/api/brands")
-      .then((result) => {
+    Promise.all([
+      api<{ brands: (Brand & { slug: string })[] }>("/api/brands"),
+      api<{ brand: Brand }>("/api/brand").catch(() => null),
+    ])
+      .then(([result, current]) => {
         setBrands(result.brands);
-        // Arranca con la marca de León Group; se puede elegir otra.
-        if (result.brands.some((brand) => brand.slug === LEON_GROUP)) setBrandSlug(LEON_GROUP);
+        // Arranca con la marca en uso (la de la pestaña Marca); si no está
+        // guardada, con la primera de la lista. Se puede elegir otra.
+        const enUso = result.brands.find((brand) => brand.name === current?.brand.name);
+        const inicial = enUso ?? result.brands[0];
+        if (inicial) setBrandSlug(inicial.slug);
       })
       .catch((e) => setError((e as Error).message));
     api<Settings>("/api/defaults")
